@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KnifeSwap Post Generator</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F2F2F7;--card:#fff;
+  --b1:rgba(0,0,0,.1);--b2:rgba(0,0,0,.06);
+  --t1:#1D1D1F;--t2:#3A3A3C;--t3:#6E6E73;--t4:#AEAEB2;
+  --blue:#0071E3;--bluebg:#EBF4FF;--bluet:#004FC4;
+  --green:#34C759;--greenbg:#E8F9EE;--greent:#1A7F35;
+  --orange:#FF9500;--orangebg:#FFF5E6;--oranget:#A05A00;
+  --red:#FF3B30;--redbg:#FFF1F0;--redt:#CC2200;
+  --purple:#AF52DE;--purplebg:#F5EEFF;--purplet:#7B2FA8;
+  --sh:0 1px 3px rgba(0,0,0,.06),0 0 0 .5px rgba(0,0,0,.07);
+  --shm:0 4px 20px rgba(0,0,0,.09),0 0 0 .5px rgba(0,0,0,.06);
+  --r:14px;--rs:10px;--rxs:7px;
+  --tr:.2s cubic-bezier(.25,.46,.45,.94);
+  --font:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',system-ui,sans-serif;
+  --mono:'SF Mono',ui-monospace,'Cascadia Code',monospace;
+}
+body,html{background:var(--bg)}
+.app{font-family:var(--font);color:var(--t1);min-height:100vh;background:var(--bg);-webkit-font-smoothing:antialiased}
+
+/* HEADER */
+.hdr{background:rgba(255,255,255,.85);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:.5px solid rgba(0,0,0,.14);padding:0 18px;display:flex;align-items:center;height:52px;position:sticky;top:0;z-index:40;gap:12px}
+.hdr-logo{display:flex;align-items:center;gap:10px;cursor:pointer;flex-shrink:0}
+.hdr-ico{width:30px;height:30px;border-radius:8px;background:linear-gradient(145deg,#1C1C1E,#3A3A3C);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.28)}
+.hdr-ico-lbl{font-size:11px;font-weight:800;color:#fff;letter-spacing:.02em}
+.hdr-title{font-size:15px;font-weight:700;color:var(--t1);letter-spacing:-.02em}
+.hdr-sub{font-size:10px;color:var(--t3);margin-top:.5px}
+.hdr-tabs{flex:1;display:flex;justify-content:center}
+.tab-seg{background:rgba(0,0,0,.07);border-radius:9px;padding:2px;display:inline-flex}
+.tab-item{padding:5px 16px;border-radius:7px;font-size:12.5px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--t2);font-family:var(--font);transition:all var(--tr)}
+.tab-item.on{background:var(--card);color:var(--t1);font-weight:600;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.hdr-r{display:flex;gap:8px;align-items:center;flex-shrink:0}
+.hdr-badge{font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px}
+.hdr-badge.am{background:var(--orangebg);color:var(--oranget)}
+.hdr-badge.gn{background:var(--greenbg);color:var(--greent)}
+.hdr-ico-btn{width:32px;height:32px;border-radius:8px;background:rgba(0,0,0,.06);border:none;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;color:var(--t2);transition:background var(--tr)}
+.hdr-ico-btn:hover{background:rgba(0,0,0,.1)}
+
+/* BUTTONS */
+.btn{border:none;border-radius:980px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all var(--tr);display:inline-flex;align-items:center;gap:5px;line-height:1;white-space:nowrap}
+.btn-pri{background:var(--blue);color:#fff;box-shadow:0 2px 8px rgba(0,113,227,.25)}
+.btn-pri:hover{background:#0062C4}
+.btn-pri:active{transform:scale(.97)}
+.btn-sec{background:rgba(0,0,0,.07);color:var(--t1)}
+.btn-sec:hover{background:rgba(0,0,0,.11)}
+.btn-gn{background:var(--greenbg);color:var(--greent)}
+.btn-gn:hover{background:#D0F5DF}
+.btn-rd{background:var(--redbg);color:var(--redt)}
+.btn-rd:hover{background:#FFE0DE}
+.btn-pu{background:var(--purplebg);color:var(--purplet)}
+.btn-pu:hover{background:#EBD9FF}
+.btn-sm{padding:5px 13px;font-size:11.5px}
+.btn-xs{padding:4px 10px;font-size:11px}
+.btn-hdr{background:var(--blue);color:#fff;border:none;border-radius:980px;padding:7px 15px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all var(--tr);display:inline-flex;align-items:center;gap:5px;box-shadow:0 2px 8px rgba(0,113,227,.28)}
+.btn-hdr:hover{background:#0062C4}
+.btn-hdr-ghost{background:transparent;color:var(--t2);border:none;padding:7px 10px;font-size:13px;font-weight:500;cursor:pointer;font-family:var(--font);border-radius:8px;transition:background var(--tr)}
+.btn-hdr-ghost:hover{background:rgba(0,0,0,.06)}
+.btn-gen{background:var(--blue);color:#fff;border:none;border-radius:980px;padding:13px 32px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all var(--tr);display:inline-flex;align-items:center;gap:7px;box-shadow:0 4px 14px rgba(0,113,227,.28);letter-spacing:-.01em}
+.btn-gen:hover{background:#0062C4;transform:scale(.99)}
+
+/* SEGMENTED CONTROL */
+.seg{background:rgba(0,0,0,.07);border-radius:9px;padding:2px;display:inline-flex;gap:1px}
+.seg-item{padding:5px 12px;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;font-family:var(--font);border:none;background:transparent;color:var(--t2);transition:all var(--tr)}
+.seg-item.on{background:var(--card);color:var(--t1);font-weight:600;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+
+/* CHIPS */
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:.5px solid var(--b1);background:var(--card);color:var(--t2);font-family:var(--font);transition:all var(--tr);line-height:1.2}
+.chip:hover{background:var(--bluebg);border-color:rgba(0,113,227,.3);color:var(--blue)}
+.chip.on,.chip.mul.on{background:var(--bluebg);color:var(--blue);border-color:rgba(0,113,227,.35);font-weight:600}
+.chip.sm{padding:4px 11px;font-size:11px}
+
+/* YES/NO */
+.yn-row{display:flex;background:rgba(0,0,0,.06);border-radius:7px;padding:2px;gap:1px;margin-top:3px}
+.yn{flex:1;padding:5px 8px;border-radius:5px;font-size:11.5px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--t2);font-family:var(--font);transition:all var(--tr);text-align:center}
+.yn.on{background:var(--card);color:var(--t1);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+
+/* FORM */
+.field label{display:block;font-size:11px;font-weight:600;color:var(--t3);margin-bottom:5px;letter-spacing:.03em;text-transform:uppercase}
+.field-hint{font-size:11px;color:var(--t4);margin-top:4px;line-height:1.4}
+input[type=text],input[type=number],select{width:100%;padding:9px 12px;border:.5px solid rgba(0,0,0,.14);border-radius:var(--rs);font-family:var(--font);font-size:14px;color:var(--t1);background:var(--card);outline:none;transition:border-color var(--tr),box-shadow var(--tr);-webkit-appearance:none}
+input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3.5px rgba(0,113,227,.15)}
+input::placeholder{color:var(--t4)}
+.cblk{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--t2);cursor:pointer}
+.cblk input{width:16px;height:16px;cursor:pointer;accent-color:var(--blue)}
+
+/* LAYOUT */
+.main{padding:18px 18px 50px;max-width:700px;margin:0 auto}
+.fr2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fr3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+
+/* STATS */
+.stats{display:flex;gap:10px;margin-bottom:20px}
+.stat{flex:1;background:var(--card);border-radius:var(--r);padding:14px 15px;border:.5px solid var(--b1);box-shadow:var(--sh)}
+.stat-n{font-size:26px;font-weight:800;letter-spacing:-.03em;line-height:1}
+.stat-n.blue{color:var(--blue)}.stat-n.green{color:var(--green)}.stat-n.orange{color:var(--orange)}.stat-n.purple{color:var(--purple)}
+.stat-l{font-size:10px;font-weight:600;color:var(--t3);margin-top:4px;text-transform:uppercase;letter-spacing:.06em}
+
+/* POST CARDS */
+.pc{background:var(--card);border:.5px solid var(--b1);border-radius:var(--r);margin-bottom:10px;box-shadow:var(--sh);overflow:hidden;transition:box-shadow var(--tr)}
+.pc:hover{box-shadow:var(--shm)}
+.pc-hdr{padding:14px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
+.pc-badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.05em;flex-shrink:0}
+.pc-badge.wts{background:var(--orangebg);color:var(--oranget);border:.5px solid rgba(255,149,0,.25)}
+.pc-badge.wtt{background:var(--bluebg);color:var(--bluet);border:.5px solid rgba(0,113,227,.2)}
+.pc-names{font-size:14px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:-.01em}
+.pc-date{font-size:11px;color:var(--t3);flex-shrink:0}
+.pc-stat{font-size:11px;font-weight:600;flex-shrink:0}
+.pc-stat.act{color:var(--orange)}.pc-stat.done{color:var(--green)}
+.pc-chev{font-size:9px;color:var(--t4);flex-shrink:0;transition:transform .2s;margin-left:2px}
+.pc-chev.open{transform:rotate(180deg)}
+.pc-body{border-top:.5px solid rgba(0,0,0,.07);padding:16px}
+.post-box{background:var(--bg);border:.5px solid var(--b1);border-radius:var(--rs);padding:13px 15px;font-family:var(--mono);font-size:11px;color:var(--t2);line-height:1.7;white-space:pre-wrap;word-break:break-word;max-height:280px;overflow-y:auto;margin-bottom:12px}
+.pc-meta{display:flex;gap:10px;margin-bottom:11px;flex-wrap:wrap}
+.pmeta{font-size:11px;font-weight:500;color:var(--t4)}
+.pmeta.ok{color:var(--greent)}
+.krows-hdr{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--t3);margin-bottom:8px;padding-top:14px;border-top:.5px solid rgba(0,0,0,.07)}
+.krow{display:flex;align-items:center;gap:8px;padding:10px 13px;border-radius:var(--rs);background:var(--bg);border:.5px solid var(--b1);margin-bottom:7px}
+.krow.sold{background:var(--greenbg);border-color:rgba(52,199,89,.2)}
+.krow.moving{background:var(--bluebg);border-color:rgba(0,113,227,.3)}
+.krow-info{flex:1;min-width:0}
+.krow-name{font-size:13px;font-weight:600;letter-spacing:-.01em}
+.krow-name.s{text-decoration:line-through;color:var(--t3)}
+.krow-meta{font-size:11px;color:var(--t3);margin-top:1px}
+.krow-price{font-size:14px;font-weight:800;color:var(--oranget);flex-shrink:0;letter-spacing:-.02em}
+.krow-price.s{color:var(--greent)}
+.sold-chip{font-size:10px;font-weight:700;background:var(--greenbg);color:var(--greent);border:.5px solid rgba(52,199,89,.3);padding:2px 8px;border-radius:20px;flex-shrink:0}
+.move-picker{background:var(--card);border:.5px solid rgba(0,113,227,.25);border-radius:var(--rs);margin:4px 0 8px 0;overflow:hidden;box-shadow:var(--shm)}
+.move-pick-row{display:flex;align-items:center;gap:10px;padding:9px 13px;border-bottom:.5px solid var(--b2);cursor:pointer;transition:background var(--tr);font-size:12.5px}
+.move-pick-row:hover{background:var(--bluebg)}
+.move-pick-row:last-child{border-bottom:none}
+
+/* EMPTY */
+.empty{text-align:center;padding:70px 20px;color:var(--t3)}
+.empty-ico{font-size:44px;margin-bottom:16px;opacity:.2;font-family:serif}
+.empty-h{font-size:22px;font-weight:700;color:var(--t1);margin-bottom:7px;letter-spacing:-.02em}
+.empty-p{font-size:14px;line-height:1.7;margin-bottom:24px;max-width:300px;margin-left:auto;margin-right:auto}
+
+/* LOCKER */
+.lk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+.lk-card{background:var(--card);border:.5px solid var(--b1);border-radius:var(--r);padding:15px;box-shadow:var(--sh);transition:box-shadow var(--tr)}
+.lk-card:hover{box-shadow:var(--shm)}
+.lk-brand{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--t3);margin-bottom:2px}
+.lk-model{font-size:15px;font-weight:700;letter-spacing:-.02em;margin-bottom:4px;line-height:1.2}
+.lk-steel{font-size:11.5px;color:var(--t3);margin-bottom:8px}
+.lk-price{font-size:17px;font-weight:800;color:var(--oranget);letter-spacing:-.02em;margin-bottom:9px}
+.lk-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;display:inline-flex;margin-bottom:9px;border:.5px solid transparent}
+.lk-badge.av{background:var(--greenbg);color:var(--greent);border-color:rgba(52,199,89,.25)}
+.lk-badge.li{background:var(--orangebg);color:var(--oranget);border-color:rgba(255,149,0,.2)}
+.lk-badge.so{background:rgba(0,0,0,.05);color:var(--t3)}
+.lk-acts{display:flex;gap:5px;flex-wrap:wrap}
+.lk-picker{background:var(--bg);border:.5px solid var(--b1);border-radius:var(--rs);margin-top:6px;max-height:240px;overflow-y:auto}
+.lk-pick-row{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:.5px solid var(--b2);cursor:pointer;transition:background var(--tr)}
+.lk-pick-row:hover{background:var(--bluebg)}
+.lk-pick-row:last-child{border-bottom:none}
+.lk-pick-name{font-size:13px;font-weight:600;letter-spacing:-.01em;flex:1}
+.lk-pick-meta{font-size:11px;color:var(--t3)}
+
+/* COMPOSE */
+.cmp-main{padding:16px 18px 60px;max-width:620px;margin:0 auto}
+.sec-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--t3);margin:18px 0 10px}
+.sec-lbl:first-child{margin-top:0}
+
+/* KNIFE ITEM */
+.ki{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--card);border:.5px solid var(--b1);border-radius:var(--rs);margin-bottom:8px;box-shadow:var(--sh)}
+.ki-num{width:22px;height:22px;border-radius:50%;background:var(--blue);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ki-info{flex:1;min-width:0}
+.ki-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.01em}
+.ki-meta{font-size:11px;color:var(--t3);margin-top:1px}
+.ki-price{font-size:15px;font-weight:800;color:var(--oranget);flex-shrink:0;letter-spacing:-.02em}
+.ki-fromlock{font-size:9.5px;font-weight:700;background:var(--purplebg);color:var(--purplet);padding:1px 7px;border-radius:20px;margin-left:2px;flex-shrink:0}
+
+/* KNIFE FORM */
+.kf{background:var(--card);border:.5px solid rgba(0,113,227,.25);border-radius:var(--r);padding:18px;margin-bottom:10px;box-shadow:0 0 0 3px rgba(0,113,227,.06),var(--shm)}
+.kf-hdr{display:flex;align-items:center;gap:8px;margin-bottom:16px;padding-bottom:14px;border-bottom:.5px solid var(--b2)}
+.kf-title{font-size:14px;font-weight:700;letter-spacing:-.01em}
+.kf-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
+.kf-badge.dr{background:var(--bluebg);color:var(--blue)}
+.kf-badge.lk{background:var(--purplebg);color:var(--purplet)}
+.adv-btn{display:flex;align-items:center;gap:4px;font-size:12px;font-weight:500;color:var(--blue);background:none;border:none;cursor:pointer;font-family:var(--font);padding:0;margin-top:12px;transition:opacity var(--tr)}
+.adv-btn:hover{opacity:.7}
+.adv-box{background:var(--bg);border:.5px solid var(--b1);border-radius:var(--rs);padding:14px;margin-top:8px}
+
+/* DETAILS CARD */
+.det{background:var(--card);border:.5px solid var(--b1);border-radius:var(--r);padding:18px;margin-top:14px;box-shadow:var(--sh)}
+.det-hdr{font-size:14px;font-weight:700;letter-spacing:-.01em;margin-bottom:16px;padding-bottom:14px;border-bottom:.5px solid var(--b2)}
+.gen-row{margin-top:18px;padding-top:16px;border-top:.5px solid var(--b2);display:flex;gap:10px;align-items:center}
+.err{font-size:12px;font-weight:500;color:var(--redt);background:var(--redbg);border:.5px solid rgba(255,59,48,.2);border-radius:var(--rxs);padding:9px 13px;margin-top:10px}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+.modal{background:var(--card);border-radius:18px;width:100%;max-width:520px;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.22),0 0 0 .5px rgba(0,0,0,.1);overflow:hidden}
+.modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;border-bottom:.5px solid var(--b2);flex-shrink:0}
+.modal-title{font-size:16px;font-weight:700;color:var(--t1);letter-spacing:-.02em}
+.modal-close{background:rgba(0,0,0,.07);border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--t2);display:flex;align-items:center;justify-content:center;transition:background var(--tr)}
+.modal-close:hover{background:rgba(0,0,0,.13)}
+.modal-body{overflow-y:auto;padding:18px 20px 20px;flex:1}
+.modal-rule{display:flex;gap:10px;padding:10px 0;border-bottom:.5px solid var(--b2)}
+.modal-rule:last-of-type{border-bottom:none}
+.modal-rule-num{font-size:11px;font-weight:700;color:var(--blue);background:var(--bluebg);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.modal-rule-txt{font-size:13px;color:var(--t2);line-height:1.5}
+.modal-rule-txt strong{color:var(--t1)}
+.modal-links{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;padding-top:14px;border-top:.5px solid var(--b2)}
+.modal-link{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:980px;font-size:12.5px;font-weight:600;text-decoration:none;transition:all var(--tr)}
+.modal-link.sub{background:var(--orangebg);color:var(--oranget)}
+.modal-link.sub:hover{background:#FFE5B4}
+.modal-link.rules{background:var(--bluebg);color:var(--bluet)}
+.modal-link.rules:hover{background:#D0E8FF}
+.modal-link.post{background:var(--greenbg);color:var(--greent)}
+.modal-link.post:hover{background:#C8F5D8}
+/* PRICE DROP CALCULATOR */
+.pdc{background:var(--bg);border-radius:var(--rs);padding:14px;margin-top:12px;border:.5px solid var(--b1)}
+.pdc-hdr{font-size:12.5px;font-weight:700;color:var(--t2);margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.pdc-rule{font-size:11.5px;color:var(--t3);line-height:1.5;background:var(--card);border-radius:var(--rxs);padding:8px 11px;margin-bottom:12px;border:.5px solid var(--b2)}
+.pdc-rule strong{color:var(--t2)}
+.pdc-knife{padding:10px 0;border-top:.5px solid var(--b2)}
+.pdc-knife:first-child{border-top:none;padding-top:0}
+.pdc-name{font-size:12.5px;font-weight:600;color:var(--t1);margin-bottom:7px}
+.pdc-inputs{display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap}
+.pdc-prev{max-width:130px}
+.pdc-suggest{border:none;border-radius:980px;padding:5px 13px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all var(--tr);background:var(--bluebg);color:var(--bluet);display:inline-flex;align-items:center;gap:4px}
+.pdc-suggest:hover{background:#D0E8FF}
+.pdc-suggest:active{transform:scale(.97)}
+.pdc-suggest.alt{background:var(--purplebg);color:var(--purplet)}
+.pdc-suggest.alt:hover{background:#EBD9FF}
+.pdc-status{margin-top:6px;font-size:11.5px;font-weight:600;display:flex;align-items:center;gap:5px}
+.pdc-status.ok{color:var(--greent)}.pdc-status.fail{color:var(--redt)}.pdc-status.none{color:var(--t4)}
+.pdc-same{margin-top:5px;font-size:11px;color:var(--t3);line-height:1.4}
+/* REPOST TRACKING */
+.repost-track{background:var(--bg);border:.5px solid var(--b1);border-radius:var(--rs);padding:12px 14px;margin-bottom:14px}
+.repost-track-hdr{font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px}
+.repost-track-ready{font-size:12px;color:var(--oranget);background:var(--orangebg);border-radius:var(--rxs);padding:7px 10px;line-height:1.5;border:.5px solid rgba(255,149,0,.25)}
+.repost-track-wait{font-size:12px;color:var(--t3);line-height:1.5}
+.repost-day-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;white-space:nowrap;flex-shrink:0;margin-left:2px}
+.repost-day-badge.rdy{background:var(--greenbg);color:var(--greent)}
+.repost-day-badge.wait{background:var(--bg);color:var(--t4);border:.5px solid var(--b1)}
+/* TIMESTAMP REQUIREMENT */
+.ts-req{background:var(--orangebg);border:.5px solid rgba(255,149,0,.3);border-radius:var(--rs);padding:10px 13px;font-size:12px;color:var(--oranget);line-height:1.5;margin-bottom:10px}
+/* UPLOAD ZONE */
+.up-zone{border:1.5px dashed rgba(0,0,0,.18);border-radius:var(--r);padding:22px 16px;text-align:center;cursor:pointer;transition:all var(--tr);background:rgba(0,0,0,.02)}
+.up-zone:hover,.up-zone.drag{border-color:var(--blue);background:var(--bluebg)}
+.up-lbl{font-size:13px;font-weight:500;color:var(--t3);margin-bottom:3px}
+.up-sub{font-size:11px;color:var(--t4)}
+.up-files{margin-top:8px}
+.up-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg);border:.5px solid var(--b1);border-radius:var(--rxs);margin-top:5px}
+.up-name{font-size:11.5px;color:var(--t2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.up-url{font-size:11px;color:var(--blue);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.up-err{font-size:11px;color:var(--redt);flex:1}
+.up-spin{width:14px;height:14px;border:2px solid rgba(0,113,227,.2);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* SETTINGS */
+.sgroup{background:var(--card);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);margin-bottom:18px;border:.5px solid var(--b1)}
+.srow{display:flex;align-items:flex-start;gap:12px;padding:13px 16px;border-bottom:.5px solid rgba(0,0,0,.06)}
+.srow:last-child{border-bottom:none}
+.srow-lbl{font-size:14px;font-weight:500;color:var(--t1);flex-shrink:0;padding-top:1px;min-width:120px}
+.srow-sub{font-size:11.5px;color:var(--t3);margin-top:2px}
+.srow-ctrl{flex:1;display:flex;justify-content:flex-end;flex-wrap:wrap;gap:6px}
+.settings-main{padding:18px 18px 50px;max-width:520px;margin:0 auto}
+.settings-section-lbl{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--t3);margin:20px 0 8px;padding-left:4px}
+.settings-section-lbl:first-child{margin-top:0}
+.save-notice{font-size:12px;color:var(--greent);font-weight:500;padding:6px 0;text-align:center}
+
+/* AUTH */
+.auth-btn{display:flex;align-items:center;gap:6px;background:var(--card);border:.5px solid var(--b1);border-radius:20px;padding:5px 11px 5px 7px;font-size:12px;font-weight:500;color:var(--t2);cursor:pointer;transition:background var(--tr);white-space:nowrap;max-width:180px;overflow:hidden}
+.auth-btn:hover{background:var(--bg)}
+.auth-btn.signed{color:var(--bluet);border-color:var(--blue)}
+.auth-avatar{width:22px;height:22px;border-radius:50%;background:var(--blue);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.auth-label{overflow:hidden;text-overflow:ellipsis;max-width:120px}
+.auth-modal-body{padding:20px}
+.auth-field{margin-bottom:14px}
+.auth-field label{display:block;font-size:12px;font-weight:600;color:var(--t3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px}
+.auth-field input{width:100%;padding:9px 11px;border:.5px solid var(--b1);border-radius:var(--rxs);font-size:14px;background:var(--bg);color:var(--t1)}
+.auth-field input:focus{outline:none;border-color:var(--blue);background:#fff}
+.auth-pending{text-align:center;padding:10px 0 4px}
+.auth-pending-ico{font-size:36px;margin-bottom:10px}
+.auth-pending-h{font-size:16px;font-weight:600;color:var(--t1);margin-bottom:6px}
+.auth-pending-p{font-size:13px;color:var(--t3);line-height:1.5}
+.auth-signed{display:flex;align-items:center;gap:12px;padding:4px 0 16px}
+.auth-signed-avatar{width:44px;height:44px;border-radius:50%;background:var(--blue);color:#fff;font-size:20px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.auth-signed-info{flex:1;overflow:hidden}
+.auth-signed-email{font-size:14px;font-weight:600;color:var(--t1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.auth-signed-status{font-size:12px;color:var(--greent);margin-top:2px}
+.auth-sync-banner{background:var(--bluebg);border:.5px solid var(--blue);border-radius:var(--rxs);padding:12px 14px;margin-bottom:16px;font-size:13px;color:var(--bluet);line-height:1.5}
+.auth-sync-banner strong{display:block;margin-bottom:4px;font-size:14px}
+.auth-sync-btns{display:flex;gap:8px;margin-top:10px}
+.supa-indicator{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.supa-indicator.on{background:var(--green)}
+.supa-indicator.off{background:var(--t4)}
+</style>
+
+<datalist id="dl-brands"></datalist>
+<datalist id="dl-steels"></datalist>
+<datalist id="dl-models"></datalist>
+<input type="file" id="file-upload-input" multiple accept="image/*,video/*" style="display:none" onchange="handleFileInput(event)">
+<div class="app" id="root"></div>
+
+<script>
+// ─── LOCAL STORAGE POLYFILL ───────────────────────────────────
+window.storage={
+  get:(key)=>Promise.resolve(localStorage.getItem(key)?{value:localStorage.getItem(key)}:null),
+  set:(key,val)=>{try{localStorage.setItem(key,val);}catch(e){}return Promise.resolve();}
+};
+
+// ─── SUPABASE CONFIG ──────────────────────────────────────────
+const SUPABASE_URL = "https://yfosdanxivqbknolazws.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_Xlo2H3xYFNSDOLpTvEpiPQ_13XEITlJ";
+let _sb=null;       // supabase client instance
+let currentUser=null;
+
+// ─── DATABASE ────────────────────────────────────────────────
+const BRANDS=["Artisan","Amare","Bastinelli","Benchmade","Berg Blades","Bestech","Boker","Boker Plus","Bradford Guardian","Buck","CJRB","Case","Chris Reeve","Civivi","Cobratec","Cold Steel","CRKT","Demko","Drop","DPx Gear","Emerson","ESEE","Extrema Ratio","Fallkniven","Ferrum Forge","Fox Knives","Gerber","GiantMouse","Heretic","Hinderer","Hogue","Jack Wolf","Jake Hoback","James Brand","Kansept","Ka-Bar","Kershaw","Kizer","Koenig","LionSteel","Maserin","Medford","Microtech","MKM","Morakniv","Ontario","Opinel","Ocaso","Petrified Fish","Pro-Tech","QSP","Reate","Real Steel","RUIKE","SENCUT","SOG","Southern Grind","Spartan Blades","Spyderco","Steel Will","Strider","Tactile Knife Co.","Todd Begg","Toor","TOPS","TRM","Twosun","Victorinox","Vosteed","WE Knife","White River","Zero Tolerance"];
+const BM={"Spyderco":["Amalgam","Ambitious","Ark","Assist","Byrd Cara Cara 2","Caribbean","Chaparral","Delica 4","Dragonfly","Dragonfly 2","Endura 4","Efficient","Hummingbird","Ikuchi","Kapara","Ladybug 3","Lil' Native","Manix 2","Manix 2 LW","Military","Military 2","Native 5","Native 5 G10","Native Chief","Pacific Salt 2","Para 3","Para 3 LW","Para 3 Maxamet","Paramilitary 2","Paramilitary 3","Pattadese","Persistence","Polestar","Resilience","Roadie","Salt 2","Shaman","Smock","Tenacious","Tuff","Watu","Worker","Yojimbo 2"],"Benchmade":["140 Nimravus","154 Contego","162 Bushcrafter","275 Adamas","290 Altitude","300 Whisker Jack","485 Valet","535 Bugout","535-3 Bugout","535H Bugout","540 Rift","545 Mini Griptilian","551 Griptilian","556 Mini Griptilian","560 Freek","565 Mini Freek","581 Barrage","590 Boost","620 Pika","781 Anthem","810 Contigo","940 Osborne","940-1 Osborne","940-2 Osborne","945 Mini Osborne","Adamas","Anthem","Bailout","Bugout CF","Claymore","Crooked River","Full Immunity","Freek","Mediator","Mini Bugout","Mini Freek","Mini Griptilian","Nakamura","Proper","Redoubt","Steep Country","Triage","Vector"],"Zero Tolerance":["0230","0308","0350","0350TS","0393","0450","0450CF","0452","0452CF","0456","0460","0462","0470","0562","0562CF","0562S35VN","0620CF","0630","0640","0640CF","0801","0808","0900","0990"],"Microtech":["Amphibian","Assassin","Combat Troodon","Corvid","Currahee","Cypher","Dirac","Dirac Delta","Exocet","Halo VI","LUDT","Makora","Malibu","Matrix","Nighthawk","OTS","Scarab II","Scarab II D/E","Sigil","Socom Alpha","Socom Bravo","Socom Delta","Socom Elite","Stitch","Troodon","Troodon D/E","Ultratech","Ultratech D/E","UTX-70","UTX-85","Vector","Warhound"],"CRKT":["2Blade","Avant","CEO","Crossbones","Deviation","Drifter","Facet","Fawkes","Folts Minimalist","Fossil","Homefront","Ikoma","K.I.S.S.","Kinetic","LCK+","M16","M21","Minimalist","Obake","Pilar","Pilar III","Picaro","Provoke","Ripley","Ripple 2","Squid","Squid Large","Vor","Xan"],"Kershaw":["Amplitude","Atmos","Bareknuckle","Blur","Blur S30V","Camp 10","Clarity","Cryo","Cryo II","Dividend","Emerson CQC-6K","Emerson CQC-7K","Grinder","Knockout","Launch 1","Launch 4","Launch 5","Launch 7","Launch 9","Launch 10","Launch 11","Launch 12","Leek","Link","Method","Natrix","Natrix XL","Outright","Reverb","Shuffle II","Skyline","Thermite","Volt II","Wasabi"],"Hinderer":["Eklipse","Firetac 3.5\"","Firetac Wharncliffe","Half Track","Maximus","MP-1","Nieves","Niobes","Pronghorn","Slippy 3\"","XM-18 3\"","XM-18 3.5\"","XM-18 4\"","XM-24 4\"","XM-Slippy 3\""],"WE Knife":["Banter","Bullmastiff","Elementum","Evoke","Ferrum Forge Kitefin","Kitefin","Merata","Mini Banter","Nefaris","Nefaris Large","Peer","SnecX","Soothsayer","Speedster","Thug2","Void","Wander"],"Civivi":["Amirite","Anthropos","Appalachian","Asticus","Baby Banter","Baklash","Banter","Bo","Bota","Brigadier","Button Lock Elementum","Conspirator","Crit","Elementum","Elementum II","Estrella","Finback","Gordo","Knaxos","Lumi","Mini Elementum","Ortis","Praxis","Rohane","Shard","Starflare","Stylum","Talisman","Trailblazer","Voltaic"],"Boker":["Albatros","Anti-MC","Barlow","Botafogo","Camp Knife","Classics","Copper Damascus","Daily Schrader","Domino","Enigma","Exskelibur I","Folding Hunter","Kwaiken","Lancer","Manos","Metro","Nubui","Saga","Trapper","Urban Trapper","Vox Burnley Mini","Zenshin"],"Boker Plus":["Anti-MC","Anti-MC G10","Folding Hunter","Kwaiken","Kwaiken Air","Strike","Subcom","Urban Trapper","Urban Trapper Petite","Wasabi"],"Kizer":["Ansur","Begleiter","Begleiter Mini","Classic 421","Crossbar Lock Feist","Dukes","Dukes M390","Feist","Gemini","Guru","HIC","Intrepid","Jeeves","Kesmec","Logic","Mercator K55K","Mini Sheepdog","Mojave","Sheepdog","Sheepdog Large","Towser K","Vanguard"],"Pro-Tech":["Cambria","Calmigo","Desperado","Don","Don II","Godfather","Magic BR-1","Newport","Operator","PT","Raza","Rockeye","Rockeye LE","Strider PT","TR-2","TR-3","TR-3X1","Whiskers"],"Medford":["Academi","Anger","Armada","Armada Auto","Beast","Chisel","Combat Bowie","Eris","Gentleman Jim","Hostage Rescue","Infraction","Infraction T/E","Marauder","Marauder H","Midi Marauder","Nosferatu","Praetorian","Python","Surgeon","T-Bone","Vertebrae","Viper"],"Cold Steel":["AD-15","AD-15 Lite","American Lawman","Broken Skull","FLC","Flip City","Immortal","Large Espada","Medium Lawman","Mini Lawman","Night Force","Peacekeeper","Pro Lite","Recon 1","SR1","SR1 Lite","Spartan","Superspartan","T-Bone","Trail Master","Voyager Large","Voyager Medium"],"Chris Reeve":["21 Drop Point","Cavalier","Impinda","Inkosi Large","Inkosi Small","Mnandi","Pacific","Sebenza 21 Large","Sebenza 21 Small","Sebenza 25 Large","Sebenza 25 Small","Sebenza 31 Large","Sebenza 31 Small","Umnumzaan"],"Emerson":["A-100","Bulldog","CQC-15","CQC-7BW","CQC-8","Commander","Karambit","La Griffe","Mini Commander","Patriot","SARK","Super CQC-7","Tanto","Warthog"],"Reate":["Ahead","Bright","Bug","Earth","Exo","Exo-M","Gran","Jack","Luno","Mesas","Naja","P-20","Shuttle","Smile"],"QSP":["Ars","Citius","Feral","Gannet","Grebe","Otter","Parrot","Penguin","Phoenix","Predator","Puppet","Raven","Swordfish","Tek","Workaholic"],"CJRB":["Aura","Brovo","Caldera","Crag","Ekko","Feldspar","Ficula","Frack","Gobi","Knave","Lago","Maileah","Pathos","Pyrite","Pyrite XL","Riff","Ria","Ria Mini","Ruffian","Silax","Talla","Tangram","Tigris","Tockus"],"SENCUT":["Actilite","Amalgam","Blade Backup","Bo","Citius","Coronet","Cougar","Crowbar","Cudney","Dexilt","Ensis","Jubilee","Kinikee","Maverick","Moslener","Omniform","Sachse","Salatis","Serene","Snap","Torya","Watauga"],"Ferrum Forge":["Act","Barghest","Banter","Falcon","Falconer","Fortis","Gent","Lackey","Lackey XL","Mote","Prowl","Purge","Stinger","Valor"],"Southern Grind":["Bad Monkey","Bo-Hog","Jackal","Spider Monkey","Yellow Jacket"],"Tactile Knife Co.":["Bexar","Bexar Carbon","Dreadeye","Maverick","Rockwall","Rockwall Fragged CF","Snafu","Trident"],"TRM":["Atom","Atom M390","Neutron","Triton","Vector"],"RUIKE":["Benchmark","Bravo","Cadet","Criterion","Delta75","Difference","Fang","Hussar","Lambda","M875","P108","P121","P135","P138","P155W","P801","P841","P843","P851","P875"],"LionSteel":["BOG","Bulldog","Dumbo","Gitano","Myto","Opera","ROK","SR-1","SR-2","T.R.E.","TM1","TRE Carbon","Willy"],"GiantMouse":["ACE Biblio","ACE Clyde","ACE Iona","ACE Nimbus","ACE Obso","Iona CF","Mk1","Mk2","Vox Atelier"],"Vosteed":["Angler","Bastion","Cormorant","Dapper","Druid","Elk","Fledgling","Fledgling Large","Mamba","Nightshade","Raccoon","Thunderbird","Thunderbird Mini"],"Demko":["AD 20.5","AD 20.5 Mini","Armiger","Darksaber","MG AD20","MG AD20S"],"Kansept":["Anatomy","Colossus","Convict","Fenrir","Fenrir Mini","Foosa","Grib","Integra","Kirin","Korvid","Kryo","Lark","Mekaneck","Mini Korvid","Shard","T1031","T1035","T2030"],"Hogue":["Deka","Deka M390","EX-01","EX-02","EX-04","EX-A01","EX-A04","Exploit","Mark IV","Sig Tactical","X1 Microflip","X5 Microflip"],"Heretic":["Colossus","Dogma","Hydra","Manticore-E","Manticore-S","Pariah","Roc","Sola","Swipe","Wraith"],"Koenig":["Arius","Arius S35VN","Cadd","Cadd G10","Field","Mini Arius"],"Jack Wolf":["Benny's Clip","Big Boy","Birdy","Box Elder Bro","Dandy Boy","Gunslinger Jack","Mama's Boy","Midnight Jack","Padre","Party Boy","Slim Boy","Tom Boy"],"James Brand":["Chapter","County","Ellis","Folsom","Mchenry","Pike","Redstone","Shires","Warren"],"Bradford Guardian":["G3","G3.5","G5","G6","Guardian3","Guardian3.5","Guardian5","Guardian6","Guardian7"],"Toor":["Anaconda","Canine","Chasm","Falcon","Jager","Kat","Krait","Operator","Serpent","Viper"],"Ocaso":["Cortina","Gordo","Solstice","Tentacle","Traveller"],"Twosun":["TS07","TS11","TS13","TS17","TS19","TS22","TS25","TS32","TS35","TS41","TS50","TS60","TS68","TS75","TS91","TS100"],"Jake Hoback":["Kwaiback","Maraco","OKC","Tactical Series","Trabagon"],"Todd Begg":["Bodega","Brunello","Fielder","Mini Bodega","Steelcraft Bodega","Steelcraft Brunello"],"Petrified Fish":["Dapper","Fantoni","Farmer","Kiri","Magpie","Morpho","Pavel"],"DPx Gear":["H.E.S.T. 2.0","H.E.S.T. Folder","HEST II","Milspec","Resident"],"Steel Will":["Arcturus","Cutjack","Gekko","Intrigue","Modus","Piercer","Plague Doctor"],"Strider":["AR","DB","FS","GG","GGNSS","MCC","MSC","MT","PT","SB","SMF","SNG","SNGCC"],"Extrema Ratio":["BF2","Col Moschin","COFS","Fulcrum","Fulcrum II","HF","MF2","N.K.3","Phobos","Ranger","T-Bone"],"Morakniv":["Basic","Bushcraft","Companion","Eldris","Garberg","Light My Fire","ProS","Robust","Viking"],"Opinel":["N02","N04","N06","N07","N08","N09","N10","N12","Slim","Carbon"],"Cobratec":["CTK1","FCTK","Large Mamba","Medium Mamba","OC1","OTF Sidewinder","Small Mamba","SwiftX"],"Ka-Bar":["Becker BK2","BK7","BK9","BK14","Dozier","Folding Hunter","Full Size","IDEO","Large Folder","TDI","USMC"],"ESEE":["3P","4P","5P","6P","Avispa","CM6","Candiru","Churp","CR2.5","Folding ESEE-3","Izula","Izula II","Laser Strike","Neck Knife","PR4","Rat 3","Rat 5","Romper"]};
+const STEELS=["14C28N","1095","12C27","154CM","20CV","3V","52100","4V","5160","7Cr17MoV","8Cr13MoV","80CrV2","9Cr18MoV","440C","A2","Aogami Super","AR-RPM9","BD1","BD1N","Bohler M390","Bohler N695","CTS-204P","CTS-40CP","CTS-B75P","CTS-XHP","CPM 154","CPM-20CV","CPM-3V","CPM-4V","CPM CruWear","CPM M4","CPM Rex 121","CPM Rex 45","CPM S30V","CPM S35VN","CPM S90V","CPM S110V","Cowry X","D2","Elmax","H1","HAP40","HAP72","K390","L6","LC200N","M390","MagnaCut","Maxamet","N680","N690","Nitro-V","Niolox","O1","R2/SG2","RWL-34","S7","Sandvik 12C27","Sleipner","Super Blue","Vanax","VG-1","VG-10","W2","White #2","X50CrMoV15","ZDP-189","Other"];
+const PAYS=["PayPal G&S","PayPal F&F","Venmo","Zelle","Cash App","Apple Pay","Other"];
+const NO_SHIP=["California","New York","New Jersey","Illinois","Massachusetts","Hawaii","Alaska","Puerto Rico","International","Other"];
+const ISSUES=["Light scratches","Deep scratches","Snail trails","Blade stain","Handle marks","Tip damage","None"];
+const ACC=["Original box","Certificate/papers","Carrying pouch","Pocket clip","Adjustment tool","Spare scales","Lanyard","Polishing cloth","None"];
+const BLADE_COND=["New in box","Factory edge, uncarried","Factory edge, carried","Lightly used","Field sharpened","Reprofiled","Dull","Needs sharpening"];
+const TMPL=["Detailed MD","Compact","Minimal"];
+
+// ─── HELPERS ──────────────────────────────────────────────────
+function gid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+function fmtD(iso){return new Date(iso).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}
+function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
+function tm(a,v){return a.includes(v)?a.filter(x=>x!==v):[...a,v]}
+function tmx(a,v,ex){if(v===ex)return[ex];const r=a.filter(x=>x!==ex);return r.includes(v)?r.filter(x=>x!==v):[...r,v]}
+
+// ─── SETTINGS ─────────────────────────────────────────────────
+const DS=()=>({payment:["PayPal G&S"],noShip:[],username:"",saveNotice:false});
+let SETTINGS=DS();
+async function loadSettings(){try{const r=await window.storage.get("ks_settings");if(r&&r.value)SETTINGS={...DS(),...JSON.parse(r.value)};}catch(e){}}
+async function saveSettings(){
+  try{await window.storage.set("ks_settings",JSON.stringify(SETTINGS));}catch(e){}
+  if(currentUser&&_sb)await _sbSaveSettings();
+  S.saveNotice=true;render();setTimeout(()=>{S.saveNotice=false;render()},1600);
+}
+
+// ─── STATE ────────────────────────────────────────────────────
+const EK=()=>({brand:"",model:"",steel:"",price:"",obo:false,sharpened:"No",usedCut:"No",carried:"No",bladeCondition:"Factory edge, carried",owners:"1",centering:"Perfect",lockup:"Solid",lockupNotes:"",issues:["None"],accessories:["None"],notes:"",inventoryId:null,prevPrice:""});
+const EI=()=>({id:gid(),brand:"",model:"",steel:"",price:"",obo:false,sharpened:"No",usedCut:"No",carried:"No",bladeCondition:"Factory edge, carried",owners:"1",centering:"Perfect",lockup:"Solid",lockupNotes:"",issues:["None"],accessories:["None"],notes:"",status:"available",addedAt:new Date().toISOString(),soldAt:null});
+const ED=()=>({postType:"[WTS]",knives:[],payment:[...SETTINGS.payment],paymentOther:"",noShip:[...SETTINGS.noShip],noShipOther:"",repost:false,photos:[],notes:"",rulesConfirmed:false});
+let S={posts:[],inventory:[],loaded:false,view:"list",expanded:null,copied:null,draft:ED(),kfOpen:false,kfIdx:-1,kf:EK(),kfMode:"draft",adv:false,err:"",saveNotice:false,lockerFilter:"all",lockerPicker:false,movingKnife:null,uploadFiles:[],modal:null,authStatus:"guest",authEmail:"",showMigrate:false};
+
+// ─── STORAGE ──────────────────────────────────────────────────
+async function load(){
+  try{const r=await window.storage.get("ks_v4");if(r&&r.value)S.posts=JSON.parse(r.value);}catch(e){}
+  try{const r=await window.storage.get("ks_inv_v1");if(r&&r.value)S.inventory=JSON.parse(r.value);}catch(e){}
+  S.loaded=true;render();
+}
+async function save(){
+  if(!S.loaded)return;
+  try{await window.storage.set("ks_v4",JSON.stringify(S.posts));}catch(e){}
+  if(currentUser&&_sb){for(const p of S.posts){await _sbUpsertPost(p);}}
+}
+async function saveInv(){
+  if(!S.loaded)return;
+  try{await window.storage.set("ks_inv_v1",JSON.stringify(S.inventory));}catch(e){}
+  if(currentUser&&_sb){for(const k of S.inventory){await _sbUpsertInv(k);}}
+}
+function up(fn){fn(S);save();render();}
+function upInv(fn){fn(S);saveInv();render();}
+
+// ─── SUPABASE FUNCTIONS ───────────────────────────────────────
+async function initSupabase(){
+  if(!SUPABASE_URL||SUPABASE_URL.includes("YOUR_PROJECT")||!SUPABASE_ANON_KEY||SUPABASE_ANON_KEY.includes("YOUR_ANON"))return;
+  try{
+    _sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,storageKey:"ks_sb_session"}});
+    const {data:{session}}=await _sb.auth.getSession();
+    if(session){
+      currentUser=session.user;
+      S.authStatus="signed_in";
+      S.authEmail=currentUser.email;
+      await _sbLoad();
+    }
+    _sb.auth.onAuthStateChange(async(event,session)=>{
+      if(event==="SIGNED_IN"&&session){
+        const wasGuest=!currentUser;
+        currentUser=session.user;
+        S.authStatus="signed_in";
+        S.authEmail=currentUser.email;
+        S.modal=null;
+        if(wasGuest&&(S.posts.length>0||S.inventory.length>0)){
+          S.showMigrate=true;render();
+        } else {
+          await _sbLoad();render();
+        }
+      } else if(event==="SIGNED_OUT"){
+        currentUser=null;S.authStatus="guest";S.authEmail="";S.showMigrate=false;
+        await load();loadSettings().then(render);
+      }
+    });
+  }catch(e){console.warn("Supabase init failed:",e);}
+}
+async function _sbLoad(){
+  if(!_sb||!currentUser)return;
+  try{
+    const {data:posts}=await _sb.from("posts").select("data").eq("user_id",currentUser.id);
+    if(posts&&posts.length)S.posts=posts.map(r=>r.data).sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));
+    const {data:inv}=await _sb.from("inventory").select("data").eq("user_id",currentUser.id);
+    if(inv&&inv.length)S.inventory=inv.map(r=>r.data);
+    const {data:prof}=await _sb.from("profiles").select("settings").eq("id",currentUser.id).single();
+    if(prof?.settings&&Object.keys(prof.settings).length)SETTINGS={...DS(),...prof.settings};
+    S.loaded=true;
+    // mirror to localStorage
+    try{localStorage.setItem("ks_v4",JSON.stringify(S.posts));localStorage.setItem("ks_inv_v1",JSON.stringify(S.inventory));localStorage.setItem("ks_settings",JSON.stringify(SETTINGS));}catch(e){}
+  }catch(e){console.warn("Supabase load failed:",e);S.loaded=true;}
+}
+async function _sbUpsertPost(post){
+  if(!_sb||!currentUser)return;
+  try{await _sb.from("posts").upsert({id:post.id,user_id:currentUser.id,data:post,updated_at:new Date().toISOString()});}catch(e){}
+}
+async function _sbDeletePost(id){
+  if(!_sb||!currentUser)return;
+  try{await _sb.from("posts").delete().eq("id",id).eq("user_id",currentUser.id);}catch(e){}
+}
+async function _sbUpsertInv(item){
+  if(!_sb||!currentUser)return;
+  try{await _sb.from("inventory").upsert({id:item.id,user_id:currentUser.id,data:item,updated_at:new Date().toISOString()});}catch(e){}
+}
+async function _sbDeleteInv(id){
+  if(!_sb||!currentUser)return;
+  try{await _sb.from("inventory").delete().eq("id",id).eq("user_id",currentUser.id);}catch(e){}
+}
+async function _sbSaveSettings(){
+  if(!_sb||!currentUser)return;
+  try{await _sb.from("profiles").upsert({id:currentUser.id,settings:SETTINGS});}catch(e){}
+}
+async function sendMagicLink(email){
+  if(!_sb){S.err="Cloud sync is not configured for this deployment.";render();return;}
+  try{
+    const {error}=await _sb.auth.signInWithOtp({email,options:{emailRedirectTo:location.href}});
+    if(error)throw error;
+    S.authStatus="pending";S.authEmail=email;render();
+  }catch(e){S.err=e.message||"Failed to send link.";render();}
+}
+async function signOut(){
+  if(_sb)await _sb.auth.signOut();
+  currentUser=null;S.authStatus="guest";S.authEmail="";S.showMigrate=false;render();
+}
+async function migrateToSupabase(){
+  if(!_sb||!currentUser)return;
+  for(const p of S.posts)await _sbUpsertPost(p);
+  for(const k of S.inventory)await _sbUpsertInv(k);
+  await _sbSaveSettings();
+  S.showMigrate=false;render();
+}
+function skipMigrate(){S.showMigrate=false;_sbLoad().then(render);}
+
+// ─── POST BUILDER ─────────────────────────────────────────────
+function buildPost(post,v){
+  v=v!==undefined?v:(post.variant||0);
+  const ts=new Date().toISOString().slice(0,10).replace(/-/g,"/");
+  // Resolve "Other" labels
+  const payList=post.payment.map(p=>p==="Other"&&post.paymentOther?post.paymentOther:p);
+  const pay=payList.join(" | ");
+  const noShipList=post.noShip.map(s=>s==="Other"&&post.noShipOther?post.noShipOther:s);
+  const noship=noShipList.length?"\nWill NOT ship to: "+noShipList.join(", "):"";
+  const allPhotos=(post.photos?.length?post.photos:[]).filter(Boolean);
+  const photoStr=allPhotos.length?allPhotos.join(" | "):"[timestamp/photo link]";
+  const rp=post.repost?" *(Price Drop/Repost)*":"";
+  const type=post.postType||"[WTS]";
+  const un=SETTINGS.username?SETTINGS.username+" | ":"";
+  const title=post.knives.map(k=>k.brand+" "+k.model+(k.sold?" ~~[SOLD]~~":"")).join(" | ");
+  if(v===0){
+    const blocks=post.knives.map((k,i)=>{
+      const iss=k.issues.filter(x=>x!=="None").join(", ")||"None";
+      const ac=k.accessories.filter(x=>x!=="None").join(", ")||"None";
+      const hdr=k.sold?`~~**${i+1}. ${k.brand} ${k.model} [SOLD]** — $${k.price}${k.obo?" OBO":""}~~`:`**${i+1}. ${k.brand} ${k.model}** — $${k.price}${k.obo?" OBO":""}`;
+      return`${hdr}\n- **Steel:** ${k.steel||"N/A"} | **Condition:** ${k.bladeCondition}\n- **Carried:** ${k.carried} | **Used to cut:** ${k.usedCut} | **Sharpened:** ${k.sharpened}\n- **Owners:** ${k.owners} | **Centering:** ${k.centering} | **Lockup:** ${k.lockup}${k.lockupNotes?" ("+k.lockupNotes+")":""}\n- **Issues:** ${iss} | **Accessories:** ${ac}${k.notes?"\n- **Notes:** "+k.notes:""}`;
+    }).join("\n\n");
+    return`### ${type} ${title}${rp}\n\n**Photos/Timestamp:** ${photoStr}\n\n---\n\n${blocks}\n\n---\n\n**Payment:** ${pay}\n**Shipping included**${noship}${post.notes?"\n**Notes:** "+post.notes:""}\n\n*${un}${ts}*`;
+  }
+  if(v===1){
+    const lines=post.knives.map((k,i)=>`${i+1}. ${k.brand} ${k.model}${k.sold?" [SOLD]":""} — $${k.price}${k.obo?" OBO":""}\n   ${k.steel||"N/A"} · ${k.bladeCondition} · ${k.centering} · Issues: ${k.issues.filter(x=>x!=="None").join("/")||"None"}`).join("\n");
+    return`${type} ${title} | ${ts}${rp}\n\nPhotos/Timestamp: ${photoStr}\n\n${lines}\n\nPayment: ${pay} | Shipping included${noship}${post.notes?"\nNotes: "+post.notes:""}${un?"\n"+un:""}`;
+  }
+  return`${type} ${title} | ${ts}${rp}\n${photoStr}\n\n${post.knives.map(k=>`${k.brand} ${k.model}${k.sold?" [SOLD]":""} $${k.price}${k.obo?" OBO":""} — ${k.steel||"N/A"}, ${k.bladeCondition}`).join("\n")}\n\n${pay} | Shipping included${noship}${post.notes?"\n"+post.notes:""}${un?"\n"+un:""}`;
+}
+
+// ─── UPLOAD ───────────────────────────────────────────────────
+function triggerUpload(){const el=document.getElementById("file-upload-input");if(el){el.value="";el.click();}}
+function handleFileInput(e){[...e.target.files].forEach(f=>uploadFile(f));}
+function handleDrop(e){e.preventDefault();document.querySelector(".up-zone")?.classList.remove("drag");[...e.dataTransfer.files].forEach(f=>uploadFile(f));}
+function handleDragOver(e){e.preventDefault();document.querySelector(".up-zone")?.classList.add("drag");}
+function handleDragLeave(){document.querySelector(".up-zone")?.classList.remove("drag");}
+async function uploadFile(file){
+  const uid=gid();
+  S.uploadFiles.push({uid,name:file.name,url:null,uploading:true,error:null});
+  render();
+  try{
+    const fd=new FormData();
+    fd.append("reqtype","fileupload");
+    fd.append("fileToUpload",file);
+    const res=await fetch("https://catbox.moe/user/api.php",{method:"POST",body:fd});
+    if(!res.ok)throw new Error("Server error "+res.status);
+    const url=(await res.text()).trim();
+    if(!url.startsWith("http"))throw new Error("Unexpected response");
+    const item=S.uploadFiles.find(x=>x.uid===uid);
+    if(item){item.url=url;item.uploading=false;}
+    S.draft.photos=S.uploadFiles.filter(x=>x.url).map(x=>x.url);
+  }catch(err){
+    const item=S.uploadFiles.find(x=>x.uid===uid);
+    if(item){item.error="Upload failed — try catbox.moe directly, or paste URL below";item.uploading=false;}
+  }
+  render();
+}
+function removeUpload(uid){S.uploadFiles=S.uploadFiles.filter(x=>x.uid!==uid);S.draft.photos=S.uploadFiles.filter(x=>x.url).map(x=>x.url);render();}
+async function copyText(txt){try{await navigator.clipboard.writeText(txt);}catch(e){}}
+
+// ─── KNIFE ACTIONS ────────────────────────────────────────────
+function startCompose(){S.view="compose";S.draft=ED();S.kfOpen=false;S.kfIdx=-1;S.kf=EK();S.kfMode="draft";S.adv=false;S.err="";S.lockerPicker=false;S.uploadFiles=[];render();}
+function cancelCompose(){S.view="list";S.draft=ED();S.kfOpen=false;S.err="";S.uploadFiles=[];render();}
+function openKF(idx,mode){
+  S.kfMode=mode||"draft";S.kfOpen=true;S.adv=false;S.err="";
+  if(mode==="locker"){
+    S.kfIdx=idx;S.kf=idx>=0?JSON.parse(JSON.stringify(S.inventory[idx])):EI();
+  }else{
+    S.kfIdx=idx;S.kf=idx>=0?JSON.parse(JSON.stringify(S.draft.knives[idx])):EK();
+  }
+  render();setTimeout(()=>document.getElementById("kf-brand")?.focus(),60);
+}
+function closeKF(){S.kfOpen=false;S.kfIdx=-1;S.err="";render();}
+function syncKF(){
+  const g=id=>document.getElementById(id);const f=S.kf;
+  ["brand","model","steel","price","lockupNotes","notes"].forEach(k=>{const e=g("kf-"+k);if(e)f[k]=e.value});
+  ["bladeCondition","owners","centering","lockup"].forEach(k=>{const e=g("kf-"+k);if(e)f[k]=e.value});
+}
+function saveKF(){
+  syncKF();const f=S.kf;
+  if(!f.brand.trim()||!f.model.trim()||!f.price){S.err="Brand, model, and price required.";render();return;}
+  S.err="";
+  if(S.kfMode==="locker"){
+    if(!f.id)f.id=gid();
+    if(S.kfIdx>=0)S.inventory[S.kfIdx]=JSON.parse(JSON.stringify(f));
+    else S.inventory.push(JSON.parse(JSON.stringify(f)));
+    S.kfOpen=false;S.kfIdx=-1;saveInv();render();
+  }else{
+    if(S.kfIdx>=0)S.draft.knives[S.kfIdx]=JSON.parse(JSON.stringify(f));
+    else S.draft.knives.push(JSON.parse(JSON.stringify(f)));
+    S.kfOpen=false;S.kfIdx=-1;render();
+  }
+}
+function removeKnife(i){S.draft.knives.splice(i,1);render();}
+function setPrevPrice(i,v){syncDraft();S.draft.knives[i].prevPrice=v;render();}
+function applyDropPrice(i,p){syncDraft();S.draft.knives[i].price=String(p);render();}
+function addFromLocker(invIdx){
+  const k=S.inventory[invIdx];if(!k)return;
+  const copy={...JSON.parse(JSON.stringify(k)),inventoryId:k.id};
+  delete copy.status;delete copy.addedAt;delete copy.soldAt;
+  S.draft.knives.push(copy);
+  S.inventory[invIdx].status="listed";
+  S.lockerPicker=false;saveInv();render();
+}
+function removeFromInventory(idx){if(!confirm("Remove this knife from The Roll?"))return;const gone=S.inventory[idx];if(gone)_sbDeleteInv(gone.id);upInv(s=>{s.inventory.splice(idx,1)});}
+function markInvSold(idx){upInv(s=>{const k=s.inventory[idx];k.status=k.status==="sold"?"available":"sold";k.soldAt=k.status==="sold"?new Date().toISOString():null;});}
+
+// ─── MOVE BETWEEN POSTS ───────────────────────────────────────
+function startMove(postId,ki){S.movingKnife={postId,ki};render();}
+function cancelMove(){S.movingKnife=null;render();}
+function executeMove(toPostId){
+  const {postId:fromId,ki}=S.movingKnife;
+  up(s=>{
+    const from=s.posts.find(p=>p.id===fromId);
+    const to=s.posts.find(p=>p.id===toPostId);
+    if(!from||!to)return;
+    const [knife]=from.knives.splice(ki,1);
+    knife.sold=false;knife.soldAt=null;
+    to.knives.push(knife);
+    from.postText=buildPost(from);
+    to.postText=buildPost(to);
+  });
+  S.movingKnife=null;render();
+}
+
+// ─── POST ACTIONS ─────────────────────────────────────────────
+function syncDraft(){
+  const g=id=>document.getElementById(id);
+  ["notes","paymentOther","noShipOther"].forEach(k=>{const e=g("d-"+k);if(e)S.draft[k]=e.value});
+  // Also grab manual photo URL if set
+  const mu=g("d-manualUrl");if(mu&&mu.value.trim()){if(!S.draft.photos.includes(mu.value.trim()))S.draft.photos.push(mu.value.trim());}
+}
+
+function submitPost(){
+  syncDraft();const d=S.draft;
+  if(d.knives.length===0){S.err="Add at least one knife.";render();return;}
+  if(d.payment.includes("Other")&&!d.paymentOther.trim()){S.err="Please specify your 'Other' payment method.";render();return;}
+  if(d.noShip.includes("Other")&&!d.noShipOther.trim()){S.err="Please specify the 'Other' no-ship location.";render();return;}
+  if(!d.rulesConfirmed){S.err="Please confirm you have read the r/Knife_Swap rules.";render();return;}
+  S.err="";
+  const post={id:gid(),createdAt:new Date().toISOString(),variant:0,...JSON.parse(JSON.stringify(d))};
+  post.postText=buildPost(post,0);
+  // Update inventory status for any linked knives
+  post.knives.forEach(k=>{if(k.inventoryId){const inv=S.inventory.find(x=>x.id===k.inventoryId);if(inv)inv.status="listed";}});
+  S.posts=[post,...S.posts];
+  S.view="list";S.expanded=post.id;S.draft=ED();S.uploadFiles=[];save();saveInv();render();
+}
+function markSold(pid,ki){
+  up(s=>{
+    const p=s.posts.find(x=>x.id===pid);if(!p)return;
+    const k=p.knives[ki];k.sold=!k.sold;k.soldAt=k.sold?new Date().toISOString():null;
+    if(k.inventoryId){const inv=s.inventory.find(x=>x.id===k.inventoryId);if(inv)inv.status=k.sold?"sold":"listed";}
+    p.postText=buildPost(p);
+  });
+  saveInv();
+}
+function cycleTmpl(pid){up(s=>{const p=s.posts.find(x=>x.id===pid);if(!p)return;p.variant=((p.variant||0)+1)%3;p.postText=buildPost(p)});}
+function deletePost(pid){if(!confirm("Delete this listing?"))return;_sbDeletePost(pid);up(s=>{s.posts=s.posts.filter(p=>p.id!==pid)});}
+function daysAgo(dateStr){return Math.floor((Date.now()-new Date(dateStr))/(1000*60*60*24));}
+function startPriceDropRepost(pid){
+  const p=S.posts.find(x=>x.id===pid);if(!p)return;
+  const d=ED();
+  d.repost=true;d.postType=p.postType;
+  d.payment=[...(p.payment||SETTINGS.payment)];d.paymentOther=p.paymentOther||"";
+  d.noShip=[...(p.noShip||SETTINGS.noShip)];d.noShipOther=p.noShipOther||"";
+  d.notes=p.notes||"";
+  d.knives=p.knives.filter(k=>!k.sold).map(k=>({...JSON.parse(JSON.stringify(k)),prevPrice:k.price}));
+  S.draft=d;S.view="compose";S.kfOpen=false;S.kfIdx=-1;S.kf=EK();S.kfMode="draft";S.adv=false;S.err="";S.lockerPicker=false;S.uploadFiles=[];render();
+}
+function startSamePriceRepost(pid){
+  const p=S.posts.find(x=>x.id===pid);if(!p)return;
+  const d=ED();
+  d.repost=true;d.postType=p.postType;
+  d.payment=[...(p.payment||SETTINGS.payment)];d.paymentOther=p.paymentOther||"";
+  d.noShip=[...(p.noShip||SETTINGS.noShip)];d.noShipOther=p.noShipOther||"";
+  d.notes=p.notes||"";
+  d.knives=p.knives.filter(k=>!k.sold).map(k=>JSON.parse(JSON.stringify(k)));
+  S.draft=d;S.view="compose";S.kfOpen=false;S.kfIdx=-1;S.kf=EK();S.kfMode="draft";S.adv=false;S.err="";S.lockerPicker=false;S.uploadFiles=[];render();
+}
+function openRedditPost(pid){
+  const p=S.posts.find(x=>x.id===pid);if(!p)return;
+  const title=(p.postType||"[WTS]")+" "+p.knives.map(k=>k.brand+" "+k.model).join(" | ");
+  const url="https://www.reddit.com/r/Knife_Swap/submit?selftext=true&title="+encodeURIComponent(title)+"&text="+encodeURIComponent(p.postText||"");
+  window.open(url,"_blank","noopener");
+}
+async function copyPost(pid){
+  const p=S.posts.find(x=>x.id===pid);if(!p)return;
+  try{await navigator.clipboard.writeText(p.postText);}catch(e){}
+  S.copied=pid;render();setTimeout(()=>{S.copied=null;render();},2000);
+}
+function updateModelList(){
+  const el=document.getElementById("kf-brand");
+  const dl=document.getElementById("dl-models");
+  if(!el||!dl)return;
+  dl.innerHTML=(BM[el.value]||[]).map(m=>`<option value="${esc(m)}">`).join("");
+}
+
+// ─── RENDER HELPERS ───────────────────────────────────────────
+function render(){
+  const dlb=document.getElementById("dl-brands");
+  if(dlb&&!dlb.childElementCount)dlb.innerHTML=BRANDS.map(b=>`<option value="${esc(b)}">`).join("");
+  const dls=document.getElementById("dl-steels");
+  if(dls&&!dls.childElementCount)dls.innerHTML=STEELS.map(s=>`<option value="${esc(s)}">`).join("");
+  const view=
+    S.view==="settings"?renderSettings():
+    S.view==="compose"?renderCompose():
+    S.view==="roll"?renderRoll():
+    S.view==="sold"?renderSold():
+    renderList();
+  document.getElementById("root").innerHTML=view+(S.modal?renderModal(S.modal):"");
+  updateModelList();
+}
+function renderModal(type){
+  if(type==="auth")return renderAuthModal();
+  if(type!=="rules")return"";
+  const rules=[
+    {h:"Timestamp Required",b:"Every post must include a photo of <strong>all items for sale</strong> with a handwritten note showing your Reddit username and the full date (month, day, year). No timestamp = post removed."},
+    {h:"PayPal G&S Under 25 Swaps",b:"If you have <strong>fewer than 25 confirmed swaps</strong>, PayPal Goods & Services is the only accepted payment method. No exceptions."},
+    {h:"Venmo / Zelle / CashApp / Apple Pay",b:"<strong>25+ confirmed swaps required</strong> to offer or accept alternative payment methods. Buyer must request F&F — sellers may not require it."},
+    {h:"Prices in USD",b:"All prices must be listed in <strong>US dollars</strong>. Include shipping in the price or state clearly if it's separate."},
+    {h:"Dibs System",b:"The <strong>first comment at asking price</strong> gets dibs. \"I'll take it\" counts. Price negotiations happen in DMs — don't clog the comments."},
+    {h:"Mark Items Sold",b:"Once sold, <strong>edit your post</strong> to mark items [SOLD]. Don't leave buyers guessing."},
+    {h:"Account Requirements",b:"Your Reddit account must meet minimum <strong>age and karma thresholds</strong> set by the subreddit. Check the sidebar before posting."},
+    {h:"No Prohibited Items",b:"Switchblades, gravity knives, and other <strong>restricted items</strong> may not be sold depending on buyer/seller location. Know your local laws."}
+  ];
+  const ruleHtml=rules.map((r,i)=>`<div class="modal-rule"><div class="modal-rule-num">${i+1}</div><div class="modal-rule-txt"><strong>${r.h}</strong><br>${r.b}</div></div>`).join("");
+  return`<div class="modal-overlay" onclick="S.modal=null;render()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-hdr"><div class="modal-title">r/Knife_Swap Rules</div><button class="modal-close" onclick="S.modal=null;render()">&#x2715;</button></div>
+    <div class="modal-body">
+      <p style="font-size:12px;color:var(--t3);margin-bottom:14px;line-height:1.5">Key rules summary — always check the <a href="https://www.reddit.com/r/Knife_Swap/wiki/rules" target="_blank" style="color:var(--blue)">official rules page</a> for the latest.</p>
+      ${ruleHtml}
+      <div class="modal-links">
+        <a class="modal-link sub" href="https://www.reddit.com/r/Knife_Swap/" target="_blank">&#128279; Subreddit</a>
+        <a class="modal-link rules" href="https://www.reddit.com/r/Knife_Swap/wiki/rules" target="_blank">&#128214; Full Rules</a>
+        <a class="modal-link post" href="https://www.reddit.com/r/Knife_Swap/submit" target="_blank">&#43; New Reddit Post</a>
+      </div>
+    </div>
+  </div>
+</div>`;
+}
+function renderAuthModal(){
+  let body="";
+  if(S.showMigrate){
+    body=`<div class="auth-modal-body">
+      <div class="auth-sync-banner">
+        <strong>&#9729; You have local data</strong>
+        You have ${S.posts.length} listing${S.posts.length!==1?"s":""} and ${S.inventory.length} knife${S.inventory.length!==1?"s":""} in The Roll saved locally. Sync them to your account so they're available on any device.
+        <div class="auth-sync-btns">
+          <button class="btn btn-pri btn-sm" onclick="migrateToSupabase()">Sync to Account</button>
+          <button class="btn btn-sec btn-sm" onclick="skipMigrate()">Skip &mdash; Load from Cloud</button>
+        </div>
+      </div>
+    </div>`;
+  } else if(S.authStatus==="signed_in"){
+    body=`<div class="auth-modal-body">
+      <div class="auth-signed">
+        <div class="auth-signed-avatar">${S.authEmail[0].toUpperCase()}</div>
+        <div class="auth-signed-info">
+          <div class="auth-signed-email">${esc(S.authEmail)}</div>
+          <div class="auth-signed-status">&#10003; Syncing to cloud</div>
+        </div>
+      </div>
+      <p style="font-size:13px;color:var(--t3);line-height:1.5;margin-bottom:16px">Your listings, inventory, and settings sync automatically across all your devices.</p>
+      <button class="btn btn-sec" style="width:100%" onclick="signOut()">Sign Out</button>
+    </div>`;
+  } else if(S.authStatus==="pending"){
+    body=`<div class="auth-modal-body">
+      <div class="auth-pending">
+        <div class="auth-pending-ico">&#9993;</div>
+        <div class="auth-pending-h">Check your inbox!</div>
+        <div class="auth-pending-p">We sent a magic link to <strong>${esc(S.authEmail)}</strong>.<br>Click the link in that email to sign in &mdash; no password needed.</div>
+      </div>
+      <button class="btn btn-sec" style="width:100%;margin-top:20px" onclick="S.authStatus='guest';S.authEmail='';render()">Use a different email</button>
+    </div>`;
+  } else {
+    const sbLive=!!_sb;
+    body=`<div class="auth-modal-body">
+      <div style="text-align:center;padding:4px 0 14px">
+        <div style="font-size:28px;margin-bottom:8px">&#9729;</div>
+        <div style="font-size:15px;font-weight:600;color:var(--t1);margin-bottom:4px">Sign in to sync</div>
+        <p style="font-size:13px;color:var(--t3);line-height:1.5">Enter your email and we'll send a one-click magic link. No password required &mdash; your data syncs across all your devices.</p>
+      </div>
+      ${sbLive?`<div class="auth-field">
+        <label>Email address</label>
+        <input type="email" id="auth-email-input" placeholder="you@example.com" value="${esc(S.authEmail)}" onkeydown="if(event.key==='Enter')sendMagicLink(document.getElementById('auth-email-input').value)"/>
+      </div>
+      ${S.err?`<div class="err" style="margin-bottom:10px">${esc(S.err)}</div>`:""}
+      <button class="btn btn-pri" style="width:100%" onclick="S.err='';sendMagicLink(document.getElementById('auth-email-input').value)">Send Magic Link</button>
+      <p style="font-size:11px;color:var(--t4);text-align:center;margin-top:12px;line-height:1.5">No account needed to use the app &mdash; sign in only to enable cross-device sync.</p>`
+      :`<div style="text-align:center;padding:8px 0 4px;font-size:13px;color:var(--t3)">Cloud sync is not enabled in this version.<br>Your data saves locally on this device.</div>`}
+    </div>`;
+  }
+  return`<div class="modal-overlay" onclick="S.modal=null;S.err='';render()">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:380px">
+    <div class="modal-hdr"><div class="modal-title">${S.authStatus==="signed_in"?"Your Account":"Cloud Sync"}</div><button class="modal-close" onclick="S.modal=null;S.err='';render()">&#x2715;</button></div>
+    ${body}
+  </div>
+</div>`;
+}
+function mainHdr(right){
+  const ak=S.posts.reduce((n,p)=>n+p.knives.filter(k=>!k.sold).length,0);
+  const sk=S.posts.reduce((n,p)=>n+p.knives.filter(k=>k.sold).length,0);
+  const authBtn=S.authStatus==="signed_in"
+    ?`<button class="auth-btn signed" onclick="S.modal='auth';render()" title="${esc(S.authEmail)}"><div class="auth-avatar">${S.authEmail[0].toUpperCase()}</div><span class="auth-label">${esc(S.authEmail)}</span></button>`
+    :`<button class="auth-btn" onclick="S.modal='auth';render()">&#9729; Sign In</button>`;
+  return`<div class="hdr">
+    <div class="hdr-logo" onclick="S.view='list';render()"><div class="hdr-ico"><span class="hdr-ico-lbl">KS</span></div><div><div class="hdr-title">Knife_Swap</div><div class="hdr-sub">Post Generator &amp; Tracker</div></div></div>
+    <div class="hdr-tabs"><div class="tab-seg"><button class="tab-item${S.view==='list'?' on':''}" onclick="S.view='list';render()">Listings</button><button class="tab-item${S.view==='roll'?' on':''}" onclick="S.view='roll';render()">The Roll</button><button class="tab-item${S.view==='sold'?' on':''}" onclick="S.view='sold';render()">Sold</button></div></div>
+    <div class="hdr-r">${ak>0?`<span class="hdr-badge am">${ak} active</span>`:""}${sk>0?`<span class="hdr-badge gn">${sk} sold</span>`:""}<button class="hdr-ico-btn" title="r/Knife_Swap Rules" onclick="S.modal='rules';render()">&#128214;</button><button class="hdr-ico-btn" title="Settings" onclick="S.view='settings';render()">&#9881;</button>${authBtn}${right}</div>
+  </div>`;
+}
+function kfFormHtml(){
+  const s=S;const f=s.kf;const isLock=s.kfMode==="locker";
+  const advHtml=s.adv?`<div class="adv-box"><div class="fr2" style="margin-bottom:11px"><div class="field"><label>Owners</label><select id="kf-owners">${["1","2","3+"].map(v=>`<option${f.owners===v?" selected":""}>${v}</option>`).join("")}</select></div><div class="field"><label>Centering</label><select id="kf-centering">${["Perfect","Favoring show side","Favoring clip side","Off-center"].map(v=>`<option${f.centering===v?" selected":""}>${v}</option>`).join("")}</select></div></div><div class="fr2" style="margin-bottom:11px"><div class="field"><label>Lockup</label><select id="kf-lockup">${["Solid","Slight play","Other (describe)"].map(v=>`<option${f.lockup===v?" selected":""}>${v}</option>`).join("")}</select></div>${f.lockup==="Other (describe)"?`<div class="field"><label>Describe</label><input type="text" id="kf-lockupNotes" value="${esc(f.lockupNotes)}" placeholder="Describe..."/></div>`:`<div></div>`}</div><div class="fr2" style="margin-bottom:11px"><div class="field"><label>Issues</label><div class="chips" style="margin-top:4px">${ISSUES.map(v=>`<button class="chip sm mul${f.issues.includes(v)?" on":""}" onclick="syncKF();S.kf.issues=tmx(S.kf.issues,'${v}','None');render()">${v}</button>`).join("")}</div></div><div class="field"><label>Accessories</label><div class="chips" style="margin-top:4px">${ACC.map(v=>`<button class="chip sm mul${f.accessories.includes(v)?" on":""}" onclick="syncKF();S.kf.accessories=tmx(S.kf.accessories,'${v}','None');render()">${v}</button>`).join("")}</div></div></div><div class="field"><label>Notes</label><input type="text" id="kf-notes" value="${esc(f.notes)}" placeholder="Upgraded hardware, extra scales..."/></div></div>`:"";
+  const badge=isLock?`<span class="kf-badge lk">The Roll</span>`:`<span class="kf-badge dr">${s.kfIdx>=0?"Knife #"+(s.kfIdx+1):"New"}</span>`;
+  return`<div class="kf" style="margin-top:10px"><div class="kf-hdr"><div class="kf-title">${s.kfIdx>=0?(isLock?"Edit Knife":"Edit Knife"):(isLock?"Add to The Roll":"Add a Knife")}</div>${badge}</div>
+    <div class="fr2" style="margin-bottom:11px"><div class="field"><label>Brand</label><input type="text" id="kf-brand" list="dl-brands" value="${esc(f.brand)}" placeholder="e.g. Spyderco" oninput="updateModelList()"/></div><div class="field"><label>Model</label><input type="text" id="kf-model" list="dl-models" value="${esc(f.model)}" placeholder="e.g. Para 3 LW"/></div></div>
+    <div class="fr2" style="margin-bottom:11px"><div class="field"><label>Steel</label><input type="text" id="kf-steel" list="dl-steels" value="${esc(f.steel)}" placeholder="e.g. M390"/></div><div class="field"><label>Condition</label><select id="kf-bladeCondition">${BLADE_COND.map(v=>`<option${f.bladeCondition===v?" selected":""}>${v}</option>`).join("")}</select></div></div>
+    <div class="fr2" style="margin-bottom:13px"><div class="field"><label>Asking price ($)</label><input type="number" id="kf-price" value="${esc(f.price)}" placeholder="175" min="0"/></div><div class="field" style="display:flex;align-items:flex-end;padding-bottom:10px"><label class="cblk"><input type="checkbox" ${f.obo?"checked":""} onchange="S.kf.obo=this.checked"/> OBO</label></div></div>
+    <div class="fr3"><div class="field"><label>Carried?</label><div class="yn-row">${["Yes","No"].map(v=>`<button class="yn${f.carried===v?" on":""}" onclick="syncKF();S.kf.carried='${v}';render()">${v}</button>`).join("")}</div></div><div class="field"><label>Used to cut?</label><div class="yn-row">${["Yes","No"].map(v=>`<button class="yn${f.usedCut===v?" on":""}" onclick="syncKF();S.kf.usedCut='${v}';render()">${v}</button>`).join("")}</div></div><div class="field"><label>Sharpened?</label><div class="yn-row">${["Yes","No"].map(v=>`<button class="yn${f.sharpened===v?" on":""}" onclick="syncKF();S.kf.sharpened='${v}';render()">${v}</button>`).join("")}</div></div></div>
+    <button class="adv-btn" onclick="syncKF();S.adv=!S.adv;render()">${s.adv?"Hide":"Show"} advanced</button>${advHtml}
+    ${s.err?`<div class="err">${esc(s.err)}</div>`:""}
+    <div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-pri" onclick="saveKF()">Done — ${s.kfIdx>=0?"Update":"Add"} Knife</button><button class="btn btn-sec" onclick="closeKF()">Cancel</button></div>
+  </div>`;
+}
+
+// ─── RENDER: LIST ─────────────────────────────────────────────
+function renderList(){
+  const s=S;
+  const ak=s.posts.reduce((n,p)=>n+p.knives.filter(k=>!k.sold).length,0);
+  const sk=s.posts.reduce((n,p)=>n+p.knives.filter(k=>k.sold).length,0);
+  const val=s.posts.reduce((n,p)=>n+p.knives.filter(k=>!k.sold).reduce((a,k)=>a+parseFloat(k.price||0),0),0);
+  const hdr=mainHdr(`<button class="btn-hdr" onclick="startCompose()">+ New Listing</button>`);
+  if(!s.posts.length)return hdr+`<div class="main"><div class="empty"><div class="empty-ico">&#9868;</div><div class="empty-h">No listings yet</div><div class="empty-p">Create your first r/Knife_Swap post. Add a single knife or bundle several into one listing.</div><button class="btn btn-pri" onclick="startCompose()">+ Create First Listing</button></div></div>`;
+  const stats=`<div class="stats"><div class="stat"><div class="stat-n blue">${ak}</div><div class="stat-l">Active</div></div><div class="stat"><div class="stat-n green">${sk}</div><div class="stat-l">Sold</div></div>${val>0?`<div class="stat"><div class="stat-n orange">$${Math.round(val)}</div><div class="stat-l">Listed</div></div>`:""}<div class="stat"><div class="stat-n">${s.posts.length}</div><div class="stat-l">Posts</div></div><div class="stat"><div class="stat-n purple">${s.inventory.length}</div><div class="stat-l">The Roll</div></div></div>`;
+  const moving=s.movingKnife;
+  const cards=s.posts.map(p=>{
+    const open=s.expanded===p.id;
+    const pA=p.knives.filter(k=>!k.sold).length;
+    const pS=p.knives.filter(k=>k.sold).length;
+    const allSold=pA===0&&pS>0;
+    const names=p.knives.map(k=>k.brand+" "+k.model).join(", ");
+    const bt=p.postType.includes("WTT")?"wtt":"wts";
+    const stat=allSold?"All sold":`${pA} active${pS>0?", "+pS+" sold":""}`;
+    let body="";
+    if(open){
+      const hasPhotos=(p.photos?.length||0)>0;
+      const krows=p.knives.map((k,i)=>{
+        const isMoving=moving&&moving.postId===p.id&&moving.ki===i;
+        const picker=isMoving?`<div class="move-picker"><div style="padding:8px 13px;font-size:11px;font-weight:600;color:var(--t3);border-bottom:.5px solid var(--b2)">Move to which post?</div>${s.posts.filter(op=>op.id!==p.id).map(op=>`<div class="move-pick-row" onclick="executeMove('${op.id}')"><span style="flex:1">${esc(op.knives.map(x=>x.brand+" "+x.model).join(", ").slice(0,50))}</span><span class="pmeta">${fmtD(op.createdAt)}</span></div>`).join("")}<div class="move-pick-row" onclick="cancelMove()" style="color:var(--redt)">Cancel</div></div>`:"";
+        return`<div class="krow${k.sold?" sold":""}${isMoving?" moving":""}"><div class="krow-info"><div class="krow-name${k.sold?" s":""}">${esc(k.brand)} ${esc(k.model)}</div><div class="krow-meta">${esc(k.steel||"—")} · ${esc(k.bladeCondition)}${k.sold&&k.soldAt?" · Sold "+fmtD(k.soldAt):""}</div></div><span class="krow-price${k.sold?" s":""}">$${esc(k.price)}${k.obo?" OBO":""}</span>${k.sold?`<span class="sold-chip">Sold</span><button class="btn btn-sm btn-sec" onclick="markSold('${p.id}',${i})">Relist</button>`:`<button class="btn btn-sm btn-gn" onclick="markSold('${p.id}',${i})">Mark Sold</button>`}${!k.sold&&s.posts.length>1?`<button class="btn btn-sm btn-pu" onclick="startMove('${p.id}',${i})">Transfer</button>`:""}</div>${picker}`;
+      }).join("");
+      const da2=daysAgo(p.createdAt);
+      const repostSection=pA>0?`<div class="repost-track">
+        <div class="repost-track-hdr">Repost Status</div>
+        ${da2>=7
+          ?`<div class="repost-track-ready">📅 ${da2} days since posting — eligible to repost. <strong>Take a fresh timestamp photo</strong> with today's date before reposting.</div>`
+          :`<div class="repost-track-wait">📅 ${da2} day${da2===1?"":"s"} since posting — same-price repost available in <strong>${7-da2} more day${7-da2===1?"":"s"}</strong>. Price drop available anytime.</div>`
+        }
+        <div style="display:flex;gap:7px;margin-top:9px;flex-wrap:wrap">
+          <button class="btn btn-pu btn-sm" onclick="startPriceDropRepost('${p.id}')">📉 Price Drop Repost</button>
+          ${da2>=7?`<button class="btn btn-sec btn-sm" onclick="startSamePriceRepost('${p.id}')">🔄 Same Price Repost</button>`:`<button class="btn btn-sm" style="background:var(--bg);color:var(--t4);cursor:default;border:.5px solid var(--b1)" disabled title="Available in ${7-da2} more day${7-da2===1?'':'s'}">🔄 Same Price (${7-da2}d)</button>`}
+        </div>
+      </div>`:""
+      ;
+      body=`<div class="pc-body"><div class="pc-meta"><span class="pmeta">${p.postText?.length||0} chars</span><span class="pmeta"> · ${fmtD(p.createdAt)}</span><span class="pmeta${hasPhotos?" ok":""}">${hasPhotos?" · "+p.photos.length+" photo"+(p.photos.length>1?"s":"")+" linked":" · No photos"}</span><span class="pmeta"> · ${TMPL[p.variant||0]}</span></div><div class="post-box">${esc(p.postText||"")}</div><div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-bottom:14px"><button class="btn btn-pri btn-sm" onclick="copyPost('${p.id}')"${s.copied===p.id?` style="background:var(--green)"`:""}>${s.copied===p.id?"Copied!":"Copy Post"}</button><button class="btn btn-gn btn-sm" onclick="openRedditPost('${p.id}')">Post to Reddit &#8599;</button><button class="btn btn-sec btn-sm" onclick="cycleTmpl('${p.id}')">Switch: ${TMPL[((p.variant||0)+1)%3]}</button><button class="btn btn-rd btn-sm" onclick="deletePost('${p.id}')" style="margin-left:auto">Delete</button></div>${repostSection}<div class="krows-hdr">Knives in this post</div>${krows}</div>`;
+    }
+    const da=daysAgo(p.createdAt);
+    const ageBadge=!allSold?(da>=7?`<span class="repost-day-badge rdy">Repost ready</span>`:`<span class="repost-day-badge wait">${da}d old</span>`):"";
+    return`<div class="pc"><div class="pc-hdr" onclick="S.expanded=S.expanded==='${p.id}'?null:'${p.id}';S.movingKnife=null;render()"><span class="pc-badge ${bt}">${esc(p.postType)}</span><span class="pc-names">${esc(names)}</span><span class="pc-date">${fmtD(p.createdAt)}</span>${ageBadge}<span class="pc-stat${allSold?" done":" act"}">${stat}</span><span class="pc-chev${open?" open":""}">&#9660;</span></div>${body}</div>`;
+  }).join("");
+  return hdr+`<div class="main">${stats}${cards}</div>`;
+}
+
+// ─── RENDER: THE ROLL ─────────────────────────────────────────
+function renderRoll(){
+  const inv=S.inventory;
+  const hdr=mainHdr(`<button class="btn-hdr" onclick="openKF(-1,'locker')">+ Add Knife</button>`);
+  const av=inv.filter(k=>k.status==="available").length;
+  const li=inv.filter(k=>k.status==="listed").length;
+  const so=inv.filter(k=>k.status==="sold").length;
+  if(!inv.length)return hdr+`<div class="main"><div class="empty"><div class="empty-ico">🔪</div><div class="empty-h">The Roll is empty</div><div class="empty-p">Add knives to The Roll to track your collection and quickly pull them into listings.</div><button class="btn btn-pri" onclick="openKF(-1,'locker')">+ Add First Knife</button></div></div>${S.kfOpen?kfFormHtml():""}`;
+  const fil=S.lockerFilter;
+  const filtered=fil==="all"?inv:inv.filter(k=>k.status===fil);
+  const stats=`<div class="stats"><div class="stat"><div class="stat-n">${inv.length}</div><div class="stat-l">Total</div></div><div class="stat"><div class="stat-n green">${av}</div><div class="stat-l">Available</div></div><div class="stat"><div class="stat-n orange">${li}</div><div class="stat-l">In Listing</div></div><div class="stat"><div class="stat-n" style="color:var(--t3)">${so}</div><div class="stat-l">Sold</div></div></div>`;
+  const filterBar=`<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center"><div class="seg">${[["All","all"],["Available","available"],["In Listing","listed"],["Sold","sold"]].map(([l,v])=>`<button class="seg-item${fil===v?" on":""}" onclick="S.lockerFilter='${v}';render()">${l}</button>`).join("")}</div></div>`;
+  const cards=filtered.length?`<div class="lk-grid">${filtered.map((k,i)=>{
+    const realIdx=inv.indexOf(k);
+    const sb=k.status==="available"?`<span class="lk-badge av">Available</span>`:k.status==="listed"?`<span class="lk-badge li">In Listing</span>`:`<span class="lk-badge so">Sold</span>`;
+    return`<div class="lk-card"><div class="lk-brand">${esc(k.brand)}</div><div class="lk-model">${esc(k.model)}</div><div class="lk-steel">${esc(k.steel||"Steel N/A")} · ${esc(k.bladeCondition)}</div><div class="lk-price">$${esc(k.price)}${k.obo?" OBO":""}</div>${sb}<div class="lk-acts">${k.status!=="sold"?`<button class="btn btn-sm btn-gn" onclick="markInvSold(${realIdx})">Mark Sold</button>`:`<button class="btn btn-sm btn-sec" onclick="markInvSold(${realIdx})">Relist</button>`}<button class="btn btn-sm btn-sec" onclick="openKF(${realIdx},'locker')">Edit</button><button class="btn btn-sm btn-rd" onclick="removeFromInventory(${realIdx})">Remove</button></div></div>`;
+  }).join("")}</div>`:`<div style="text-align:center;padding:40px 0;color:var(--t4);font-size:13px">No ${fil} knives</div>`;
+  const form=S.kfOpen&&S.kfMode==="locker"?kfFormHtml():"";
+  return hdr+`<div class="main">${stats}${filterBar}${form}${cards}</div>`;
+}
+
+// ─── RENDER: SOLD ─────────────────────────────────────────────
+function renderSold(){
+  const hdr=mainHdr("");
+  // Gather sold knives from posts
+  const fromPosts=[];
+  S.posts.forEach(p=>{
+    p.knives.forEach(k=>{
+      if(k.sold){fromPosts.push({brand:k.brand,model:k.model,steel:k.steel,price:k.price,obo:k.obo,bladeCondition:k.bladeCondition,soldAt:k.soldAt,source:"post",postType:p.postType,postDate:p.createdAt});}
+    });
+  });
+  // Gather sold knives from The Roll
+  const fromRoll=[];
+  S.inventory.forEach(k=>{
+    if(k.status==="sold"){fromRoll.push({brand:k.brand,model:k.model,steel:k.steel,price:k.price,obo:k.obo,bladeCondition:k.bladeCondition,soldAt:k.soldAt,source:"roll"});}
+  });
+  const all=[...fromPosts,...fromRoll].sort((a,b)=>(b.soldAt||"").localeCompare(a.soldAt||""));
+  const totalVal=all.reduce((n,k)=>n+parseFloat(k.price||0),0);
+  const stats=`<div class="stats"><div class="stat"><div class="stat-n green">${all.length}</div><div class="stat-l">Sold</div></div>${totalVal>0?`<div class="stat"><div class="stat-n orange">$${Math.round(totalVal)}</div><div class="stat-l">Total</div></div>`:""}<div class="stat"><div class="stat-n">${fromPosts.length}</div><div class="stat-l">From Posts</div></div><div class="stat"><div class="stat-n purple">${fromRoll.length}</div><div class="stat-l">From The Roll</div></div></div>`;
+  if(!all.length)return hdr+`<div class="main">${stats}<div class="empty"><div class="empty-ico">✓</div><div class="empty-h">No sold knives yet</div><div class="empty-p">When you mark a knife as sold in a listing or in The Roll, it will show up here.</div></div></div>`;
+  const rows=all.map(k=>`<div class="krow"><div class="krow-info"><div class="krow-name">${esc(k.brand)} ${esc(k.model)}</div><div class="krow-meta">${esc(k.steel||"—")} · ${esc(k.bladeCondition)}${k.source==="post"?` · ${esc(k.postType||"[WTS]")} post`:" · The Roll"}</div></div><span class="krow-price">$${esc(k.price)}${k.obo?" OBO":""}</span><span class="sold-chip">Sold</span>${k.soldAt?`<span style="font-size:11px;color:var(--t3);white-space:nowrap">${fmtD(k.soldAt)}</span>`:""}</div>`).join("");
+  return hdr+`<div class="main">${stats}<div class="card" style="padding:0;overflow:hidden"><div class="krows-hdr" style="padding:12px 16px;border-bottom:.5px solid var(--b2)">Sold History</div>${rows}</div></div>`;
+}
+
+// ─── RENDER: COMPOSE ─────────────────────────────────────────
+function renderCompose(){
+  const s=S;const d=s.draft;
+  const availInLocker=s.inventory.filter(k=>k.status==="available");
+  const knivesList=d.knives.length?d.knives.map((k,i)=>`<div class="ki"><span class="ki-num">${i+1}</span><div class="ki-info"><div class="ki-name">${esc(k.brand)} ${esc(k.model)}${k.inventoryId?`<span class="ki-fromlock">The Roll</span>`:""}</div><div class="ki-meta">${esc(k.steel||"—")} · ${esc(k.bladeCondition)}</div></div><span class="ki-price">$${esc(k.price)}${k.obo?" OBO":""}</span><button class="btn btn-sec btn-xs" onclick="openKF(${i},'draft')">Edit</button><button class="btn btn-rd btn-xs" onclick="removeKnife(${i})">Remove</button></div>`).join(""):`<div style="text-align:center;padding:20px 16px;color:var(--t4);font-size:13px;border:1px dashed rgba(0,0,0,.13);border-radius:var(--rs)">No knives added yet</div>`;
+  const lockerPickerHtml=s.lockerPicker&&availInLocker.length?`<div class="lk-picker" style="margin-top:6px">${availInLocker.map((k,i)=>{const ri=s.inventory.indexOf(k);return`<div class="lk-pick-row" onclick="addFromLocker(${ri})"><div><div class="lk-pick-name">${esc(k.brand)} ${esc(k.model)}</div><div class="lk-pick-meta">${esc(k.steel||"—")} · ${esc(k.bladeCondition)} · $${esc(k.price)}</div></div><button class="btn btn-gn btn-xs" style="pointer-events:none">Add</button></div>`}).join("")}<div style="padding:8px 14px;font-size:11px;color:var(--t4);border-top:.5px solid var(--b2);cursor:pointer" onclick="S.lockerPicker=false;render()">Close picker</div></div>`:s.lockerPicker&&!availInLocker.length?`<div style="padding:12px 14px;background:var(--bg);border-radius:var(--rs);font-size:12.5px;color:var(--t3);margin-top:6px">No available knives in The Roll. <span style="color:var(--blue);cursor:pointer" onclick="S.view='roll';render()">Add some first.</span></div>`:"";
+  const addBtns=!s.kfOpen?`<div style="display:flex;gap:8px;margin-top:8px"><button class="btn btn-sec" style="flex:1;justify-content:center;border-radius:var(--rs)" onclick="openKF(-1,'draft')">+ New Knife</button>${s.inventory.length?`<button class="btn btn-pu" style="border-radius:var(--rs)" onclick="S.lockerPicker=!S.lockerPicker;render()">From The Roll${s.lockerPicker?" &#9650;":" &#9660;"}</button>`:""}</div>${lockerPickerHtml}`:"";
+  const kfHtml=s.kfOpen&&s.kfMode==="draft"?kfFormHtml():"";
+  // Upload section
+  const upFiles=s.uploadFiles;
+  const upRows=upFiles.map(f=>`<div class="up-row"><span class="up-name">${esc(f.name)}</span>${f.uploading?`<span class="up-spin"></span><span style="font-size:11px;color:var(--t3)">Uploading...</span>`:f.error?`<span class="up-err">${esc(f.error)}</span>`:f.url?`<span class="up-url">${esc(f.url)}</span><button class="btn btn-sec btn-xs" onclick="copyText('${esc(f.url)}')">Copy</button>`:""}${!f.uploading?`<button class="btn btn-rd btn-xs" onclick="removeUpload('${f.uid}')">&#x2715;</button>`:""}</div>`).join("");
+  const detHtml=d.knives.length>0&&!s.kfOpen?`<div class="det"><div class="det-hdr">Photos &amp; Post Details</div>
+    <div style="margin-bottom:16px"><div class="field"><label>Post Type</label><div class="seg" style="margin-top:5px">${["[WTS]","[WTT]","[WTS/WTT]"].map(t=>`<button class="seg-item${d.postType===t?" on":""}" onclick="S.draft.postType='${t}';render()">${t}</button>`).join("")}</div></div></div>
+    <div class="field" style="margin-bottom:14px">
+      <label>Photos &amp; Timestamp</label>
+      <div class="ts-req">📸 Include one photo showing <strong>all knives</strong> in this post with a handwritten note: your Reddit username + full date (e.g. <em>u/yourname — March 14 2026</em>)</div>
+      <div class="up-zone" onclick="triggerUpload()" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave()">
+        <div class="up-lbl">Drop photos here or click to upload</div>
+        <div class="up-sub">Uploads to Catbox.moe &mdash; permanent free hosting, no account needed</div>
+      </div>
+      ${upRows?`<div class="up-files">${upRows}</div>`:""}
+      <div style="margin-top:8px;display:flex;align-items:center;gap:6px"><div style="flex:1;height:.5px;background:rgba(0,0,0,.1)"></div><span style="font-size:11px;color:var(--t4);white-space:nowrap">or paste URL manually</span><div style="flex:1;height:.5px;background:rgba(0,0,0,.1)"></div></div>
+      <input type="text" id="d-manualUrl" placeholder="https://catbox.moe/... or https://imgur.com/..." style="margin-top:8px" onchange="syncDraft()"/>
+      ${d.photos.length?`<div style="font-size:11px;color:var(--greent);margin-top:5px;font-weight:500">${d.photos.length} photo${d.photos.length>1?"s":""} linked</div>`:""}
+    </div>
+    <div style="margin-bottom:12px"><div class="field"><label>Payment <button onclick="S.modal='rules';render()" style="background:none;border:none;cursor:pointer;font-size:11px;font-weight:600;color:var(--blue);padding:0 0 0 6px;font-family:var(--font)">Rules &#8599;</button></label><div style="font-size:11px;color:var(--oranget);background:var(--orangebg);border-radius:var(--rxs);padding:6px 10px;margin:5px 0 8px;line-height:1.4">Venmo, Zelle, Cash App, Apple Pay &amp; Other require <strong>25+ confirmed swaps</strong>. PayPal G&amp;S is required until then.</div><div class="chips" style="margin-top:5px">${PAYS.map(p=>`<button class="chip sm mul${d.payment.includes(p)?" on":""}" onclick="syncDraft();S.draft.payment=tm(S.draft.payment,'${p}').length?tm(S.draft.payment,'${p}'):S.draft.payment;render()">${p}</button>`).join("")}</div>${d.payment.includes("Other")?`<input type="text" id="d-paymentOther" value="${esc(d.paymentOther)}" placeholder="Please specify payment method…" style="margin-top:8px" oninput="syncDraft()"/>`:""}
+    </div></div>
+    <div style="margin-bottom:12px"><div class="field"><label>Will NOT ship to</label><div class="chips" style="margin-top:5px">${NO_SHIP.map(p=>`<button class="chip sm mul${d.noShip.includes(p)?" on":""}" onclick="syncDraft();S.draft.noShip=tm(S.draft.noShip,'${p}');render()">${p}</button>`).join("")}</div>${d.noShip.includes("Other")?`<input type="text" id="d-noShipOther" value="${esc(d.noShipOther)}" placeholder="Please specify location…" style="margin-top:8px" oninput="syncDraft()"/>`:""}
+    </div></div>
+    <div style="margin-bottom:12px">
+      <label class="cblk"><input type="checkbox" ${d.repost?"checked":""} onchange="S.draft.repost=this.checked;render()"/> Price drop / repost</label>
+      ${d.repost?`<div class="pdc">
+        <div class="pdc-hdr">📉 Price Drop Calculator</div>
+        <div class="pdc-rule">Each knife must drop by <strong>10%</strong> or <strong>$25</strong> — your choice, whichever you prefer. Alternatively, you can repost at the <strong>same price after 7 days</strong> with no reduction required.</div>
+        ${d.knives.map((k,i)=>{
+          const prev=parseFloat(k.prevPrice||0);
+          const curr=parseFloat(k.price||0);
+          const drop10=prev>0?Math.floor(prev*0.9*100)/100:null;
+          const drop25=prev>0?Math.max(0,prev-25):null;
+          const passes10=prev>0&&curr<=prev*0.9+0.001;
+          const passes25=prev>0&&curr<=(prev-25)+0.001;
+          const passes=passes10||passes25;
+          const hasData=prev>0&&curr>0;
+          const statusHtml=!hasData?`<div class="pdc-status none">Enter previous price to check</div>`:passes?`<div class="pdc-status ok">✓ Meets requirement${passes10?" (−10%)":""}${passes25&&!passes10?" (−$25)":""}</div>`:`<div class="pdc-status fail">✗ Must drop to $${Math.min(drop10,drop25).toFixed(0)} or less — or repost same price after 7 days</div>`;
+          return`<div class="pdc-knife">
+            <div class="pdc-name">${esc(k.brand)} ${esc(k.model)} — currently $${esc(k.price)}</div>
+            <div class="pdc-inputs">
+              <div class="field pdc-prev"><label>Previous price ($)</label><input type="number" placeholder="e.g. 175" min="0" value="${esc(k.prevPrice||"")}" oninput="setPrevPrice(${i},this.value)"/></div>
+              ${prev>0?`<button class="pdc-suggest" onclick="applyDropPrice(${i},'${drop10}')">Use $${drop10?.toFixed(0)} (−10%)</button><button class="pdc-suggest alt" onclick="applyDropPrice(${i},'${drop25}')">Use $${drop25?.toFixed(0)} (−$25)</button>`:""}
+            </div>
+            ${statusHtml}
+            ${hasData&&!passes?`<div class="pdc-same">Or: repost at $${curr.toFixed(0)} after waiting 7 days from your original listing date.</div>`:""}
+          </div>`;
+        }).join("")}
+      </div>`:""}
+    </div>
+    <div class="field" style="margin-bottom:12px"><label>Additional notes</label><input type="text" id="d-notes" value="${esc(d.notes)}" placeholder="Bundle discount, open to trades..."/></div>
+    <label class="cblk"><input type="checkbox" ${d.rulesConfirmed?"checked":""} onchange="S.draft.rulesConfirmed=this.checked;render()"/> I have read all r/Knife_Swap rules</label>
+    ${s.err&&d.knives.length>0?`<div class="err">${esc(s.err)}</div>`:""}
+    <div class="gen-row"><button class="btn-gen" onclick="syncDraft();submitPost()">Generate Post</button><button class="btn btn-sec" onclick="cancelCompose()">Cancel</button></div>
+  </div>`:"";
+  const hdr=`<div class="hdr"><div class="hdr-logo" onclick="S.view='list';render()"><div class="hdr-ico"><span class="hdr-ico-lbl">KS</span></div><div><div class="hdr-title">New Listing</div><div class="hdr-sub">${d.knives.length===0?"Add knives below":d.knives.length===1?"1 knife":d.knives.length+" knives"}</div></div></div><div class="hdr-r"><button class="btn-hdr-ghost" onclick="cancelCompose()">Cancel</button></div></div>`;
+  return`<div class="app">${hdr}<div class="cmp-main"><div class="sec-lbl">Knives</div>${knivesList}${addBtns}${kfHtml}${detHtml}</div></div>`;
+}
+
+// ─── RENDER: SETTINGS ────────────────────────────────────────
+function renderSettings(){
+  const sv=SETTINGS;
+  const hdr=`<div class="hdr"><div class="hdr-logo" onclick="S.view='list';render()"><div class="hdr-ico"><span class="hdr-ico-lbl">KS</span></div><div><div class="hdr-title">Settings</div><div class="hdr-sub">Defaults &amp; preferences</div></div></div><div class="hdr-r"><button class="btn-hdr-ghost" onclick="S.view='list';render()">Done</button></div></div>`;
+  return`<div class="app">${hdr}<div class="settings-main">
+  ${S.saveNotice?`<div class="save-notice">Settings saved</div>`:""}
+  <div class="settings-section-lbl">Your Profile</div>
+  <div class="sgroup">
+    <div class="srow"><div><div class="srow-lbl">Reddit Username</div><div class="srow-sub">Added to generated posts (optional)</div></div><div class="srow-ctrl"><input type="text" style="max-width:180px;font-size:13px;padding:7px 10px" value="${esc(sv.username)}" placeholder="u/yourname" onchange="SETTINGS.username=this.value;saveSettings()"/></div></div>
+  </div>
+  <div class="settings-section-lbl">Post Defaults</div>
+  <div class="sgroup">
+    <div class="srow"><div><div class="srow-lbl">Payment</div><div class="srow-sub">Default payment methods</div></div><div class="srow-ctrl"><div class="chips">${PAYS.map(p=>`<button class="chip sm mul${sv.payment.includes(p)?" on":""}" onclick="SETTINGS.payment=tm(SETTINGS.payment,'${p}').length?tm(SETTINGS.payment,'${p}'):SETTINGS.payment;saveSettings()">${p}</button>`).join("")}</div></div></div>
+    <div class="srow"><div><div class="srow-lbl">No-Ship Defaults</div><div class="srow-sub">Pre-select restricted states</div></div><div class="srow-ctrl"><div class="chips">${NO_SHIP.map(p=>`<button class="chip sm mul${(sv.noShip||[]).includes(p)?" on":""}" onclick="SETTINGS.noShip=tm(SETTINGS.noShip||[],'${p}');saveSettings()">${p}</button>`).join("")}</div></div></div>
+  </div>
+  <div class="settings-section-lbl">Cloud Sync</div>
+  <div class="sgroup">
+    <div class="srow">
+      <div><div class="srow-lbl">Sync Status</div><div class="srow-sub">${S.authStatus==="signed_in"?`Signed in as ${esc(S.authEmail)}`:"Not signed in &mdash; data saves locally on this device"}</div></div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+        <div class="supa-indicator ${S.authStatus==="signed_in"?"on":"off"}"></div>
+        <span style="font-size:12px;color:var(--t3);white-space:nowrap">${S.authStatus==="signed_in"?"Syncing":"Local only"}</span>
+      </div>
+    </div>
+    <div class="srow">
+      ${S.authStatus==="signed_in"
+        ?`<button class="btn btn-sec btn-sm" onclick="signOut()">Sign Out</button>`
+        :`<button class="btn btn-pri btn-sm" onclick="S.modal='auth';render()">&#9729; Sign In</button>`
+      }
+    </div>
+  </div>
+  <div class="settings-section-lbl">About</div>
+  <div class="sgroup">
+    <div class="srow"><div class="srow-lbl">Version</div><div style="font-size:13px;color:var(--t3);margin-left:auto">3.1 &mdash; ${BRANDS.length} brands, ${STEELS.length} steels</div></div>
+    <div class="srow"><div><div class="srow-lbl">Photo Hosting</div><div class="srow-sub" style="max-width:340px;line-height:1.5">Photos upload directly to <strong>Catbox.moe</strong> &mdash; free, permanent, no account needed. Files are hosted at files.catbox.moe and links go directly into your posts.</div></div></div>
+    <div class="srow"><div><div class="srow-lbl">What is Verification?</div><div class="srow-sub" style="max-width:340px;line-height:1.5">r/Knife_Swap requires a verification photo: picture of your knives with a handwritten note showing your Reddit username and today's date. Post it separately on r/Knife_Swap, then paste that post URL in your listings.</div></div></div>
+  </div>
+</div></div>`;
+}
+
+// ─── INIT ────────────────────────────────────────────────────
+window.S=S;window.SETTINGS=SETTINGS;window.tm=tm;window.tmx=tmx;
+window.startCompose=startCompose;window.cancelCompose=cancelCompose;
+window.openKF=openKF;window.closeKF=closeKF;window.syncKF=syncKF;window.saveKF=saveKF;
+window.removeKnife=removeKnife;window.setPrevPrice=setPrevPrice;window.applyDropPrice=applyDropPrice;window.addFromLocker=addFromLocker;window.removeFromInventory=removeFromInventory;window.markInvSold=markInvSold;
+window.syncDraft=syncDraft;window.submitPost=submitPost;
+window.markSold=markSold;window.cycleTmpl=cycleTmpl;window.deletePost=deletePost;window.copyPost=copyPost;window.copyText=copyText;window.openRedditPost=openRedditPost;window.startPriceDropRepost=startPriceDropRepost;window.startSamePriceRepost=startSamePriceRepost;
+window.startMove=startMove;window.cancelMove=cancelMove;window.executeMove=executeMove;
+window.updateModelList=updateModelList;window.saveSettings=saveSettings;
+window.triggerUpload=triggerUpload;window.handleFileInput=handleFileInput;window.handleDrop=handleDrop;window.handleDragOver=handleDragOver;window.handleDragLeave=handleDragLeave;window.removeUpload=removeUpload;
+window.sendMagicLink=sendMagicLink;window.signOut=signOut;window.migrateToSupabase=migrateToSupabase;window.skipMigrate=skipMigrate;
+render();
+(async()=>{
+  await loadSettings();
+  await initSupabase();
+  if(!currentUser){await load();}
+  render();
+})();
+</script>
+</body>
+</html>
