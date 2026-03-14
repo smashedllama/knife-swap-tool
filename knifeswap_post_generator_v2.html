@@ -43,8 +43,9 @@ body,html{background:var(--bg)}
 .hdr-badge{font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px}
 .hdr-badge.am{background:var(--orangebg);color:var(--oranget)}
 .hdr-badge.gn{background:var(--greenbg);color:var(--greent)}
-.hdr-ico-btn{width:32px;height:32px;border-radius:8px;background:rgba(0,0,0,.06);border:none;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;color:var(--t2);transition:background var(--tr)}
+.hdr-ico-btn{height:32px;border-radius:8px;background:rgba(0,0,0,.06);border:none;cursor:pointer;font-size:12px;font-weight:500;font-family:var(--font);display:inline-flex;align-items:center;gap:5px;padding:0 10px;color:var(--t2);transition:background var(--tr);white-space:nowrap}
 .hdr-ico-btn:hover{background:rgba(0,0,0,.1)}
+.hdr-ico-btn .ico{font-size:14px;line-height:1}
 
 /* BUTTONS */
 .btn{border:none;border-radius:980px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all var(--tr);display:inline-flex;align-items:center;gap:5px;line-height:1;white-space:nowrap}
@@ -802,7 +803,7 @@ function mainHdr(){
   return`<div class="hdr">
     <div class="hdr-logo" onclick="S.view='list';render()"><div class="hdr-ico"><span class="hdr-ico-lbl">KS</span></div><div><div class="hdr-title">Knife_Swap</div><div class="hdr-sub">Post Generator &amp; Tracker</div></div></div>
     <div class="hdr-tabs"><div class="tab-seg"><button class="tab-item${S.view==='list'?' on':''}" onclick="S.view='list';render()">Listings</button><button class="tab-item${S.view==='roll'?' on':''}" onclick="S.view='roll';render()">The Roll</button><button class="tab-item${S.view==='sold'?' on':''}" onclick="S.view='sold';render()">Sold</button></div></div>
-    <div class="hdr-r"><button class="hdr-ico-btn" title="r/Knife_Swap Rules" onclick="S.modal='rules';render()">&#128214;</button><button class="hdr-ico-btn" title="Settings" onclick="S.view='settings';render()">&#9881;</button>${authBtn}</div>
+    <div class="hdr-r"><button class="hdr-ico-btn" onclick="S.modal='rules';render()"><span class="ico">&#128214;</span>Rules</button><button class="hdr-ico-btn" onclick="S.view='settings';render()"><span class="ico">&#9881;</span>Settings</button>${authBtn}</div>
   </div>`;
 }
 function kfFormHtml(){
