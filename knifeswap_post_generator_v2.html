@@ -389,6 +389,7 @@ let S={posts:[],inventory:[],loaded:false,view:"list",expanded:null,copied:null,
 async function load(){
   try{const r=await window.storage.get("ks_v4");if(r&&r.value)S.posts=JSON.parse(r.value);}catch(e){}
   try{const r=await window.storage.get("ks_inv_v1");if(r&&r.value)S.inventory=JSON.parse(r.value);}catch(e){}
+  reconcileInventory();
   S.loaded=true;render();
 }
 async function save(){
@@ -403,6 +404,20 @@ async function saveInv(){
 }
 function up(fn){fn(S);save();render();}
 function upInv(fn){fn(S);saveInv();render();}
+// Audit every "listed" inventory item against active posts.
+// Runs at load time so stale statuses from old bugs are self-healing.
+function reconcileInventory(){
+  let changed=false;
+  S.inventory.forEach(inv=>{
+    if(inv.status==="listed"){
+      const claimedByActivePost=S.posts.some(p=>
+        p.knives.some(k=>k.inventoryId===inv.id&&!k.sold)
+      );
+      if(!claimedByActivePost){inv.status="available";changed=true;}
+    }
+  });
+  if(changed)saveInv();
+}
 
 // ─── SUPABASE FUNCTIONS ───────────────────────────────────────
 async function initSupabase(){
@@ -445,6 +460,7 @@ async function _sbLoad(){
     const {data:prof}=await _sb.from("profiles").select("settings").eq("id",currentUser.id).single();
     if(prof?.settings&&Object.keys(prof.settings).length)SETTINGS={...DS(),...prof.settings};
     S.loaded=true;
+    reconcileInventory();
     // mirror to localStorage
     try{localStorage.setItem("ks_v4",JSON.stringify(S.posts));localStorage.setItem("ks_inv_v1",JSON.stringify(S.inventory));localStorage.setItem("ks_settings",JSON.stringify(SETTINGS));}catch(e){}
   }catch(e){console.warn("Supabase load failed:",e);S.loaded=true;}
