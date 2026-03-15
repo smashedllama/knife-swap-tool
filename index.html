@@ -801,12 +801,16 @@ async function doFetchPriceResearch(){
   const f=S.kf;
   const qBase=[f.brand,f.model].filter(Boolean).join(" ").trim();
   if(!qBase){S.priceResearch={status:"idle",results:[],query:""};render();return;}
-  // Pick the most distinctive word from the model name (first word >3 chars) for quoted search
-  // Quoting forces Reddit to require that word, cutting out irrelevant "any Spyderco" results
-  const anchorWord=(f.model||"").split(/\s+/).find(w=>w.length>3)||f.model||"";
+
+  // Significant model words (>3 chars) — used for client-side relevance checks
+  const modelWords=(f.model||"").split(/\s+/).filter(w=>w.length>3);
+  // Anchor = first significant model word; used for quoted Reddit query
+  const anchorWord=modelWords[0]||f.model||"";
+  const brandLow=(f.brand||"").toLowerCase();
+
   const qSearchBase=anchorWord?(f.brand?`${f.brand} "${anchorWord}"`:`"${anchorWord}"`):qBase;
   const qSearch=f.steel?`${qSearchBase} ${f.steel}`:qSearchBase;
-  const qSearchBroad=qSearchBase; // without steel, still uses quoted anchor
+  const qSearchBroad=qSearchBase;
   S.priceResearch={status:"loading",results:[],query:qBase};render();
 
   const fetchQ=async(searchQ,limit)=>{
@@ -815,45 +819,76 @@ async function doFetchPriceResearch(){
     if(!res.ok)throw new Error("HTTP "+res.status);
     return (await res.json()).data?.children||[];
   };
+
+  // Score how well a post matches the target knife (higher = more relevant)
+  const relevanceScore=(fullLow)=>{
+    let score=0;
+    modelWords.forEach(w=>{if(fullLow.includes(w.toLowerCase()))score+=2;});
+    if(brandLow.length>2&&fullLow.includes(brandLow))score+=1;
+    if(f.steel&&fullLow.includes(f.steel.toLowerCase()))score+=3;
+    return score;
+  };
+
   const parsePost=c=>{
     const d=c.data;
     const tl=d.title.toLowerCase();
     const flair=(d.link_flair_text||"").trim();
-    const isSold=tl.includes("[sold]")||tl.includes("(sold)")||/\bsold\b/.test(flair.toLowerCase());
+    const flairLow=flair.toLowerCase();
+    // Filter: WTB posts are not price comps
+    const isWTB=tl.includes("[wtb]")||tl.includes("(wtb)")||/\bwtb\b/.test(flairLow)||tl.includes("want to buy");
+    const isSold=tl.includes("[sold]")||tl.includes("(sold)")||/\bsold\b/.test(flairLow);
     const isWTT=flair.includes("WTT")||(tl.includes("[wtt]")&&!tl.includes("[wts]"));
     const fullText=d.title+" "+(d.selftext||"");
     const fullLow=fullText.toLowerCase();
-    // Flag posts that explicitly mention the model — client-side relevance gate
-    const mentionsModel=anchorWord?fullLow.includes(anchorWord.toLowerCase()):true;
-    // Flag posts that explicitly mention the exact steel variant
+    // Strict model check: ALL significant model words must appear
+    const allModelWordsMatch=modelWords.length>0
+      ?modelWords.every(w=>fullLow.includes(w.toLowerCase()))
+      :true;
+    // Brand check: brand must appear (if 3+ chars)
+    const brandMatch=brandLow.length>2?fullLow.includes(brandLow):true;
+    const isRelevant=!isWTB&&allModelWordsMatch&&brandMatch;
+    // Soft relevance: at least the anchor word appears (used as fallback tier)
+    const mentionsAnchor=anchorWord?fullLow.includes(anchorWord.toLowerCase()):true;
     const steelMatch=f.steel?fullLow.includes(f.steel.toLowerCase()):false;
+    const score=relevanceScore(fullLow);
     const prices=extractKnifePrices(fullText,qBase);
     return{title:d.title,url:"https://reddit.com"+d.permalink,author:d.author,
       date:new Date(d.created_utc*1000).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}),
-      prices,isSold,isWTT,flair,steelMatch,mentionsModel};
+      prices,isSold,isWTT,isWTB,flair,steelMatch,isRelevant,mentionsAnchor,score};
   };
+
+  const dedupe=(arr,seen=new Set())=>arr.filter(p=>{if(seen.has(p.url))return false;seen.add(p.url);return true;});
+  const byScore=(a,b)=>b.score-a.score||(Number(b.steelMatch)-Number(a.steelMatch));
 
   try{
     let posts=[];
     let searchedWithSteel=false;
     if(f.steel){
-      // First pass: quoted anchor + steel — most precise
-      const steelChildren=await fetchQ(qSearch,15);
-      const steelPosts=steelChildren.map(parsePost).filter(p=>p.mentionsModel);
+      // Pass 1: quoted anchor + steel (fetch 25 to survive strict filtering)
+      const steelChildren=await fetchQ(qSearch,25);
+      const steelPosts=steelChildren.map(parsePost).filter(p=>p.isRelevant);
+      steelPosts.sort(byScore);
       if(steelPosts.length>=3){
         posts=steelPosts;
         searchedWithSteel=true;
       }else{
-        // Supplement with quoted-anchor broad search — steel matches bubble to top
-        const broadChildren=await fetchQ(qSearchBroad,15);
-        const broadPosts=broadChildren.map(parsePost).filter(p=>p.mentionsModel);
-        const seen=new Set(steelPosts.map(p=>p.url));
-        const broadOnly=broadPosts.filter(p=>!seen.has(p.url));
-        broadOnly.sort((a,b)=>Number(b.steelMatch)-Number(a.steelMatch));
-        posts=[...steelPosts,...broadOnly];
+        // Pass 2: quoted anchor only — merge, steel matches first
+        const broadChildren=await fetchQ(qSearchBroad,25);
+        const broadPosts=broadChildren.map(parsePost).filter(p=>p.isRelevant);
+        const merged=dedupe([...steelPosts,...broadPosts]);
+        merged.sort(byScore);
+        posts=merged;
       }
     }else{
-      posts=(await fetchQ(qSearchBroad,15)).map(parsePost).filter(p=>p.mentionsModel);
+      const children=await fetchQ(qSearchBroad,25);
+      posts=children.map(parsePost).filter(p=>p.isRelevant);
+      posts.sort(byScore);
+    }
+    // Graceful fallback: if strict filter wiped everything, loosen to anchor-only check
+    if(!posts.length){
+      const fallbackChildren=await fetchQ(qSearchBroad,25);
+      posts=fallbackChildren.map(parsePost).filter(p=>!p.isWTB&&p.mentionsAnchor);
+      posts.sort(byScore);
     }
     S.priceResearch={status:posts.length?"done":"empty",results:posts,query:qBase,querySteel:f.steel?qSearch:null,searchedWithSteel};
   }catch(e){
@@ -872,21 +907,21 @@ function applyPriceFromResearch(raw){
 }
 function extractKnifePrices(text,q){
   const sections=text.split(/\n[-─*_]{3,}\n|\n(?=__[A-Z])|\n{2,}(?=[A-Z\*\#])/);
-  // Include steel in search terms when available — narrows to the right knife section
   const steel=S.kf?.steel||"";
-  const qFull=(q+" "+steel).trim();
-  const terms=qFull.toLowerCase().split(/\s+/).filter(t=>t.length>2);
   const baseTerms=q.toLowerCase().split(/\s+/).filter(t=>t.length>2);
-  // Try to find sections that mention both knife AND steel
+  // Try sections mentioning knife AND steel (most targeted)
   let relevant=steel?sections.filter(s=>baseTerms.some(t=>s.toLowerCase().includes(t))&&s.toLowerCase().includes(steel.toLowerCase())):[];
-  // Fall back: sections that mention the knife (without steel constraint)
+  // Fall back to sections mentioning any knife term
   if(!relevant.length)relevant=sections.filter(s=>baseTerms.some(t=>s.toLowerCase().includes(t)));
-  // Last resort: full text
   const src=relevant.length?relevant.join('\n'):text;
-  const withDollar=src.match(/\$\s*(\d[\d,]*(?:\.\d{1,2})?)/g)||[];
-  const labeled=(src.match(/\b(?:SV|TV|PO|PRICE)\s*:?\s*\$?(\d{2,5})\b/gi)||[])
-    .map(m=>{const n=m.match(/(\d{2,5})/);return n?"$"+n[1]:null;}).filter(Boolean);
-  return[...new Set([...withDollar,...labeled].map(p=>p.replace(/[\s,]/g,"")))].slice(0,4);
+  // Match $175 style prices
+  const withDollar=(src.match(/\$\s*(\d[\d,]*(?:\.\d{1,2})?)/g)||[]).map(p=>p.replace(/[\s,]/g,""));
+  // Match labeled prices: "SV: 175", "SV 175", "asking 175", "175 shipped", "price: 175"
+  const labeledRaw=src.match(/\b(?:SV|TV|PO|asking|price)\s*:?\s*\$?(\d{2,4})\b|\b(\d{3,4})\s+shipped\b/gi)||[];
+  const labeled=labeledRaw.map(m=>{const n=m.match(/(\d{3,4})/);return n?"$"+n[1]:null;}).filter(Boolean);
+  // Combine, dedupe, and sanity-check range ($20–$3500 = plausible knife price)
+  const all=[...new Set([...withDollar,...labeled])];
+  return all.filter(p=>{const v=parseFloat(p.replace(/[^0-9.]/g,""));return v>=20&&v<=3500;}).slice(0,4);
 }
 function clearPriceResearch(){S.priceResearch={status:"idle",results:[],query:""};render();}
 
