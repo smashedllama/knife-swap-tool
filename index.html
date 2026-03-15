@@ -618,7 +618,7 @@ const NO_SHIP=["California","New York","New Jersey","Illinois","Massachusetts","
 const ISSUES=["Light scratches","Deep scratches","Snail trails","Blade stain","Handle marks","Tip damage","None"];
 const ACC=["Original box","Certificate/papers","Carrying pouch","Pocket clip","Adjustment tool","Spare scales","Lanyard","Polishing cloth","None"];
 const BLADE_COND=["New in box","Factory edge, uncarried","Factory edge, carried","Lightly used","Field sharpened","Reprofiled","Dull","Needs sharpening"];
-const TMPL=["Detailed","Compact","Minimal"];
+const TMPL=["Detailed","Compact","Minimal","Table"];
 
 // ─── HELPERS ──────────────────────────────────────────────────
 function gid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
@@ -1078,6 +1078,38 @@ function buildPost(post,v){
     return`${type} ${title} | ${ts}${rp}${headerBlock}\n\nTimestamp: ${photoLine}\n\n${lines}${bundleLine}\n\nPayment: ${pay} | Shipping included${noshipLine}${tradeFooter}${post.notes?"\nNotes: "+post.notes:""}\n${sig}`;
   }
 
+  // TABLE (v=3) - Reddit markdown table
+  if(v===3){
+    const photoBlock=allPhotos.length?allPhotos.join("\n"):"[ paste your timestamp photo link here ]";
+    const hdrBlock=ph?`\n\n${ph}`:"";
+    const noshipLine=noShipList.length?`\n**Will NOT ship to:** ${noShipList.join(", ")}`:"";
+    const tradeFooter=isWTT?(ti?`\n**Trade Interests:** ${ti}`:""):"\n**No Trades**";
+    const notesLine=post.notes?`\n**Notes:** ${post.notes}`:"";
+    const sig=un?`*${un} - ${ts}*`:`*${ts}*`;
+    const bundleBlock=bundle?`\n\n---\n\n**Bundle: $${post.bundlePrice} takes all${post.knives.length>1?" ("+post.knives.length+" knives)":""}**`:"";
+    const ownOrd=n=>{const x=parseInt(n)||1;return x===1?"1st":x===2?"2nd":x===3?"3rd":x+"th";};
+    const rows=post.knives.map(k=>{
+      const nameCell=`${k.brand} ${k.model}${k.sold?" \\[SOLD\\]":k.pending?" \\[PENDING\\]":""}`;
+      const priceCell=knifePrice(k);
+      const parts=[];
+      if(k.steel)parts.push(`**${k.steel}**`);
+      parts.push(`${ownOrd(k.owners)} owner`);
+      const c=k.carried==="Yes",u=k.usedCut==="Yes";
+      if(!c&&!u)parts.push("Not carried or used to cut");
+      else if(c&&!u)parts.push("Carried, not used to cut");
+      else if(u)parts.push("Carried and used to cut");
+      if(k.sharpened==="Yes")parts.push("Resharpened");
+      if(k.bladeCondition&&k.bladeCondition!=="Factory edge, carried")parts.push(k.bladeCondition);
+      const iss=(k.issues||[]).filter(x=>x&&x!=="None");
+      if(iss.length)parts.push(iss.join(", "));
+      const acc=(k.accessories||[]).filter(x=>x&&x!=="None");
+      if(acc.length)parts.push("Includes: "+acc.join(", "));
+      if(k.notes)parts.push(k.notes);
+      return`| ${nameCell} | ${priceCell} | ${parts.join(". ")}${parts.length?".":""} |`;
+    }).join("\n");
+    return`${type} ${title}${rp}${hdrBlock}\n\n**Timestamp + Photos:**\n${photoBlock}\n\n---\n\n| Knife | Price | Description |\n|:--|:--|:--|\n${rows}${bundleBlock}\n\n---\n\n**Payment:** ${pay}\n**Shipping:** Included (CONUS)${noshipLine}${tradeFooter}${notesLine}\n\n${sig}`;
+  }
+
   // MINIMAL (v=2) - one line per knife
   const photoLine=allPhotos.length?allPhotos[0]:"[ paste your timestamp photo link here ]";
   const headerBlock=ph?`\n${ph}`:"";
@@ -1326,7 +1358,7 @@ async function copyConfirmComment(pid,ki){
   S.copied="cc_"+pid+"_"+ki;render();
   setTimeout(()=>{if(S.copied==="cc_"+pid+"_"+ki){S.copied=null;render();}},2000);
 }
-function cycleTmpl(pid){up(s=>{const p=s.posts.find(x=>x.id===pid);if(!p)return;p.variant=((p.variant||0)+1)%3;p.postText=buildPost(p)});}
+function cycleTmpl(pid){up(s=>{const p=s.posts.find(x=>x.id===pid);if(!p)return;p.variant=((p.variant||0)+1)%TMPL.length;p.postText=buildPost(p)});}
 function deletePost(pid){
   if(!confirm("Delete this listing?"))return;
   pushUndo("Listing deleted");
@@ -1672,7 +1704,7 @@ function renderList(){
       </div>`:""
       ;
       const isPrev=s.mdPreview.has(p.id);
-      body=`<div class="pc-body"><div class="pc-meta"><span class="pmeta"${charColor?` style="color:${charColor};font-weight:600"`:""}>${charLen.toLocaleString()} chars${charLen>38000?" ⚠️":charLen>30000?" ⚡":""}</span><span class="pmeta"> · ${fmtD(p.createdAt)}</span><span class="pmeta${hasPhotos?" ok":""}">${hasPhotos?" · "+p.photos.length+" photo"+(p.photos.length>1?"s":"")+" linked":" · No photos"}</span><span class="pmeta"> · ${TMPL[p.variant||0]}</span></div>${isPrev?`<div class="post-box" style="white-space:normal;font-family:var(--font);font-size:12.5px;line-height:1.75;overflow-y:auto;max-height:320px">${renderMd(p.postText||"")}</div>`:`<div class="post-box">${esc(p.postText||"")}</div>`}<div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-bottom:8px"><button class="btn btn-pri btn-sm" onclick="copyPost('${p.id}')"${s.copied===p.id?` style="background:var(--green)"`:""}>${s.copied===p.id?"Copied!":"Copy Post"}</button><button class="btn btn-gn btn-sm" onclick="openRedditPost('${p.id}')">Post to Reddit &#8599;</button><button class="btn btn-sec btn-sm" onclick="cycleTmpl('${p.id}')">Switch: ${TMPL[((p.variant||0)+1)%3]}</button><button class="btn btn-sec btn-sm" onclick="toggleMdPreview('${p.id}')" title="Toggle rendered markdown preview">${isPrev?"&lt;/&gt; Raw":"👁 Preview"}</button><button class="btn btn-rd btn-sm" onclick="deletePost('${p.id}')" style="margin-left:auto">Delete</button></div><div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px">${checkPostRules(p.id).map(c=>`<span style="font-size:10.5px;font-weight:500;padding:2px 9px;border-radius:20px;background:${c.ok?"var(--greenbg)":"var(--redbg)"};color:${c.ok?"var(--greent)":"var(--redt)"}">${c.ok?"✓":"✗"} ${esc(c.msg)}</span>`).join("")}</div>${repostSection}<div class="krows-hdr">Knives in this post</div>${krows}</div>`;
+      body=`<div class="pc-body"><div class="pc-meta"><span class="pmeta"${charColor?` style="color:${charColor};font-weight:600"`:""}>${charLen.toLocaleString()} chars${charLen>38000?" ⚠️":charLen>30000?" ⚡":""}</span><span class="pmeta"> · ${fmtD(p.createdAt)}</span><span class="pmeta${hasPhotos?" ok":""}">${hasPhotos?" · "+p.photos.length+" photo"+(p.photos.length>1?"s":"")+" linked":" · No photos"}</span><span class="pmeta"> · ${TMPL[p.variant||0]}</span></div>${isPrev?`<div class="post-box" style="white-space:normal;font-family:var(--font);font-size:12.5px;line-height:1.75;overflow-y:auto;max-height:320px">${renderMd(p.postText||"")}</div>`:`<div class="post-box">${esc(p.postText||"")}</div>`}<div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-bottom:8px"><button class="btn btn-pri btn-sm" onclick="copyPost('${p.id}')"${s.copied===p.id?` style="background:var(--green)"`:""}>${s.copied===p.id?"Copied!":"Copy Post"}</button><button class="btn btn-gn btn-sm" onclick="openRedditPost('${p.id}')">Post to Reddit &#8599;</button><button class="btn btn-sec btn-sm" onclick="cycleTmpl('${p.id}')">Switch: ${TMPL[((p.variant||0)+1)%TMPL.length]}</button><button class="btn btn-sec btn-sm" onclick="toggleMdPreview('${p.id}')" title="Toggle rendered markdown preview">${isPrev?"&lt;/&gt; Raw":"👁 Preview"}</button><button class="btn btn-rd btn-sm" onclick="deletePost('${p.id}')" style="margin-left:auto">Delete</button></div><div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px">${checkPostRules(p.id).map(c=>`<span style="font-size:10.5px;font-weight:500;padding:2px 9px;border-radius:20px;background:${c.ok?"var(--greenbg)":"var(--redbg)"};color:${c.ok?"var(--greent)":"var(--redt)"}">${c.ok?"✓":"✗"} ${esc(c.msg)}</span>`).join("")}</div>${repostSection}<div class="krows-hdr">Knives in this post</div>${krows}</div>`;
     }
     const da=daysAgo(p.createdAt);
     const ageBadge=!allSold?(da>=7?`<span class="repost-day-badge rdy">Repost ready</span>`:`<span class="repost-day-badge wait">${da}d old</span>`):"";
