@@ -89,9 +89,10 @@ body,html{background:var(--bg)}
 /* FORM */
 .field label{display:block;font-size:11px;font-weight:600;color:var(--t3);margin-bottom:5px;letter-spacing:.03em;text-transform:uppercase}
 .field-hint{font-size:11px;color:var(--t4);margin-top:4px;line-height:1.4}
-input[type=text],input[type=number],select{width:100%;padding:9px 12px;border:.5px solid rgba(0,0,0,.14);border-radius:var(--rs);font-family:var(--font);font-size:14px;color:var(--t1);background:var(--card);outline:none;transition:border-color var(--tr),box-shadow var(--tr);-webkit-appearance:none}
-input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3.5px rgba(0,113,227,.15)}
-input::placeholder{color:var(--t4)}
+input[type=text],input[type=number],select,textarea{width:100%;padding:9px 12px;border:.5px solid rgba(0,0,0,.14);border-radius:var(--rs);font-family:var(--font);font-size:14px;color:var(--t1);background:var(--card);outline:none;transition:border-color var(--tr),box-shadow var(--tr);-webkit-appearance:none}
+input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3.5px rgba(0,113,227,.15)}
+input::placeholder,textarea::placeholder{color:var(--t4)}
+textarea{resize:vertical;line-height:1.55}
 .cblk{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--t2);cursor:pointer}
 .cblk input{width:16px;height:16px;cursor:pointer;accent-color:var(--blue)}
 
@@ -121,13 +122,14 @@ input::placeholder{color:var(--t4)}
 .pc-chev{font-size:9px;color:var(--t4);flex-shrink:0;transition:transform .2s;margin-left:2px}
 .pc-chev.open{transform:rotate(180deg)}
 .pc-body{border-top:.5px solid rgba(0,0,0,.07);padding:16px}
-.post-box{background:#FAFAFA;border:.5px solid var(--b1);border-radius:var(--rs);padding:14px 16px;font-family:var(--mono);font-size:11.5px;color:var(--t1);line-height:1.75;white-space:pre-wrap;word-break:break-word;max-height:320px;overflow-y:auto;margin-bottom:12px;box-shadow:inset 0 1px 3px rgba(0,0,0,.04)}
+.post-box{background:var(--bg);border:.5px solid var(--b1);border-radius:var(--rs);padding:14px 16px;font-family:var(--mono);font-size:11.5px;color:var(--t1);line-height:1.75;white-space:pre-wrap;word-break:break-word;max-height:320px;overflow-y:auto;margin-bottom:12px;box-shadow:inset 0 1px 3px rgba(0,0,0,.04)}
 .pc-meta{display:flex;gap:10px;margin-bottom:11px;flex-wrap:wrap}
 .pmeta{font-size:11px;font-weight:500;color:var(--t4)}
 .pmeta.ok{color:var(--greent)}
 .krows-hdr{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--t3);margin-bottom:8px;padding-top:14px;border-top:.5px solid rgba(0,0,0,.07)}
 .krow{display:flex;align-items:center;gap:8px;padding:10px 13px;border-radius:var(--rs);background:var(--bg);border:.5px solid var(--b1);margin-bottom:7px}
 .krow.sold{background:var(--greenbg);border-color:rgba(52,199,89,.2)}
+.krow.pending-row{background:var(--orangebg);border-color:rgba(255,149,0,.25)}
 .krow.moving{background:var(--bluebg);border-color:rgba(0,113,227,.3)}
 .krow-info{flex:1;min-width:0}
 .krow-name{font-size:13px;font-weight:600;letter-spacing:-.01em}
@@ -158,6 +160,7 @@ input::placeholder{color:var(--t4)}
 .lk-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;display:inline-flex;margin-bottom:9px;border:.5px solid transparent}
 .lk-badge.av{background:var(--greenbg);color:var(--greent);border-color:rgba(52,199,89,.25)}
 .lk-badge.li{background:var(--orangebg);color:var(--oranget);border-color:rgba(255,149,0,.2)}
+.lk-badge.pe{background:var(--purplebg);color:var(--purplet);border-color:rgba(175,82,222,.2)}
 .lk-badge.so{background:rgba(0,0,0,.05);color:var(--t3)}
 .lk-acts{display:flex;gap:5px;flex-wrap:wrap}
 .lk-picker{background:var(--bg);border:.5px solid var(--b1);border-radius:var(--rs);margin-top:6px;max-height:240px;overflow-y:auto}
@@ -320,7 +323,8 @@ input::placeholder{color:var(--t4)}
 .pr-row-title{font-size:12px;color:var(--blue);line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-decoration:none;display:block}
 .pr-row-title:hover{text-decoration:underline}
 .pr-row-meta{font-size:11px;color:var(--t4);margin-top:1px}
-.pr-price{font-size:12px;font-weight:700;color:var(--greent);white-space:nowrap;background:var(--greenbg);padding:2px 8px;border-radius:20px;flex-shrink:0}
+.pr-price{font-size:12px;font-weight:700;color:var(--greent);white-space:nowrap;background:var(--greenbg);padding:2px 8px;border-radius:20px;flex-shrink:0;transition:filter var(--tr),transform var(--tr);display:inline-block}
+.pr-price:hover{filter:brightness(1.15);transform:scale(1.05)}
 /* BUNDLE */
 .bundle-box{background:var(--bg);border:.5px solid var(--b1);border-radius:var(--rs);padding:12px 14px;margin-bottom:14px}
 .bundle-box-top{display:flex;align-items:center;gap:10px}
@@ -330,12 +334,111 @@ input::placeholder{color:var(--t4)}
 .title-prev .t-text{color:var(--t1)}
 .title-prev .t-over{color:var(--redt)!important;font-weight:700}
 .title-prev .t-count{font-size:10.5px;font-weight:600;color:var(--t3)}
+
+/* ─── DARK MODE ──────────────────────────────────────────── */
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#1C1C1E;--card:#2C2C2E;
+    --b1:rgba(255,255,255,.1);--b2:rgba(255,255,255,.06);
+    --t1:#F2F2F7;--t2:rgba(235,235,245,.86);--t3:rgba(235,235,245,.55);--t4:rgba(235,235,245,.28);
+    --blue:#0A84FF;--bluebg:rgba(10,132,255,.2);--bluet:#64B5F6;
+    --green:#30D158;--greenbg:rgba(48,209,88,.18);--greent:#34C759;
+    --orange:#FF9F0A;--orangebg:rgba(255,159,10,.18);--oranget:#FFB340;
+    --red:#FF453A;--redbg:rgba(255,69,58,.18);--redt:#FF6961;
+    --purple:#BF5AF2;--purplebg:rgba(191,90,242,.18);--purplet:#DA8FFF;
+    --sh:0 1px 3px rgba(0,0,0,.4),0 0 0 .5px rgba(255,255,255,.07);
+    --shm:0 4px 20px rgba(0,0,0,.5),0 0 0 .5px rgba(255,255,255,.06);
+  }
+  body,html{background:#1C1C1E}
+  /* Header */
+  .hdr{background:rgba(28,28,30,.9);border-bottom-color:rgba(255,255,255,.1)}
+  .hdr-ico-btn{background:rgba(255,255,255,.1);color:var(--t2)}
+  .hdr-ico-btn:hover{background:rgba(255,255,255,.16)}
+  .btn-hdr-ghost{color:var(--t2)}
+  .btn-hdr-ghost:hover{background:rgba(255,255,255,.08)}
+  /* Tabs & segmented controls */
+  .tab-seg,.seg{background:rgba(255,255,255,.1)}
+  .tab-item.on,.seg-item.on{background:#3A3A3C;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+  /* Buttons */
+  .btn-sec{background:rgba(255,255,255,.12);color:var(--t1)}
+  .btn-sec:hover{background:rgba(255,255,255,.18)}
+  /* Yes/No */
+  .yn-row{background:rgba(255,255,255,.08)}
+  .yn.on{background:#3A3A3C;color:var(--t1);box-shadow:0 1px 3px rgba(0,0,0,.3)}
+  /* Chips */
+  .chip{border-color:rgba(255,255,255,.1);color:var(--t3)}
+  /* Auth */
+  .auth-btn{background:var(--card);border-color:var(--b1);color:var(--t2)}
+  .auth-btn:hover{background:#3A3A3C}
+  .auth-btn.signed{border-color:var(--blue)}
+  /* Modal */
+  .modal-overlay{background:rgba(0,0,0,.7)}
+  .modal-close{background:rgba(255,255,255,.1)}
+  .modal-close:hover{background:rgba(255,255,255,.18)}
+  /* Post box */
+  .post-box{box-shadow:inset 0 1px 3px rgba(0,0,0,.2)}
+  /* Upload zone */
+  .up-zone{background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.15)}
+  .up-zone:hover,.up-zone.drag{background:rgba(10,132,255,.12);border-color:var(--blue)}
+  .up-row{background:#3A3A3C;border-color:rgba(255,255,255,.07)}
+  /* Knife form */
+  .kf{background:var(--card);border-color:rgba(10,132,255,.3);box-shadow:0 0 0 3px rgba(10,132,255,.1),var(--shm)}
+  .adv-box{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.08)}
+  .kf-type-btn{background:#3A3A3C;border-color:rgba(255,255,255,.1);color:var(--t3)}
+  /* Locker picker */
+  .lk-picker{background:#2C2C2E;border-color:rgba(255,255,255,.08)}
+  .lk-pick-row:hover{background:rgba(10,132,255,.15)}
+  /* Move picker */
+  .move-picker{background:#2C2C2E;border-color:rgba(10,132,255,.25)}
+  .move-pick-row:hover{background:rgba(10,132,255,.15)}
+  /* Price research */
+  .pr-panel{background:#3A3A3C;border-color:rgba(255,255,255,.08)}
+  .pr-panel-hdr{background:#2C2C2E;border-bottom-color:rgba(255,255,255,.08)}
+  .pr-row{border-bottom-color:rgba(255,255,255,.06)}
+  /* Repost tracker */
+  .repost-track{background:#3A3A3C;border-color:rgba(255,255,255,.08)}
+  /* Bundle box */
+  .bundle-box{background:#3A3A3C;border-color:rgba(255,255,255,.08)}
+  /* Price drop calc */
+  .pdc{background:#3A3A3C;border-color:rgba(255,255,255,.08)}
+  .pdc-rule{background:#2C2C2E;border-color:rgba(255,255,255,.06)}
+  /* Timestamp req */
+  .ts-req{background:rgba(255,159,10,.12);border-color:rgba(255,159,10,.25);color:var(--oranget)}
+  /* Title preview */
+  .title-prev{background:#3A3A3C;border-color:rgba(255,255,255,.08)}
+  /* Settings sgroup */
+  .sgroup{background:var(--card);border-color:rgba(255,255,255,.08)}
+  .srow{border-bottom-color:rgba(255,255,255,.06)}
+  /* Stats */
+  .stat{background:var(--card);border-color:rgba(255,255,255,.08)}
+  /* Post cards */
+  .pc{background:var(--card);border-color:rgba(255,255,255,.08)}
+  .pc-body{border-top-color:rgba(255,255,255,.07)}
+  /* Knife rows */
+  .krow{background:#3A3A3C;border-color:rgba(255,255,255,.08)}
+  .krow.sold{background:rgba(48,209,88,.12);border-color:rgba(48,209,88,.2)}
+  .krow.pending-row{background:rgba(255,159,10,.12);border-color:rgba(255,159,10,.2)}
+  .krow.moving{background:rgba(10,132,255,.15);border-color:rgba(10,132,255,.3)}
+  /* Roll cards */
+  .lk-card{background:var(--card);border-color:rgba(255,255,255,.08)}
+  /* Compose knife items */
+  .ki{background:var(--card);border-color:rgba(255,255,255,.08)}
+  /* Details card */
+  .det{background:var(--card);border-color:rgba(255,255,255,.08)}
+  /* Sold flow */
+  .sold-flow{background:rgba(48,209,88,.1)}
+  /* Auth modal specific */
+  .auth-field input{background:#3A3A3C;border-color:rgba(255,255,255,.1)}
+  .auth-field input:focus{background:#3A3A3C}
+  .auth-sync-banner{background:rgba(10,132,255,.15);border-color:rgba(10,132,255,.35)}
+}
 </style>
 
 <datalist id="dl-brands"></datalist>
 <datalist id="dl-steels"></datalist>
 <datalist id="dl-models"></datalist>
 <input type="file" id="file-upload-input" multiple accept="image/*,video/*" style="display:none" onchange="handleFileInput(event)">
+<input type="file" id="kf-photo-input-hidden" accept="image/*,video/*" multiple style="display:none" onchange="handleKnifeFileInput(event)">
 <div class="app" id="root"></div>
 
 <script>
@@ -370,7 +473,7 @@ function tm(a,v){return a.includes(v)?a.filter(x=>x!==v):[...a,v]}
 function tmx(a,v,ex){if(v===ex)return[ex];const r=a.filter(x=>x!==ex);return r.includes(v)?r.filter(x=>x!==v):[...r,v]}
 
 // ─── SETTINGS ─────────────────────────────────────────────────
-const DS=()=>({payment:["PayPal G&S"],noShip:[],username:"",saveNotice:false,catboxHash:""});
+const DS=()=>({payment:["PayPal G&S"],noShip:[],username:"",saveNotice:false,catboxHash:"",postHeader:"",tradeInterests:""});
 let SETTINGS=DS();
 async function loadSettings(){try{const r=await window.storage.get("ks_settings");if(r&&r.value)SETTINGS={...DS(),...JSON.parse(r.value)};}catch(e){}}
 async function saveSettings(){
@@ -380,10 +483,10 @@ async function saveSettings(){
 }
 
 // ─── STATE ────────────────────────────────────────────────────
-const EK=()=>({brand:"",model:"",steel:"",price:"",obo:false,knifeType:"WTS",tradeValue:"",sharpened:"No",usedCut:"No",carried:"No",bladeCondition:"Factory edge, carried",owners:"1",centering:"Perfect",lockup:"Solid",lockupNotes:"",issues:["None"],accessories:["None"],notes:"",inventoryId:null,prevPrice:"",photos:[]});
-const EI=()=>({id:gid(),brand:"",model:"",steel:"",price:"",obo:false,knifeType:"WTS",tradeValue:"",sharpened:"No",usedCut:"No",carried:"No",bladeCondition:"Factory edge, carried",owners:"1",centering:"Perfect",lockup:"Solid",lockupNotes:"",issues:["None"],accessories:["None"],notes:"",status:"available",addedAt:new Date().toISOString(),soldAt:null,photos:[]});
-const ED=()=>({postType:"[WTS]",knives:[],payment:[...SETTINGS.payment],paymentOther:"",noShip:[...SETTINGS.noShip],noShipOther:"",repost:false,photos:[],notes:"",rulesConfirmed:false,bundleEnabled:false,bundlePrice:""});
-let S={posts:[],inventory:[],loaded:false,view:"list",expanded:null,copied:null,draft:ED(),kfOpen:false,kfIdx:-1,kf:EK(),kfMode:"draft",adv:false,err:"",saveNotice:false,lockerFilter:"all",lockerPicker:false,movingKnife:null,uploadFiles:[],kfUploads:[],priceResearch:{status:"idle",results:[],query:""},modal:null,authStatus:"guest",authEmail:"",showMigrate:false,soldFlow:null,delFlowEmail:null};
+const EK=()=>({brand:"",model:"",steel:"",price:"",obo:false,knifeType:"WTS",tradeValue:"",sharpened:"No",usedCut:"No",carried:"No",bladeCondition:"Factory edge, carried",owners:"1",centering:"Perfect",lockup:"Solid",lockupNotes:"",issues:["None"],accessories:["None"],notes:"",inventoryId:null,prevPrice:"",photos:[],pending:false});
+const EI=()=>({id:gid(),brand:"",model:"",steel:"",price:"",obo:false,knifeType:"WTS",tradeValue:"",sharpened:"No",usedCut:"No",carried:"No",bladeCondition:"Factory edge, carried",owners:"1",centering:"Perfect",lockup:"Solid",lockupNotes:"",issues:["None"],accessories:["None"],notes:"",status:"available",addedAt:new Date().toISOString(),soldAt:null,photos:[],pending:false});
+const ED=()=>({postType:"[WTS]",knives:[],payment:[...SETTINGS.payment],paymentOther:"",noShip:[...SETTINGS.noShip],noShipOther:"",repost:false,photos:[],notes:"",rulesConfirmed:false,bundleEnabled:false,bundlePrice:"",tradeInterests:SETTINGS.tradeInterests||""});
+let S={posts:[],inventory:[],loaded:false,view:"list",expanded:null,copied:null,draft:ED(),kfOpen:false,kfIdx:-1,kf:EK(),kfMode:"draft",adv:false,err:"",saveNotice:false,lockerFilter:"all",lockerPicker:false,movingKnife:null,uploadFiles:[],kfUploads:[],priceResearch:{status:"idle",results:[],query:""},modal:null,authStatus:"guest",authEmail:"",showMigrate:false,soldFlow:null,delFlowEmail:null,authLoading:true};
 
 // ─── STORAGE ──────────────────────────────────────────────────
 async function load(){
@@ -421,7 +524,7 @@ function reconcileInventory(){
 
 // ─── SUPABASE FUNCTIONS ───────────────────────────────────────
 async function initSupabase(){
-  if(!SUPABASE_URL||SUPABASE_URL.includes("YOUR_PROJECT")||!SUPABASE_ANON_KEY||SUPABASE_ANON_KEY.includes("YOUR_ANON"))return;
+  if(!SUPABASE_URL||SUPABASE_URL.includes("YOUR_PROJECT")||!SUPABASE_ANON_KEY||SUPABASE_ANON_KEY.includes("YOUR_ANON")){S.authLoading=false;return;}
   try{
     _sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,storageKey:"ks_sb_session"}});
     const {data:{session}}=await _sb.auth.getSession();
@@ -429,8 +532,12 @@ async function initSupabase(){
       currentUser=session.user;
       S.authStatus="signed_in";
       S.authEmail=currentUser.email;
-      await _sbLoad();
     }
+    // Resolve auth state immediately — header snaps to correct state before DB loads
+    S.authLoading=false;
+    render();
+    // Now load data from DB in the background
+    if(currentUser)await _sbLoad();
     _sb.auth.onAuthStateChange(async(event,session)=>{
       if(event==="SIGNED_IN"&&session){
         const wasGuest=!currentUser;
@@ -448,7 +555,7 @@ async function initSupabase(){
         await load();loadSettings().then(render);
       }
     });
-  }catch(e){console.warn("Supabase init failed:",e);}
+  }catch(e){S.authLoading=false;console.warn("Supabase init failed:",e);}
 }
 async function _sbLoad(){
   if(!_sb||!currentUser)return;
@@ -561,20 +668,34 @@ function buildTitleStr(knives,postType,maxLen){
 // Price research via Reddit public JSON (free, no auth)
 async function doFetchPriceResearch(){
   const f=S.kf;
-  const q=[f.brand,f.model,f.steel].filter(Boolean).join(" ").trim();
+  // Use brand+model only (steel makes results too narrow)
+  const q=[f.brand,f.model].filter(Boolean).join(" ").trim();
   if(!q){S.priceResearch={status:"idle",results:[],query:""};render();return;}
   S.priceResearch={status:"loading",results:[],query:q};render();
   try{
-    const url="https://www.reddit.com/r/Knife_Swap/search.json?q="+encodeURIComponent(q)+"&sort=new&restrict_sr=on&limit=10&type=link";
+    // No type=link — r/Knife_Swap uses self posts; prices live in the post body (selftext)
+    const url="https://www.reddit.com/r/Knife_Swap/search.json?q="+encodeURIComponent(q)+"&sort=new&restrict_sr=on&limit=15";
     const res=await fetch(url,{headers:{"Accept":"application/json"}});
     if(!res.ok)throw new Error("HTTP "+res.status);
     const data=await res.json();
     const posts=(data.data?.children||[]).map(c=>{
       const d=c.data;
-      const prices=[];
-      const m=d.title.match(/\$\s*(\d+)/g);
-      if(m)prices.push(...m);
-      return{title:d.title,url:"https://reddit.com"+d.permalink,author:d.author,date:new Date(d.created_utc*1000).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}),prices};
+      const tl=d.title.toLowerCase();
+      const flair=(d.link_flair_text||"").trim();
+      // Detect sold/closed status
+      const isSold=tl.includes("[sold]")||tl.includes("(sold)")||/\bsold\b/.test(flair.toLowerCase());
+      // Detect post type
+      const isWTT=flair.includes("WTT")||(tl.includes("[wtt]")&&!tl.includes("[wts]"));
+      // Search BOTH title and selftext — prices live in the post body on r/Knife_Swap
+      const searchText=d.title+" "+(d.selftext||"");
+      const withDollar=searchText.match(/\$\s*(\d[\d,]*(?:\.\d{1,2})?)/g)||[];
+      // Also catch "SV: 175" / "SV:175" / "SV 175" (no $ sign)
+      const labeled=(searchText.match(/\b(?:SV|TV|PO|PRICE)\s*:?\s*\$?(\d{2,5})\b/gi)||[]).map(m=>{const n=m.match(/(\d{2,5})/);return n?"$"+n[1]:null;}).filter(Boolean);
+      const rawPrices=[...withDollar,...labeled];
+      const prices=[...new Set(rawPrices.map(p=>p.replace(/[\s,]/g,"")))].slice(0,6);
+      return{title:d.title,url:"https://reddit.com"+d.permalink,author:d.author,
+        date:new Date(d.created_utc*1000).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}),
+        prices,isSold,isWTT,flair};
     });
     S.priceResearch={status:posts.length?"done":"empty",results:posts,query:q};
   }catch(e){
@@ -582,6 +703,15 @@ async function doFetchPriceResearch(){
     // Fallback: open reddit search in new tab
     window.open("https://www.reddit.com/r/Knife_Swap/search/?q="+encodeURIComponent(q)+"&sort=new&restrict_sr=1","_blank","noopener");
   }
+  render();
+}
+function applyPriceFromResearch(raw){
+  // Strip $ and apply to current knife price field
+  const num=raw.replace(/[^0-9.]/g,"");
+  if(!num)return;
+  S.kf.price=num;
+  const el=document.getElementById("kf-price");
+  if(el)el.value=num;
   render();
 }
 function clearPriceResearch(){S.priceResearch={status:"idle",results:[],query:""};render();}
@@ -605,20 +735,27 @@ function buildPost(post,v){
   const rp=post.repost?" *(Price Drop / Repost)*":"";
   const type=post.postType||"[WTS]";
   const un=SETTINGS.username||"";
-  const title=post.knives.map(k=>k.brand+" "+k.model+(k.sold?" ~~[SOLD]~~":"")).join(" | ");
+  const title=post.knives.map(k=>k.brand+" "+k.model+(k.sold?" ~~[SOLD]~~":k.pending?" [PENDING]":"")).join(" | ");
   const bundle=post.bundleEnabled&&post.bundlePrice;
+  const ph=SETTINGS.postHeader?(SETTINGS.postHeader.trim()):"";
+  const ti=post.tradeInterests||(SETTINGS.tradeInterests||"");
+  const isWTT=type.includes("WTT");
+  const dot=k=>k.sold?"🔴":k.pending?"🟡":"🟢";
 
   if(v===0){
     // DETAILED - full structured format with clear sections
     const photoBlock=allPhotos.length?allPhotos.join("\n"):"[ paste your timestamp photo link here ]";
+    const headerBlock=ph?`\n\n${ph}`:"";
+    const tradeBlock=isWTT&&ti?`\n**Trade Interests:** ${ti}`:"";
     const blocks=post.knives.map((k,i)=>{
       const iss=k.issues.filter(x=>x!=="None").join(", ")||"None";
       const ac=k.accessories.filter(x=>x!=="None").join(", ")||"None";
       const pl=knifePrice(k);
       const kphotos=(k.photos||[]).filter(Boolean);
+      const statusLabel=k.sold?"[SOLD]":k.pending?"[PENDING]":"";
       const hdr=k.sold
-        ?`~~**${i+1}. ${k.brand} ${k.model} [SOLD]**~~ | ~~${pl}~~`
-        :`**${i+1}. ${k.brand} ${k.model}** | **${pl}**`;
+        ?`~~**${dot(k)} ${i+1}. ${k.brand} ${k.model} [SOLD]**~~ | ~~${pl}~~`
+        :`**${dot(k)} ${i+1}. ${k.brand} ${k.model}${statusLabel?" "+statusLabel:""}** | **${pl}**`;
       const lines=[
         `- **Steel:** ${k.steel||"N/A"} | **Condition:** ${k.bladeCondition}`,
         `- **Owners:** ${k.owners} | **Carried:** ${k.carried} | **Cut:** ${k.usedCut} | **Sharpened:** ${k.sharpened}`,
@@ -631,19 +768,22 @@ function buildPost(post,v){
     }).join("\n\n---\n\n");
     const bundleBlock=bundle?`\n\n---\n\n**Bundle: $${post.bundlePrice} takes all ${post.knives.length>1?post.knives.length+" knives":""}**`:"";
     const noshipLine=noShipList.length?`\n**Will NOT ship to:** ${noShipList.join(", ")}`:"";
+    const tradeFooter=isWTT&&ti?`\n**Trade Interests:** ${ti}`:"";
     const notesLine=post.notes?`\n**Notes:** ${post.notes}`:"";
     const sig=un?`*${un} - ${ts}*`:`*${ts}*`;
-    return`${type} ${title}${rp}\n\n**Timestamp + Photos:**\n${photoBlock}\n\n---\n\n${blocks}${bundleBlock}\n\n---\n\n**Payment:** ${pay}\n**Shipping:** Included (CONUS)${noshipLine}${notesLine}\n\n${sig}`;
+    return`${type} ${title}${rp}${headerBlock}\n\n**Timestamp + Photos:**\n${photoBlock}\n\n---\n\n${blocks}${bundleBlock}\n\n---\n\n**Payment:** ${pay}\n**Shipping:** Included (CONUS)${noshipLine}${tradeFooter}${notesLine}\n\n${sig}`;
   }
 
   if(v===1){
     // COMPACT - one block per knife, key details only
     const photoLine=allPhotos.length?allPhotos.join("\n"):"[ paste your timestamp photo link here ]";
+    const headerBlock=ph?`\n\n${ph}`:"";
     const lines=post.knives.map((k,i)=>{
       const iss=k.issues.filter(x=>x!=="None").join(", ")||"None";
       const ac=k.accessories.filter(x=>x!=="None").join(", ")||"None";
       const kphotos=(k.photos||[]).filter(Boolean);
-      let block=`**${i+1}. ${k.brand} ${k.model}**${k.sold?" [SOLD]":""} | ${knifePrice(k)}`;
+      const statusLabel=k.sold?" [SOLD]":k.pending?" [PENDING]":"";
+      let block=`${dot(k)} **${i+1}. ${k.brand} ${k.model}**${statusLabel} | ${knifePrice(k)}`;
       block+=`\n${k.steel||"N/A"} | ${k.bladeCondition} | ${k.owners} owner | Centering: ${k.centering}`;
       if(iss!=="None")block+=` | Issues: ${iss}`;
       if(ac!=="None")block+=` | Accessories: ${ac}`;
@@ -653,16 +793,19 @@ function buildPost(post,v){
     }).join("\n\n");
     const bundleLine=bundle?`\n\nBundle: $${post.bundlePrice} for all`:"";
     const noshipLine=noShipList.length?` | No ship: ${noShipList.join(", ")}`:"";
+    const tradeFooter=isWTT&&ti?`\nTrade Interests: ${ti}`:"";
     const sig=un?`${un} - ${ts}`:ts;
-    return`${type} ${title} | ${ts}${rp}\n\nTimestamp: ${photoLine}\n\n${lines}${bundleLine}\n\nPayment: ${pay} | Shipping included${noshipLine}${post.notes?"\nNotes: "+post.notes:""}\n${sig}`;
+    return`${type} ${title} | ${ts}${rp}${headerBlock}\n\nTimestamp: ${photoLine}\n\n${lines}${bundleLine}\n\nPayment: ${pay} | Shipping included${noshipLine}${tradeFooter}${post.notes?"\nNotes: "+post.notes:""}\n${sig}`;
   }
 
   // MINIMAL (v=2) - one line per knife
   const photoLine=allPhotos.length?allPhotos[0]:"[ paste your timestamp photo link here ]";
+  const headerBlock=ph?`\n${ph}`:"";
   const bundleLine=bundle?`\nBundle: $${post.bundlePrice} for all`:"";
   const noshipLine=noShipList.length?` | No ship: ${noShipList.join(", ")}`:"";
+  const tradeFooter=isWTT&&ti?` | Trades: ${ti}`:"";
   const sig=un?`${un} - ${ts}`:ts;
-  return`${type} ${title}${rp}\n${photoLine}\n\n${post.knives.map(k=>`${k.brand} ${k.model}${k.sold?" [SOLD]":""} | ${knifePrice(k)} | ${k.steel||"N/A"}, ${k.bladeCondition}`).join("\n")}${bundleLine}\n\nPayment: ${pay} | Shipping included${noshipLine}${post.notes?"\n"+post.notes:""}\n${sig}`;
+  return`${type} ${title}${rp}\n${photoLine}${headerBlock}\n\n${post.knives.map(k=>`${dot(k)} ${k.brand} ${k.model}${k.sold?" [SOLD]":k.pending?" [PENDING]":""} | ${knifePrice(k)} | ${k.steel||"N/A"}, ${k.bladeCondition}`).join("\n")}${bundleLine}\n\nPayment: ${pay} | Shipping included${noshipLine}${tradeFooter}${post.notes?"\n"+post.notes:""}\n${sig}`;
 }
 
 // ─── UPLOAD ───────────────────────────────────────────────────
@@ -696,7 +839,7 @@ async function uploadFile(file){
 function removeUpload(uid){S.uploadFiles=S.uploadFiles.filter(x=>x.uid!==uid);S.draft.photos=S.uploadFiles.filter(x=>x.url).map(x=>x.url);render();}
 
 // Per-knife photo uploads
-function triggerKnifeUpload(){const el=document.getElementById("kf-photo-input");if(el){el.value="";el.click();}}
+function triggerKnifeUpload(){const el=document.getElementById("kf-photo-input-hidden");if(el){el.value="";el.click();}}
 function handleKnifeFileInput(e){[...e.target.files].forEach(f=>uploadKnifePhoto(f));}
 async function uploadKnifePhoto(file){
   const uid=gid();
@@ -782,6 +925,8 @@ function saveKF(){
 }
 function removeKnife(i){
   const k=S.draft.knives[i];
+  const name=k?(k.brand+" "+k.model).trim():"this knife";
+  if(!confirm("Remove "+name+" from this listing?"))return;
   if(k&&k.inventoryId){
     const inv=S.inventory.find(x=>x.id===k.inventoryId);
     if(inv){
@@ -826,7 +971,7 @@ function executeMove(toPostId){
 // ─── POST ACTIONS ─────────────────────────────────────────────
 function syncDraft(){
   const g=id=>document.getElementById(id);
-  ["notes","paymentOther","noShipOther"].forEach(k=>{const e=g("d-"+k);if(e)S.draft[k]=e.value});
+  ["notes","paymentOther","noShipOther","tradeInterests"].forEach(k=>{const e=g("d-"+k);if(e)S.draft[k]=e.value});
   const bp=g("d-bundlePrice");if(bp)S.draft.bundlePrice=bp.value;
   // Also grab manual photo URL if set
   const mu=g("d-manualUrl");if(mu&&mu.value.trim()){if(!S.draft.photos.includes(mu.value.trim()))S.draft.photos.push(mu.value.trim());}
@@ -850,7 +995,7 @@ function markSold(pid,ki){
   const p=S.posts.find(x=>x.id===pid);if(!p)return;
   if(p.knives[ki]?.sold){
     // Relist
-    up(s=>{const p=s.posts.find(x=>x.id===pid);if(!p)return;const k=p.knives[ki];k.sold=false;k.soldAt=null;k.soldTo=null;if(k.inventoryId){const inv=s.inventory.find(x=>x.id===k.inventoryId);if(inv)inv.status="listed";}p.postText=buildPost(p);});
+    up(s=>{const p=s.posts.find(x=>x.id===pid);if(!p)return;const k=p.knives[ki];k.sold=false;k.soldAt=null;k.soldTo=null;k.pending=false;if(k.inventoryId){const inv=s.inventory.find(x=>x.id===k.inventoryId);if(inv)inv.status="listed";}p.postText=buildPost(p);});
     saveInv();return;
   }
   S.soldFlow={pid,ki};render();
@@ -859,10 +1004,16 @@ function confirmSoldFlow(){
   const sf=S.soldFlow;if(!sf)return;
   const raw=(document.getElementById("sold-to-input")?.value||"").trim();
   const buyer=raw.replace(/^@/,"").replace(/^\/?u\//i,"");
-  up(s=>{const p=s.posts.find(x=>x.id===sf.pid);if(!p)return;const k=p.knives[sf.ki];k.sold=true;k.soldAt=new Date().toISOString();k.soldTo=buyer||null;if(k.inventoryId){const inv=s.inventory.find(x=>x.id===k.inventoryId);if(inv)inv.status="sold";}p.postText=buildPost(p);});
+  up(s=>{const p=s.posts.find(x=>x.id===sf.pid);if(!p)return;const k=p.knives[sf.ki];k.sold=true;k.soldAt=new Date().toISOString();k.soldTo=buyer||null;k.pending=false;if(k.inventoryId){const inv=s.inventory.find(x=>x.id===k.inventoryId);if(inv)inv.status="sold";}p.postText=buildPost(p);});
   saveInv();S.soldFlow=null;render();
 }
 function cancelSoldFlow(){S.soldFlow=null;render();}
+function markPending(pid,ki){
+  up(s=>{const p=s.posts.find(x=>x.id===pid);if(!p)return;const k=p.knives[ki];if(!k||k.sold)return;k.pending=!k.pending;p.postText=buildPost(p);});
+}
+function markInvPending(idx){
+  upInv(s=>{const k=s.inventory[idx];if(!k||k.status==="sold")return;k.pending=!k.pending;});
+}
 function buildConfirmComment(pid,ki){
   const p=S.posts.find(x=>x.id===pid);if(!p)return"";
   const k=p.knives[ki];if(!k||!k.sold)return"";
@@ -1032,9 +1183,11 @@ function renderAuthModal(){
 </div>`;
 }
 function mainHdr(){
-  const authBtn=S.authStatus==="signed_in"
-    ?`<button class="auth-btn signed" onclick="S.modal='auth';render()" title="${esc(S.authEmail)}"><div class="auth-avatar">${S.authEmail[0].toUpperCase()}</div><span class="auth-label">${esc(S.authEmail)}</span></button>`
-    :`<button class="auth-btn" onclick="S.modal='auth';render()">&#9729; Sign In</button>`;
+  const authBtn=S.authLoading
+    ?`<button class="auth-btn" style="opacity:.55;pointer-events:none;cursor:default" aria-label="Loading"><div class="auth-avatar" style="background:var(--t4);width:18px;height:18px;border-radius:50%;flex-shrink:0"></div><span class="auth-label" style="color:var(--t4)">···</span></button>`
+    :S.authStatus==="signed_in"
+      ?`<button class="auth-btn signed" onclick="S.modal='auth';render()" title="${esc(S.authEmail)}"><div class="auth-avatar">${S.authEmail[0].toUpperCase()}</div><span class="auth-label">${esc(S.authEmail)}</span></button>`
+      :`<button class="auth-btn" onclick="S.modal='auth';render()">&#9729; Sign In</button>`;
   return`<div class="hdr">
     <div class="hdr-logo" onclick="S.view='list';render()"><div class="hdr-ico"><span class="hdr-ico-lbl">KS</span></div><div><div class="hdr-title">Knife_Swap</div><div class="hdr-sub">Post Generator &amp; Tracker</div></div></div>
     <div class="hdr-tabs"><div class="tab-seg"><button class="tab-item${S.view==='list'?' on':''}" onclick="S.view='list';render()">Listings</button><button class="tab-item${S.view==='roll'?' on':''}" onclick="S.view='roll';render()">The Roll</button><button class="tab-item${S.view==='sold'?' on':''}" onclick="S.view='sold';render()">Sold</button></div></div>
@@ -1050,15 +1203,28 @@ function kfFormHtml(){
   const pr=s.priceResearch;
   let prPanel="";
   if(pr.status==="loading"){
-    prPanel=`<div class="pr-panel"><div class="pr-panel-hdr"><span>Searching r/Knife_Swap for "${esc(pr.query)}"...</span></div><div style="padding:16px 12px;font-size:12px;color:var(--t3);text-align:center">Loading...</div></div>`;
+    prPanel=`<div class="pr-panel"><div class="pr-panel-hdr"><span>Searching r/Knife_Swap for "${esc(pr.query)}"…</span></div><div style="padding:16px 12px;font-size:12px;color:var(--t3);text-align:center;display:flex;align-items:center;justify-content:center;gap:8px"><span class="up-spin"></span>Loading…</div></div>`;
   }else if(pr.status==="done"||pr.status==="empty"){
     const rows=pr.results.map(r=>{
-      const prices=r.prices.length?`<span class="pr-price">${r.prices[0]}</span>`:"";
-      return`<div class="pr-row"><div class="pr-row-text"><a class="pr-row-title" href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.title)}</a><div class="pr-row-meta">${esc(r.author)} · ${esc(r.date)}</div></div>${prices}</div>`;
+      // Status chip — uses CSS vars so it works in both light & dark
+      const chip=r.isSold
+        ?`<span style="font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:20px;background:var(--redbg);color:var(--redt);flex-shrink:0;white-space:nowrap">SOLD</span>`
+        :r.isWTT
+          ?`<span style="font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:20px;background:var(--bluebg);color:var(--bluet);flex-shrink:0;white-space:nowrap">WTT</span>`
+          :r.prices.length
+            ?`<span style="font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:20px;background:var(--greenbg);color:var(--greent);flex-shrink:0;white-space:nowrap">Active</span>`
+            :"";
+      // Price chips — clickable to apply to price field
+      const priceChips=r.prices.slice(0,4).map(p=>`<span class="pr-price" onclick="applyPriceFromResearch('${esc(p)}')" style="cursor:pointer;user-select:none" title="Tap to use ${esc(p)}">${esc(p)}</span>`).join(" ");
+      const meta=`${esc(r.author)} · ${esc(r.date)}${r.flair?" · "+esc(r.flair):""}`;
+      return`<div class="pr-row"><div class="pr-row-text"><a class="pr-row-title" href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.title)}</a><div class="pr-row-meta">${meta}</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">${chip}${priceChips}</div></div>`;
     }).join("")||`<div style="padding:14px 12px;font-size:12px;color:var(--t3);text-align:center">No recent posts found for this knife.</div>`;
-    prPanel=`<div class="pr-panel"><div class="pr-panel-hdr"><span>Recent sales for "${esc(pr.query)}"</span><button onclick="clearPriceResearch()" style="background:none;border:none;cursor:pointer;color:var(--t4);font-size:13px;padding:0">&#x2715;</button></div>${rows}</div>`;
+    const avgNote=pr.results.reduce((acc,r)=>acc.concat(r.prices),[]).length
+      ?(()=>{const nums=pr.results.reduce((acc,r)=>acc.concat(r.prices.map(p=>parseFloat(p.replace(/[^0-9.]/g,"")))).filter(Boolean),[]);const avg=nums.reduce((a,b)=>a+b,0)/nums.length;return`<div style="padding:7px 12px;font-size:11px;color:var(--t3);border-top:.5px solid var(--b2)">💡 Avg price seen: <strong style="color:var(--t1)">$${Math.round(avg)}</strong> across ${nums.length} price mention${nums.length!==1?"s":""}</div>`;})()
+      :"";
+    prPanel=`<div class="pr-panel"><div class="pr-panel-hdr"><span>r/Knife_Swap results for "${esc(pr.query)}"</span><button onclick="clearPriceResearch()" style="background:none;border:none;cursor:pointer;color:var(--t4);font-size:13px;padding:0">&#x2715;</button></div>${rows}${avgNote}</div>`;
   }else if(pr.status==="fallback"){
-    prPanel=`<div class="pr-panel"><div style="padding:10px 12px;font-size:12px;color:var(--t3)">Couldn't load results inline - opened Reddit search in a new tab.</div></div>`;
+    prPanel=`<div class="pr-panel"><div style="padding:10px 12px;font-size:12px;color:var(--t3)">Couldn't load inline — opened Reddit search in a new tab.</div></div>`;
   }
   return`<div class="kf" style="margin-top:10px"><div class="kf-hdr"><div class="kf-title">${s.kfIdx>=0?"Edit Knife":(isLock?"Add to The Roll":"Add a Knife")}</div>${badge}</div>
     <div class="fr2" style="margin-bottom:11px"><div class="field"><label>Brand</label><input type="text" id="kf-brand" list="dl-brands" value="${esc(f.brand)}" placeholder="e.g. Spyderco" oninput="updateModelList()"/></div><div class="field"><label>Model</label><input type="text" id="kf-model" list="dl-models" value="${esc(f.model)}" placeholder="e.g. Para 3 LW"/></div></div>
@@ -1076,8 +1242,7 @@ function kfFormHtml(){
     <div class="fr3"><div class="field"><label>Carried?</label><div class="yn-row">${["Yes","No"].map(v=>`<button class="yn${f.carried===v?" on":""}" onclick="syncKF();S.kf.carried='${v}';render()">${v}</button>`).join("")}</div></div><div class="field"><label>Used to cut?</label><div class="yn-row">${["Yes","No"].map(v=>`<button class="yn${f.usedCut===v?" on":""}" onclick="syncKF();S.kf.usedCut='${v}';render()">${v}</button>`).join("")}</div></div><div class="field"><label>Sharpened?</label><div class="yn-row">${["Yes","No"].map(v=>`<button class="yn${f.sharpened===v?" on":""}" onclick="syncKF();S.kf.sharpened='${v}';render()">${v}</button>`).join("")}</div></div></div>
     <button class="adv-btn" onclick="syncKF();S.adv=!S.adv;render()">${s.adv?"Hide":"Show"} advanced</button>${advHtml}
     <div class="field" style="margin-top:12px">
-      <label>Knife Photos <span style="font-weight:400;color:var(--t4);font-size:11px">(optional - stored with this knife)</span></label>
-      <input type="file" id="kf-photo-input" accept="image/*" multiple style="display:none" onchange="handleKnifeFileInput(event)"/>
+      <label>Knife Photos &amp; Videos <span style="font-weight:400;color:var(--t4);font-size:11px">(optional - stored with this knife)</span></label>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <button class="btn btn-sec btn-sm" onclick="triggerKnifeUpload()" type="button">+ Add Photos</button>
         ${s.kfUploads.map(u=>`<div style="display:flex;align-items:center;gap:5px;font-size:11px;padding:4px 8px;background:var(--bg);border:.5px solid var(--b2);border-radius:6px;max-width:200px">${u.uploading?`<span style="color:var(--t4)">uploading...</span>`:u.error?`<span style="color:var(--redt);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(u.error)}</span>`:`<a href="${esc(u.url)}" target="_blank" style="color:var(--blue);text-decoration:none;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(u.name)}</a>`}<button onclick="removeKnifeUpload('${u.uid}')" style="background:none;border:none;color:var(--t4);cursor:pointer;padding:0;font-size:12px;line-height:1;margin-left:2px">&times;</button></div>`).join("")}
@@ -1118,7 +1283,9 @@ function renderList(){
         const ccCopied=s.copied===ccKey;
         const soldToMeta=k.sold&&k.soldTo?` · Buyer: u/${esc(k.soldTo)}`:"";
         const sfHtml=isSF?`<div class="sold-flow"><div style="font-size:12px;font-weight:700;color:var(--greent);margin-bottom:9px">Who bought it?</div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><input id="sold-to-input" type="text" placeholder="Buyer's Reddit username (optional)" style="flex:1;min-width:160px;font-size:13px;padding:7px 10px;border:.5px solid var(--b2);border-radius:8px;outline:none"/><button class="btn btn-gn btn-sm" onclick="confirmSoldFlow()">Confirm Sold</button><button class="btn btn-sec btn-sm" onclick="cancelSoldFlow()">Cancel</button></div><div style="font-size:11px;color:var(--greent);opacity:.8;margin-top:8px;line-height:1.5">Add their username to generate a confirmation comment for the <a href="https://www.reddit.com/r/Knife_Swap/search/?q=Confirmed+Trade+Thread&restrict_sr=1&sort=new&type=link" target="_blank" rel="noopener" style="color:inherit;font-weight:700;text-decoration:underline">Confirmed Trade Thread</a></div></div>`:"";
-        return`<div class="krow${k.sold?" sold":""}${isMoving?" moving":""}"><div class="krow-info"><div class="krow-name${k.sold?" s":""}">${esc(k.brand)} ${esc(k.model)}${kPhotoCount?` <span style="font-size:10px;font-weight:500;color:var(--blue);background:rgba(0,122,255,.1);border-radius:4px;padding:1px 5px">📷 ${kPhotoCount}</span>`:""}</div><div class="krow-meta">${esc(k.steel||"N/A")} · ${esc(k.bladeCondition)}${k.sold&&k.soldAt?" · Sold "+fmtD(k.soldAt):""}${soldToMeta}</div></div><span class="krow-price${k.sold?" s":""}">${knifePrice(k)}</span>${k.sold?`<span class="sold-chip">Sold</span><button class="btn btn-sm${ccCopied?" btn-gn":" btn-pu"}" onclick="copyConfirmComment('${p.id}',${i})">${ccCopied?"Copied!":"Confirm Comment"}</button><button class="btn btn-sm btn-sec" onclick="markSold('${p.id}',${i})">Relist</button>`:`<button class="btn btn-sm btn-gn" onclick="markSold('${p.id}',${i})">Mark Sold</button>`}${!k.sold&&s.posts.length>1?`<button class="btn btn-sm btn-pu" onclick="startMove('${p.id}',${i})">Transfer</button>`:""}</div>${sfHtml}${picker}`;
+        const kDot=k.sold?"🔴":k.pending?"🟡":"🟢";
+        const kRowClass=`krow${k.sold?" sold":k.pending?" pending-row":""}${isMoving?" moving":""}`;
+        return`<div class="${kRowClass}"><div class="krow-info"><div class="krow-name${k.sold?" s":""}">${kDot} ${esc(k.brand)} ${esc(k.model)}${k.pending&&!k.sold?` <span style="font-size:10px;font-weight:700;background:var(--orangebg);color:var(--oranget);border-radius:4px;padding:1px 5px">PENDING</span>`:""}${kPhotoCount?` <span style="font-size:10px;font-weight:500;color:var(--blue);background:rgba(0,122,255,.1);border-radius:4px;padding:1px 5px">📷 ${kPhotoCount}</span>`:""}</div><div class="krow-meta">${esc(k.steel||"N/A")} · ${esc(k.bladeCondition)}${k.sold&&k.soldAt?" · Sold "+fmtD(k.soldAt):""}${soldToMeta}</div></div><span class="krow-price${k.sold?" s":""}">${knifePrice(k)}</span>${k.sold?`<span class="sold-chip">Sold</span><button class="btn btn-sm${ccCopied?" btn-gn":" btn-pu"}" onclick="copyConfirmComment('${p.id}',${i})">${ccCopied?"Copied!":"Confirm Comment"}</button><button class="btn btn-sm btn-sec" onclick="markSold('${p.id}',${i})">Relist</button>`:`<button class="btn btn-sm${k.pending?" btn-am":" btn-sec"}" style="${k.pending?"background:var(--orangebg);color:var(--oranget)":""}" onclick="markPending('${p.id}',${i})">${k.pending?"🟡 Pending":"🟡 Pending?"}</button><button class="btn btn-sm btn-gn" onclick="markSold('${p.id}',${i})">🟢→🔴 Sold</button>`}${!k.sold&&s.posts.length>1?`<button class="btn btn-sm btn-pu" onclick="startMove('${p.id}',${i})">Transfer</button>`:""}</div>${sfHtml}${picker}`;
       }).join("");
       const da2=daysAgo(p.createdAt);
       const repostSection=pA>0?`<div class="repost-track">
@@ -1154,15 +1321,17 @@ function renderRoll(){
   const li=inv.filter(k=>k.status==="listed").length;
   const so=inv.filter(k=>k.status==="sold").length;
   if(!inv.length)return hdr+`<div class="main"><div class="empty"><div class="empty-ico">🔪</div><div class="empty-h">The Roll is empty</div><div class="empty-p">Add knives to The Roll to track your collection and quickly pull them into listings.</div><button class="btn btn-pri" onclick="openKF(-1,'locker')">+ Add First Knife</button></div></div>${S.kfOpen?kfFormHtml():""}`;
+  const pe=inv.filter(k=>k.pending&&k.status!=="sold").length;
   const fil=S.lockerFilter;
-  const filtered=fil==="all"?inv:inv.filter(k=>k.status===fil);
-  const stats=`<div class="stats"><div class="stat"><div class="stat-n">${inv.length}</div><div class="stat-l">Total</div></div><div class="stat"><div class="stat-n green">${av}</div><div class="stat-l">Available</div></div><div class="stat"><div class="stat-n orange">${li}</div><div class="stat-l">In Listing</div></div><div class="stat"><div class="stat-n" style="color:var(--t3)">${so}</div><div class="stat-l">Sold</div></div><div class="stat" style="margin-left:auto"><button class="btn btn-pri btn-sm" onclick="openKF(-1,'locker')">+ Add Knife</button></div></div>`;
-  const filterBar=`<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center"><div class="seg">${[["All","all"],["Available","available"],["In Listing","listed"],["Sold","sold"]].map(([l,v])=>`<button class="seg-item${fil===v?" on":""}" onclick="S.lockerFilter='${v}';render()">${l}</button>`).join("")}</div></div>`;
+  const filtered=fil==="all"?inv:fil==="pending"?inv.filter(k=>k.pending&&k.status!=="sold"):inv.filter(k=>k.status===fil);
+  const stats=`<div class="stats"><div class="stat"><div class="stat-n">${inv.length}</div><div class="stat-l">Total</div></div><div class="stat"><div class="stat-n green">${av}</div><div class="stat-l">🟢 Available</div></div><div class="stat"><div class="stat-n orange">${li}</div><div class="stat-l">In Listing</div></div>${pe>0?`<div class="stat"><div class="stat-n" style="color:var(--oranget)">${pe}</div><div class="stat-l">🟡 Pending</div></div>`:""}<div class="stat"><div class="stat-n" style="color:var(--t3)">${so}</div><div class="stat-l">🔴 Sold</div></div><div class="stat" style="margin-left:auto"><button class="btn btn-pri btn-sm" onclick="openKF(-1,'locker')">+ Add Knife</button></div></div>`;
+  const filterBar=`<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center"><div class="seg">${[["All","all"],["🟢 Available","available"],["In Listing","listed"],["🟡 Pending","pending"],["🔴 Sold","sold"]].map(([l,v])=>`<button class="seg-item${fil===v?" on":""}" onclick="S.lockerFilter='${v}';render()">${l}</button>`).join("")}</div></div>`;
   const cards=filtered.length?`<div class="lk-grid">${filtered.map((k,i)=>{
     const realIdx=inv.indexOf(k);
-    const sb=k.status==="available"?`<span class="lk-badge av">Available</span>`:k.status==="listed"?`<span class="lk-badge li">In Listing</span>`:`<span class="lk-badge so">Sold</span>`;
+    const statusDot=k.status==="sold"?"🔴":k.pending?"🟡":"🟢";
+    const sb=k.status==="available"&&!k.pending?`<span class="lk-badge av">🟢 Available</span>`:k.pending&&k.status!=="sold"?`<span class="lk-badge pe">🟡 Pending</span>`:k.status==="listed"?`<span class="lk-badge li">In Listing</span>`:`<span class="lk-badge so">🔴 Sold</span>`;
     const lkPc=(k.photos||[]).length;
-    return`<div class="lk-card"><div class="lk-brand">${esc(k.brand)}</div><div class="lk-model">${esc(k.model)}${lkPc?` <span style="font-size:10px;color:var(--blue)">📷${lkPc}</span>`:""}</div><div class="lk-steel">${esc(k.steel||"Steel N/A")} · ${esc(k.bladeCondition)}</div><div class="lk-price">$${esc(k.price)}${k.obo?" OBO":""}</div>${sb}<div class="lk-acts">${k.status!=="sold"?`<button class="btn btn-sm btn-gn" onclick="markInvSold(${realIdx})">Mark Sold</button>`:`<button class="btn btn-sm btn-sec" onclick="markInvSold(${realIdx})">Relist</button>`}<button class="btn btn-sm btn-sec" onclick="openKF(${realIdx},'locker')">Edit</button><button class="btn btn-sm btn-rd" onclick="removeFromInventory(${realIdx})">Remove</button></div></div>`;
+    return`<div class="lk-card"><div class="lk-brand">${esc(k.brand)}</div><div class="lk-model">${statusDot} ${esc(k.model)}${lkPc?` <span style="font-size:10px;color:var(--blue)">📷${lkPc}</span>`:""}</div><div class="lk-steel">${esc(k.steel||"Steel N/A")} · ${esc(k.bladeCondition)}</div><div class="lk-price">$${esc(k.price)}${k.obo?" OBO":""}</div>${sb}<div class="lk-acts">${k.status!=="sold"?`<button class="btn btn-sm${k.pending?" btn-sec":""}" style="${k.pending?"background:var(--orangebg);color:var(--oranget)":""}" onclick="markInvPending(${realIdx})">${k.pending?"🟡 Pending":"🟡 Pending?"}</button>`:""}${k.status!=="sold"?`<button class="btn btn-sm btn-gn" onclick="markInvSold(${realIdx})">🔴 Sold</button>`:`<button class="btn btn-sm btn-sec" onclick="markInvSold(${realIdx})">Relist</button>`}<button class="btn btn-sm btn-sec" onclick="openKF(${realIdx},'locker')">Edit</button><button class="btn btn-sm btn-rd" onclick="removeFromInventory(${realIdx})">Remove</button></div></div>`;
   }).join("")}</div>`:`<div style="text-align:center;padding:40px 0;color:var(--t4);font-size:13px">No ${fil} knives</div>`;
   const form=S.kfOpen&&S.kfMode==="locker"?kfFormHtml():"";
   return hdr+`<div class="main">${stats}${filterBar}${form}${cards}</div>`;
@@ -1236,7 +1405,7 @@ function renderCompose(){
       <label>Photos &amp; Timestamp</label>
       <div class="ts-req">📸 Include one photo showing <strong>all knives</strong> in this post with a handwritten note: your Reddit username + full date (e.g. <em>u/yourname - March 14, 2026</em>)</div>
       <div class="up-zone" onclick="triggerUpload()" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave()">
-        <div class="up-lbl">Drop photos here or click to upload</div>
+        <div class="up-lbl">Drop photos or videos here or click to upload</div>
         <div class="up-sub">Uploads to Catbox.moe - free hosting${SETTINGS.catboxHash?" (linked to your account)":""}</div>
       </div>
       <div style="font-size:11px;color:var(--t4);line-height:1.5;margin-top:6px;padding:0 2px">⚠️ Catbox uploads are <strong>permanent</strong> - files cannot be deleted without a Catbox account. <a href="https://catbox.moe" target="_blank" style="color:var(--blue);text-decoration:none">Create a free account</a> and add your userhash in Settings to manage your files.</div>
@@ -1277,6 +1446,7 @@ function renderCompose(){
       </div>`:""}
     </div>
     <div class="field" style="margin-bottom:12px"><label>Additional notes</label><input type="text" id="d-notes" value="${esc(d.notes)}" placeholder="Open to offers, prefer local pickup, etc."/></div>
+    ${d.postType.includes("WTT")?`<div class="field" style="margin-bottom:12px"><label>Trade Interests <span style="font-weight:400;color:var(--t4);font-size:11px">— what are you looking for?</span></label><input type="text" id="d-tradeInterests" value="${esc(d.tradeInterests||"")}" placeholder="Spyderco Para 3, Benchmade Bugout, CRK Sebenza..." oninput="syncDraft()"/><div class="field-hint">Will appear in the generated post under "Trade Interests:"</div></div>`:`<input type="hidden" id="d-tradeInterests" value="${esc(d.tradeInterests||"")}"/>`}
     ${d.knives.length>1?`<div class="bundle-box" style="margin-bottom:14px"><div class="bundle-box-top"><label class="cblk"><input type="checkbox" ${d.bundleEnabled?"checked":""} onchange="syncDraft();S.draft.bundleEnabled=this.checked;render()"/> Bundle pricing</label><span style="font-size:11px;color:var(--t3)">Offer one price for the entire lot</span></div>${d.bundleEnabled?`<div class="field" style="margin-top:8px"><label>Bundle price ($)</label><input type="number" id="d-bundlePrice" min="0" value="${esc(d.bundlePrice||"")}" placeholder="e.g. 350" oninput="syncDraft()"/></div>`:""}</div>`:""}
     <label class="cblk"><input type="checkbox" ${d.rulesConfirmed?"checked":""} onchange="S.draft.rulesConfirmed=this.checked;render()"/> I have read all r/Knife_Swap rules</label>
     ${s.err&&d.knives.length>0?`<div class="err">${esc(s.err)}</div>`:""}
@@ -1298,6 +1468,8 @@ function renderSettings(){
   </div>
   <div class="settings-section-lbl">Post Defaults</div>
   <div class="sgroup">
+    <div class="srow" style="flex-direction:column;align-items:flex-start;gap:8px"><div><div class="srow-lbl">Custom Post Header</div><div class="srow-sub" style="line-height:1.5;max-width:380px">Personal intro text that appears at the top of every generated post — your rules, trade interests disclaimer, backstory, etc. Leave blank for no header.</div></div><textarea style="min-height:80px;font-size:13px" placeholder="e.g. * PayPal G&S only · Shipped CONUS&#10;* Yolo &gt; Chat · Only interested in CRK, Hinderer&#10;Letting go of some catch-and-releases..." onchange="SETTINGS.postHeader=this.value;saveSettings()">${esc(sv.postHeader||"")}</textarea></div>
+    <div class="srow" style="flex-direction:column;align-items:flex-start;gap:8px"><div><div class="srow-lbl">Default Trade Interests</div><div class="srow-sub" style="max-width:380px;line-height:1.5">Added to WTT/WTS+WTT posts under "Trade Interests:". Can be overridden per-post in compose.</div></div><input type="text" style="width:100%;font-size:13px;padding:7px 10px" value="${esc(sv.tradeInterests||"")}" placeholder="e.g. Spyderco Para 3, CRK Sebenza, Hinderer XM-18..." onchange="SETTINGS.tradeInterests=this.value;saveSettings()"/></div>
     <div class="srow"><div><div class="srow-lbl">Payment</div><div class="srow-sub">Default payment methods</div></div><div class="srow-ctrl"><div class="chips">${PAYS.map(p=>`<button class="chip sm mul${sv.payment.includes(p)?" on":""}" onclick="SETTINGS.payment=tm(SETTINGS.payment,'${p}').length?tm(SETTINGS.payment,'${p}'):SETTINGS.payment;saveSettings()">${p}</button>`).join("")}</div></div></div>
     <div class="srow"><div><div class="srow-lbl">No-Ship Defaults</div><div class="srow-sub">Pre-select restricted states</div></div><div class="srow-ctrl"><div class="chips">${NO_SHIP.map(p=>`<button class="chip sm mul${(sv.noShip||[]).includes(p)?" on":""}" onclick="SETTINGS.noShip=tm(SETTINGS.noShip||[],'${p}');saveSettings()">${p}</button>`).join("")}</div></div></div>
   </div>
@@ -1359,8 +1531,9 @@ window.updateModelList=updateModelList;window.saveSettings=saveSettings;
 window.triggerUpload=triggerUpload;window.handleFileInput=handleFileInput;window.handleDrop=handleDrop;window.handleDragOver=handleDragOver;window.handleDragLeave=handleDragLeave;window.removeUpload=removeUpload;
 window.triggerKnifeUpload=triggerKnifeUpload;window.handleKnifeFileInput=handleKnifeFileInput;window.removeKnifeUpload=removeKnifeUpload;
 window.confirmSoldFlow=confirmSoldFlow;window.cancelSoldFlow=cancelSoldFlow;window.copyConfirmComment=copyConfirmComment;window.buildConfirmComment=buildConfirmComment;
+window.markPending=markPending;window.markInvPending=markInvPending;
 window.sendMagicLink=sendMagicLink;window.signOut=signOut;window.deleteAccount=deleteAccount;window.migrateToSupabase=migrateToSupabase;window.skipMigrate=skipMigrate;
-window.autoPostType=autoPostType;window.buildTitleStr=buildTitleStr;window.doFetchPriceResearch=doFetchPriceResearch;window.clearPriceResearch=clearPriceResearch;
+window.autoPostType=autoPostType;window.buildTitleStr=buildTitleStr;window.doFetchPriceResearch=doFetchPriceResearch;window.clearPriceResearch=clearPriceResearch;window.applyPriceFromResearch=applyPriceFromResearch;
 render();
 (async()=>{
   await loadSettings();
