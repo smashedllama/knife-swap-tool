@@ -813,11 +813,19 @@ async function doFetchPriceResearch(){
   const qSearchBroad=qSearchBase;
   S.priceResearch={status:"loading",results:[],query:qBase};render();
 
+  // Check 30-min localStorage cache before hitting Reddit
+  const cacheKey=("ks_pr_"+(qBase+"_"+(f.steel||"")).replace(/\s+/g,"_").toLowerCase());
+  try{const c=JSON.parse(localStorage.getItem(cacheKey)||"null");if(c&&Date.now()-c.ts<30*60*1000){S.priceResearch=c.data;render();return;}}catch(e){}
+
   const fetchQ=async(searchQ,limit)=>{
+    const ctrl=new AbortController();
+    const tid=setTimeout(()=>ctrl.abort(),10000);
     const url="https://www.reddit.com/r/Knife_Swap/search.json?q="+encodeURIComponent(searchQ)+"&sort=new&restrict_sr=on&limit="+limit;
-    const res=await fetch(url,{headers:{"Accept":"application/json"}});
-    if(!res.ok)throw new Error("HTTP "+res.status);
-    return (await res.json()).data?.children||[];
+    try{
+      const res=await fetch(url,{headers:{"Accept":"application/json"},signal:ctrl.signal});
+      if(!res.ok)throw new Error("HTTP "+res.status);
+      return (await res.json()).data?.children||[];
+    }finally{clearTimeout(tid);}
   };
 
   // Score how well a post matches the target knife (higher = more relevant)
@@ -891,6 +899,8 @@ async function doFetchPriceResearch(){
       posts.sort(byScore);
     }
     S.priceResearch={status:posts.length?"done":"empty",results:posts,query:qBase,querySteel:f.steel?qSearch:null,searchedWithSteel};
+    // Cache successful results for 30 min — avoids hammering Reddit API
+    if(posts.length)try{localStorage.setItem(cacheKey,JSON.stringify({ts:Date.now(),data:S.priceResearch}));}catch(e){}
   }catch(e){
     S.priceResearch={status:"fallback",results:[],query:qBase};
     window.open("https://www.reddit.com/r/Knife_Swap/search/?q="+encodeURIComponent(qSearch)+"&sort=new&restrict_sr=1","_blank","noopener");
@@ -906,6 +916,8 @@ function applyPriceFromResearch(raw){
   render();
 }
 function extractKnifePrices(text,q){
+  // Guard against enormous post bodies causing regex slowdown
+  if(text.length>60000)text=text.slice(0,60000);
   const sections=text.split(/\n[-─*_]{3,}\n|\n(?=__[A-Z])|\n{2,}(?=[A-Z\*\#])/);
   const steel=S.kf?.steel||"";
   const baseTerms=q.toLowerCase().split(/\s+/).filter(t=>t.length>2);
@@ -1120,6 +1132,12 @@ function saveKF(){
   if(kt!=="WTS"&&!f.tradeValue){S.err="Trade value required for WTT listings.";render();return;}
   S.err="";
   f.photos=S.kfUploads.filter(x=>x.url).map(x=>x.url);
+  // Duplicate check: warn if same brand+model already in this draft listing
+  if(S.kfMode==="draft"){
+    const bLow=f.brand.toLowerCase(),mLow=f.model.toLowerCase();
+    const dup=S.draft.knives.find((k,i)=>i!==S.kfIdx&&(k.brand||"").toLowerCase()===bLow&&(k.model||"").toLowerCase()===mLow);
+    if(dup&&!confirm(`"${f.brand} ${f.model}" is already in this listing — add a second copy anyway?`))return;
+  }
   if(S.kfMode==="locker"){
     if(!f.id)f.id=gid();
     // Track price history when editing Roll knife with price change
@@ -1170,7 +1188,11 @@ function removeFromInventory(idx){if(!confirm("Remove this knife from The Roll?"
 function markInvSold(idx){upInv(s=>{const k=s.inventory[idx];k.status=k.status==="sold"?"available":"sold";k.soldAt=k.status==="sold"?new Date().toISOString():null;});}
 
 // ─── MOVE BETWEEN POSTS ───────────────────────────────────────
-function startMove(postId,ki){S.movingKnife={postId,ki};render();}
+function startMove(postId,ki){
+  const p=S.posts.find(x=>x.id===postId);
+  if(p&&p.knives[ki]?.sold){alert("Sold knives cannot be transferred between listings.");return;}
+  S.movingKnife={postId,ki};render();
+}
 function cancelMove(){S.movingKnife=null;render();}
 function executeMove(toPostId){
   const {postId:fromId,ki}=S.movingKnife;
@@ -1202,6 +1224,7 @@ function submitPost(){
   if(d.payment.includes("Other")&&!d.paymentOther.trim()){S.err="Please specify your 'Other' payment method.";render();return;}
   if(d.noShip.includes("Other")&&!d.noShipOther.trim()){S.err="Please specify the 'Other' no-ship location.";render();return;}
   if(!d.rulesConfirmed){S.err="Please confirm you have read the r/Knife_Swap rules.";render();return;}
+  if(d.bundleEnabled&&!String(d.bundlePrice||"").trim()){S.err="Enter a bundle price or uncheck the bundle offer.";render();return;}
   S.err="";
   const post={id:gid(),createdAt:new Date().toISOString(),variant:0,...JSON.parse(JSON.stringify(d))};
   post.postText=buildPost(post,0);
@@ -1580,7 +1603,8 @@ function renderRoll(){
   const pe=inv.filter(k=>k.pending&&k.status!=="sold").length;
   const fil=S.lockerFilter;
   const filtered=fil==="all"?inv:fil==="pending"?inv.filter(k=>k.pending&&k.status!=="sold"):inv.filter(k=>k.status===fil);
-  const stats=`<div class="stats"><div class="stat"><div class="stat-n">${inv.length}</div><div class="stat-l">Total</div></div><div class="stat"><div class="stat-n green">${av}</div><div class="stat-l">🟢 Available</div></div><div class="stat"><div class="stat-n orange">${li}</div><div class="stat-l">In Listing</div></div>${pe>0?`<div class="stat"><div class="stat-n" style="color:var(--oranget)">${pe}</div><div class="stat-l">🟡 Pending</div></div>`:""}<div class="stat"><div class="stat-n" style="color:var(--t3)">${so}</div><div class="stat-l">🔴 Sold</div></div><div class="stat" style="margin-left:auto;display:flex;gap:7px;align-items:center"><button class="btn btn-sec btn-sm" onclick="exportRollCSV()" title="Export to CSV">↓ CSV</button><button class="btn btn-pri btn-sm" onclick="openKF(-1,'locker')">+ Add Knife</button></div></div>`;
+  const rollValue=inv.filter(k=>k.status!=="sold").reduce((s,k)=>s+parseFloat(k.price||0),0);
+  const stats=`<div class="stats"><div class="stat"><div class="stat-n">${inv.length}</div><div class="stat-l">Total</div></div><div class="stat"><div class="stat-n green">${av}</div><div class="stat-l">🟢 Available</div></div><div class="stat"><div class="stat-n orange">${li}</div><div class="stat-l">In Listing</div></div>${pe>0?`<div class="stat"><div class="stat-n" style="color:var(--oranget)">${pe}</div><div class="stat-l">🟡 Pending</div></div>`:""}<div class="stat"><div class="stat-n" style="color:var(--t3)">${so}</div><div class="stat-l">🔴 Sold</div></div>${rollValue>0?`<div class="stat"><div class="stat-n purple">$${Math.round(rollValue).toLocaleString()}</div><div class="stat-l">Collection Value</div></div>`:""}<div class="stat" style="margin-left:auto;display:flex;gap:7px;align-items:center"><button class="btn btn-sec btn-sm" onclick="exportRollCSV()" title="Export to CSV">↓ CSV</button><button class="btn btn-pri btn-sm" onclick="openKF(-1,'locker')">+ Add Knife</button></div></div>`;
   const filterBar=`<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center"><div class="seg">${[["All","all"],["🟢 Available","available"],["In Listing","listed"],["🟡 Pending","pending"],["🔴 Sold","sold"]].map(([l,v])=>`<button class="seg-item${fil===v?" on":""}" onclick="S.lockerFilter='${v}';render()">${l}</button>`).join("")}</div></div>`;
   const cards=filtered.length?`<div class="lk-grid">${filtered.map((k,i)=>{
     const realIdx=inv.indexOf(k);
