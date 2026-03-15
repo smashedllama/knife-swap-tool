@@ -1367,20 +1367,22 @@ function startSamePriceRepost(pid){
   d.knives=p.knives.filter(k=>!k.sold).map(k=>JSON.parse(JSON.stringify(k)));
   S.draft=d;S.view="compose";S.kfOpen=false;S.kfIdx=-1;S.kf=EK();S.kfMode="draft";S.adv=false;S.err="";S.lockerPicker=false;S.uploadFiles=[];render();
 }
-function openRedditPost(pid){
+async function openRedditPost(pid){
   const p=S.posts.find(x=>x.id===pid);if(!p)return;
   const title=buildTitleStr(p.knives,p.postType,300);
-  let url="https://www.reddit.com/r/Knife_Swap/submit?selftext=true&title="+encodeURIComponent(title)+"&text="+encodeURIComponent(p.postText||"");
-  // For price-drop reposts, hint Reddit to pre-fill the flair
+  let url="https://www.reddit.com/r/Knife_Swap/submit?selftext=true&title="+encodeURIComponent(title);
   if(p.repost)url+="&flair_text="+encodeURIComponent("Price Reduced");
+  // Copy body to clipboard — Reddit ignores the &text= param in the new UI
+  try{await navigator.clipboard.writeText(p.postText||"");}catch(e){}
   window.open(url,"_blank","noopener");
-  // Remind user to select flair if it's a price drop repost
-  if(p.repost){
-    S.flairToast="Select 'Price Reduced' flair on Reddit before posting";
-    clearTimeout(S._flairTid);
-    S._flairTid=setTimeout(()=>{S.flairToast=null;render();},8000);
-    render();
-  }
+  // Show paste reminder (overrides flair toast if both apply)
+  const msg=p.repost
+    ?"📋 Post text copied — paste into body, then select 'Price Reduced' flair"
+    :"📋 Post text copied to clipboard — paste it into the Reddit body";
+  S.flairToast=msg;
+  clearTimeout(S._flairTid);
+  S._flairTid=setTimeout(()=>{S.flairToast=null;render();},9000);
+  render();
 }
 async function copyPost(pid){
   const p=S.posts.find(x=>x.id===pid);if(!p)return;
@@ -1420,7 +1422,7 @@ function render(){
     S.view==="sold"?renderSold():
     renderList();
   const toastHtml=S.undoToast?`<div class="undo-toast">↩ ${esc(S.undoToast)} <button class="undo-toast-btn" onclick="undoLast()">Undo</button></div>`:"";
-  const flairToastHtml=S.flairToast?`<div class="flair-toast">📉 ${esc(S.flairToast)}</div>`:"";
+  const flairToastHtml=S.flairToast?`<div class="flair-toast">${esc(S.flairToast)}</div>`:"";
   document.getElementById("root").innerHTML=view+(S.modal?renderModal(S.modal):"")+toastHtml+flairToastHtml;
   updateModelList();
 }
