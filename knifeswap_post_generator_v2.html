@@ -1048,7 +1048,7 @@ function buildPost(post,v){
     }).join("\n\n---\n\n");
     const bundleBlock=bundle?`\n\n---\n\n**Bundle: $${post.bundlePrice} takes all ${post.knives.length>1?post.knives.length+" knives":""}**`:"";
     const noshipLine=noShipList.length?`\n**Will NOT ship to:** ${noShipList.join(", ")}`:"";
-    const tradeFooter=isWTT&&ti?`\n**Trade Interests:** ${ti}`:"";
+    const tradeFooter=isWTT?(ti?`\n**Trade Interests:** ${ti}`:""):"\n**No Trades**";
     const notesLine=post.notes?`\n**Notes:** ${post.notes}`:"";
     const sig=un?`*${un} - ${ts}*`:`*${ts}*`;
     return`${type} ${title}${rp}${headerBlock}\n\n**Timestamp + Photos:**\n${photoBlock}\n\n---\n\n${blocks}${bundleBlock}\n\n---\n\n**Payment:** ${pay}\n**Shipping:** Included (CONUS)${noshipLine}${tradeFooter}${notesLine}\n\n${sig}`;
@@ -1073,7 +1073,7 @@ function buildPost(post,v){
     }).join("\n\n");
     const bundleLine=bundle?`\n\nBundle: $${post.bundlePrice} for all`:"";
     const noshipLine=noShipList.length?` | No ship: ${noShipList.join(", ")}`:"";
-    const tradeFooter=isWTT&&ti?`\nTrade Interests: ${ti}`:"";
+    const tradeFooter=isWTT?(ti?`\nTrade Interests: ${ti}`:""):"\nNo Trades";
     const sig=un?`${un} - ${ts}`:ts;
     return`${type} ${title} | ${ts}${rp}${headerBlock}\n\nTimestamp: ${photoLine}\n\n${lines}${bundleLine}\n\nPayment: ${pay} | Shipping included${noshipLine}${tradeFooter}${post.notes?"\nNotes: "+post.notes:""}\n${sig}`;
   }
@@ -1083,7 +1083,7 @@ function buildPost(post,v){
   const headerBlock=ph?`\n${ph}`:"";
   const bundleLine=bundle?`\nBundle: $${post.bundlePrice} for all`:"";
   const noshipLine=noShipList.length?` | No ship: ${noShipList.join(", ")}`:"";
-  const tradeFooter=isWTT&&ti?` | Trades: ${ti}`:"";
+  const tradeFooter=isWTT?(ti?` | Trades: ${ti}`:""):" | No Trades";
   const sig=un?`${un} - ${ts}`:ts;
   return`${type} ${title}${rp}\n${photoLine}${headerBlock}\n\n${post.knives.map(k=>`${dot(k)} ${k.brand} ${k.model}${k.sold?" [SOLD]":k.pending?" [PENDING]":""} | ${knifePrice(k)} | ${k.steel||"N/A"}, ${k.bladeCondition}`).join("\n")}${bundleLine}\n\nPayment: ${pay} | Shipping included${noshipLine}${tradeFooter}${post.notes?"\n"+post.notes:""}\n${sig}`;
 }
