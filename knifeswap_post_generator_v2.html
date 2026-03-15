@@ -328,6 +328,7 @@ textarea{resize:vertical;line-height:1.55}
 .pr-panel-hdr{padding:8px 12px;font-size:11px;font-weight:600;color:var(--t3);background:var(--card);border-bottom:.5px solid var(--b1);display:flex;justify-content:space-between;align-items:center}
 .pr-row{padding:9px 12px;border-bottom:.5px solid var(--b2);display:flex;gap:10px;align-items:center}
 .pr-row:last-child{border-bottom:none}
+.pr-row-match{border-left:2.5px solid var(--green);padding-left:9.5px}
 .pr-row-text{flex:1;min-width:0}
 .pr-row-title{font-size:12px;color:var(--blue);line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-decoration:none;display:block}
 .pr-row-title:hover{text-decoration:underline}
@@ -796,36 +797,60 @@ function buildTitleStr(knives,postType,maxLen){
 // Price research via Reddit public JSON (free, no auth)
 async function doFetchPriceResearch(){
   const f=S.kf;
-  // Use brand+model only (steel makes results too narrow)
   const q=[f.brand,f.model].filter(Boolean).join(" ").trim();
   if(!q){S.priceResearch={status:"idle",results:[],query:""};render();return;}
-  S.priceResearch={status:"loading",results:[],query:q};render();
-  try{
-    // No type=link — r/Knife_Swap uses self posts; prices live in the post body (selftext)
-    const url="https://www.reddit.com/r/Knife_Swap/search.json?q="+encodeURIComponent(q)+"&sort=new&restrict_sr=on&limit=15";
+  // Steel-specific query for a more targeted first pass
+  const qSteel=f.steel?[f.brand,f.model,f.steel].filter(Boolean).join(" ").trim():null;
+  S.priceResearch={status:"loading",results:[],query:qSteel||q};render();
+
+  const fetchQ=async(searchQ,limit)=>{
+    const url="https://www.reddit.com/r/Knife_Swap/search.json?q="+encodeURIComponent(searchQ)+"&sort=new&restrict_sr=on&limit="+limit;
     const res=await fetch(url,{headers:{"Accept":"application/json"}});
     if(!res.ok)throw new Error("HTTP "+res.status);
-    const data=await res.json();
-    const posts=(data.data?.children||[]).map(c=>{
-      const d=c.data;
-      const tl=d.title.toLowerCase();
-      const flair=(d.link_flair_text||"").trim();
-      // Detect sold/closed status
-      const isSold=tl.includes("[sold]")||tl.includes("(sold)")||/\bsold\b/.test(flair.toLowerCase());
-      // Detect post type
-      const isWTT=flair.includes("WTT")||(tl.includes("[wtt]")&&!tl.includes("[wts]"));
-      // Extract prices from sections near the searched knife name only
-      const fullText=d.title+" "+(d.selftext||"");
-      const prices=extractKnifePrices(fullText,q);
-      return{title:d.title,url:"https://reddit.com"+d.permalink,author:d.author,
-        date:new Date(d.created_utc*1000).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}),
-        prices,isSold,isWTT,flair};
-    });
-    S.priceResearch={status:posts.length?"done":"empty",results:posts,query:q};
+    return (await res.json()).data?.children||[];
+  };
+  const parsePost=c=>{
+    const d=c.data;
+    const tl=d.title.toLowerCase();
+    const flair=(d.link_flair_text||"").trim();
+    const isSold=tl.includes("[sold]")||tl.includes("(sold)")||/\bsold\b/.test(flair.toLowerCase());
+    const isWTT=flair.includes("WTT")||(tl.includes("[wtt]")&&!tl.includes("[wts]"));
+    const fullText=d.title+" "+(d.selftext||"");
+    // Flag posts that explicitly mention the exact steel variant
+    const steelMatch=f.steel?fullText.toLowerCase().includes(f.steel.toLowerCase()):false;
+    const prices=extractKnifePrices(fullText,q);
+    return{title:d.title,url:"https://reddit.com"+d.permalink,author:d.author,
+      date:new Date(d.created_utc*1000).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}),
+      prices,isSold,isWTT,flair,steelMatch};
+  };
+
+  try{
+    let posts=[];
+    let searchedWithSteel=false;
+    if(qSteel){
+      // First pass: targeted steel+model search
+      const steelChildren=await fetchQ(qSteel,15);
+      const steelPosts=steelChildren.map(parsePost);
+      if(steelPosts.length>=3){
+        // Enough focused results — stay narrow
+        posts=steelPosts;
+        searchedWithSteel=true;
+      }else{
+        // Supplement with broad brand+model search — steel matches bubble to top
+        const broadChildren=await fetchQ(q,15);
+        const broadPosts=broadChildren.map(parsePost);
+        const seen=new Set(steelPosts.map(p=>p.url));
+        const broadOnly=broadPosts.filter(p=>!seen.has(p.url));
+        broadOnly.sort((a,b)=>Number(b.steelMatch)-Number(a.steelMatch));
+        posts=[...steelPosts,...broadOnly];
+      }
+    }else{
+      posts=(await fetchQ(q,15)).map(parsePost);
+    }
+    S.priceResearch={status:posts.length?"done":"empty",results:posts,query:q,querySteel:qSteel,searchedWithSteel};
   }catch(e){
-    S.priceResearch={status:"fallback",results:[],query:q};
-    // Fallback: open reddit search in new tab
-    window.open("https://www.reddit.com/r/Knife_Swap/search/?q="+encodeURIComponent(q)+"&sort=new&restrict_sr=1","_blank","noopener");
+    S.priceResearch={status:"fallback",results:[],query:qSteel||q};
+    window.open("https://www.reddit.com/r/Knife_Swap/search/?q="+encodeURIComponent(qSteel||q)+"&sort=new&restrict_sr=1","_blank","noopener");
   }
   render();
 }
@@ -838,12 +863,17 @@ function applyPriceFromResearch(raw){
   render();
 }
 function extractKnifePrices(text,q){
-  // Split post into sections by r/Knife_Swap separator patterns
   const sections=text.split(/\n[-─*_]{3,}\n|\n(?=__[A-Z])|\n{2,}(?=[A-Z\*\#])/);
-  const terms=q.toLowerCase().split(/\s+/).filter(t=>t.length>2);
-  // Find sections that mention the searched knife
-  const relevant=sections.filter(s=>terms.some(t=>s.toLowerCase().includes(t)));
-  // Fall back to full text if nothing matched
+  // Include steel in search terms when available — narrows to the right knife section
+  const steel=S.kf?.steel||"";
+  const qFull=(q+" "+steel).trim();
+  const terms=qFull.toLowerCase().split(/\s+/).filter(t=>t.length>2);
+  const baseTerms=q.toLowerCase().split(/\s+/).filter(t=>t.length>2);
+  // Try to find sections that mention both knife AND steel
+  let relevant=steel?sections.filter(s=>baseTerms.some(t=>s.toLowerCase().includes(t))&&s.toLowerCase().includes(steel.toLowerCase())):[];
+  // Fall back: sections that mention the knife (without steel constraint)
+  if(!relevant.length)relevant=sections.filter(s=>baseTerms.some(t=>s.toLowerCase().includes(t)));
+  // Last resort: full text
   const src=relevant.length?relevant.join('\n'):text;
   const withDollar=src.match(/\$\s*(\d[\d,]*(?:\.\d{1,2})?)/g)||[];
   const labeled=(src.match(/\b(?:SV|TV|PO|PRICE)\s*:?\s*\$?(\d{2,5})\b/gi)||[])
@@ -1354,8 +1384,16 @@ function kfFormHtml(){
   if(pr.status==="loading"){
     prPanel=`<div class="pr-panel"><div class="pr-panel-hdr"><span>Searching r/Knife_Swap for "${esc(pr.query)}"…</span></div><div style="padding:16px 12px;font-size:12px;color:var(--t3);text-align:center;display:flex;align-items:center;justify-content:center;gap:8px"><span class="up-spin"></span>Loading…</div></div>`;
   }else if(pr.status==="done"||pr.status==="empty"){
+    const steelMatchCount=pr.results.filter(r=>r.steelMatch).length;
+    const hdrLabel=pr.querySteel&&pr.searchedWithSteel
+      ?`${esc(s.kf.steel)} results · ${pr.results.length} found`
+      :pr.querySteel&&steelMatchCount>0
+        ?`${pr.results.length} results · ${steelMatchCount} match ${esc(s.kf.steel)}`
+        :pr.querySteel
+          ?`${pr.results.length} results (no ${esc(s.kf.steel)} mentions found)`
+          :`${pr.results.length} results for "${esc(pr.query)}"`;
     const rows=pr.results.map(r=>{
-      // Status chip — uses CSS vars so it works in both light & dark
+      // Status chip
       const chip=r.isSold
         ?`<span style="font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:20px;background:var(--redbg);color:var(--redt);flex-shrink:0;white-space:nowrap">SOLD</span>`
         :r.isWTT
@@ -1363,15 +1401,26 @@ function kfFormHtml(){
           :r.prices.length
             ?`<span style="font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:20px;background:var(--greenbg);color:var(--greent);flex-shrink:0;white-space:nowrap">Active</span>`
             :"";
-      // Price chips — clickable to apply to price field
+      // Steel match badge — highlights posts that explicitly mention the searched steel
+      const steelBadge=r.steelMatch&&s.kf.steel
+        ?`<span style="font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:20px;background:var(--greenbg);color:var(--greent);white-space:nowrap;border:.5px solid rgba(52,199,89,.3)">✓ ${esc(s.kf.steel)}</span>`
+        :(pr.querySteel&&!r.steelMatch?`<span style="font-size:9.5px;padding:2px 7px;border-radius:20px;background:var(--bg);color:var(--t4);white-space:nowrap;border:.5px solid var(--b1)">diff steel?</span>`:"");
+      // Price chips — clickable to apply; 💾 to save as reference comp
       const priceChips=r.prices.slice(0,4).map(p=>`<span style="display:inline-flex;align-items:center;gap:2px"><span class="pr-price" onclick="applyPriceFromResearch('${esc(p)}')" style="cursor:pointer;user-select:none" title="Click to use ${esc(p)}">${esc(p)}</span><button onclick="saveRefComp('${esc(p)}')" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--t4);padding:0;line-height:1" title="Save as reference comp">💾</button></span>`).join(" ");
       const meta=`${esc(r.author)} · ${esc(r.date)}${r.flair?" · "+esc(r.flair):""}`;
-      return`<div class="pr-row"><div class="pr-row-text"><a class="pr-row-title" href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.title)}</a><div class="pr-row-meta">${meta}</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">${chip}${priceChips}</div></div>`;
+      return`<div class="pr-row${r.steelMatch?" pr-row-match":""}"><div class="pr-row-text"><a class="pr-row-title" href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.title)}</a><div class="pr-row-meta">${meta}</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">${chip}${steelBadge}${priceChips}</div></div>`;
     }).join("")||`<div style="padding:14px 12px;font-size:12px;color:var(--t3);text-align:center">No recent posts found for this knife.</div>`;
     const avgNote=pr.results.reduce((acc,r)=>acc.concat(r.prices),[]).length
-      ?(()=>{const nums=pr.results.reduce((acc,r)=>acc.concat(r.prices.map(p=>parseFloat(p.replace(/[^0-9.]/g,"")))).filter(Boolean),[]);const avg=nums.reduce((a,b)=>a+b,0)/nums.length;return`<div style="padding:7px 12px;font-size:11px;color:var(--t3);border-top:.5px solid var(--b2)">💡 Avg price seen: <strong style="color:var(--t1)">$${Math.round(avg)}</strong> across ${nums.length} price mention${nums.length!==1?"s":""}</div>`;})()
+      ?(()=>{
+          const allNums=pr.results.reduce((acc,r)=>acc.concat(r.prices.map(p=>parseFloat(p.replace(/[^0-9.]/g,"")))).filter(Boolean),[]);
+          const steelNums=pr.results.filter(r=>r.steelMatch).reduce((acc,r)=>acc.concat(r.prices.map(p=>parseFloat(p.replace(/[^0-9.]/g,"")))).filter(Boolean),[]);
+          const numSet=steelNums.length>=2?steelNums:allNums;
+          const avg=numSet.reduce((a,b)=>a+b,0)/numSet.length;
+          const label=steelNums.length>=2?`${esc(s.kf.steel||"")} comps`:`all comps`;
+          return`<div style="padding:7px 12px;font-size:11px;color:var(--t3);border-top:.5px solid var(--b2)">💡 Avg price (${label}): <strong style="color:var(--t1)">$${Math.round(avg)}</strong> across ${numSet.length} mention${numSet.length!==1?"s":""}</div>`;
+       })()
       :"";
-    prPanel=`<div class="pr-panel"><div class="pr-panel-hdr"><span>r/Knife_Swap results for "${esc(pr.query)}"</span><button onclick="clearPriceResearch()" style="background:none;border:none;cursor:pointer;color:var(--t4);font-size:13px;padding:0">&#x2715;</button></div>${rows}${avgNote}</div>`;
+    prPanel=`<div class="pr-panel"><div class="pr-panel-hdr"><span>${hdrLabel}</span><button onclick="clearPriceResearch()" style="background:none;border:none;cursor:pointer;color:var(--t4);font-size:13px;padding:0">&#x2715;</button></div>${rows}${avgNote}</div>`;
   }else if(pr.status==="fallback"){
     prPanel=`<div class="pr-panel"><div style="padding:10px 12px;font-size:12px;color:var(--t3)">Couldn't load inline — opened Reddit search in a new tab.</div></div>`;
   }
@@ -1385,7 +1434,7 @@ function kfFormHtml(){
     </div>
     ${kt==="WTS"?"":`<div style="margin-bottom:11px;margin-top:-6px"><label class="cblk"><input type="checkbox" ${f.obo?"checked":""} onchange="S.kf.obo=this.checked"/> OBO on prices</label></div>`}
     <div class="field" style="margin-bottom:11px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><label style="margin:0">Price Research</label><button class="pr-btn" onclick="syncKF();doFetchPriceResearch()" type="button">🔍 Search r/Knife_Swap${pr.status==="loading"?"...":""}</button></div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px"><label style="margin:0">Price Research</label><button class="pr-btn" onclick="syncKF();doFetchPriceResearch()" type="button">🔍 Search r/Knife_Swap${pr.status==="loading"?"...":""}</button>${f.steel&&pr.status==="idle"?`<span style="font-size:10.5px;color:var(--t3)">will search ${esc(f.brand?f.brand+" ":"")}${esc(f.model||"")} + ${esc(f.steel)}</span>`:""}</div>
       ${prPanel}
       ${(f.comps||[]).length?`<div style="margin-top:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span style="font-size:11px;font-weight:600;color:var(--t3)">💾 Saved comps:</span>${(f.comps||[]).map((c,ci)=>`<span class="comp-chip" onclick="applyPriceFromResearch('$${esc(c.price)}')" style="cursor:pointer" title="Click to use">\$${esc(c.price)}<button onclick="event.stopPropagation();S.kf.comps=(S.kf.comps||[]).filter((_,i)=>i!==${ci});render()" style="background:none;border:none;cursor:pointer;padding:0;color:inherit;font-size:12px;opacity:.7;margin-left:2px">×</button></span>`).join("")}</div>`:""}
     </div>
