@@ -1863,6 +1863,11 @@ window.createCatboxAlbum=createCatboxAlbum;
 function saveRefComp(price){
   const num=price.replace(/[^0-9.]/g,"");if(!num)return;
   S.kf.comps=[...(S.kf.comps||[]),{price:num,date:new Date().toISOString()}];
+  // If editing a Roll knife, persist immediately — don't wait for Save button
+  if(S.kfMode==="locker"&&S.kfIdx>=0&&S.inventory[S.kfIdx]){
+    S.inventory[S.kfIdx].comps=JSON.parse(JSON.stringify(S.kf.comps));
+    saveInv();
+  }
   render();
 }
 function removeRefComp(invId,idx){
