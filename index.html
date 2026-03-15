@@ -552,8 +552,8 @@ textarea{resize:vertical;line-height:1.55}
 <datalist id="dl-brands"></datalist>
 <datalist id="dl-steels"></datalist>
 <datalist id="dl-models"></datalist>
-<input type="file" id="file-upload-input" multiple accept="image/*,video/*" style="display:none" onchange="handleFileInput(event)">
-<input type="file" id="kf-photo-input-hidden" accept="image/*,video/*" multiple style="display:none" onchange="handleKnifeFileInput(event)">
+<input type="file" id="file-upload-input" multiple accept="image/*" style="display:none" onchange="handleFileInput(event)">
+<input type="file" id="kf-photo-input-hidden" accept="image/*" multiple style="display:none" onchange="handleKnifeFileInput(event)">
 <div class="app" id="root"></div>
 
 <script>
@@ -628,7 +628,7 @@ function tm(a,v){return a.includes(v)?a.filter(x=>x!==v):[...a,v]}
 function tmx(a,v,ex){if(v===ex)return[ex];const r=a.filter(x=>x!==ex);return r.includes(v)?r.filter(x=>x!==v):[...r,v]}
 
 // ─── SETTINGS ─────────────────────────────────────────────────
-const DS=()=>({payment:["PayPal G&S"],noShip:[],username:"",saveNotice:false,catboxHash:"",postHeader:"",tradeInterests:""});
+const DS=()=>({payment:["PayPal G&S"],noShip:[],username:"",saveNotice:false,catboxHash:"",imgbbKey:"",postHeader:"",tradeInterests:""});
 let SETTINGS=DS();
 async function loadSettings(){try{const r=await window.storage.get("ks_settings");if(r&&r.value)SETTINGS={...DS(),...JSON.parse(r.value)};}catch(e){}}
 async function saveSettings(){
@@ -1095,25 +1095,32 @@ function handleFileInput(e){[...e.target.files].forEach(f=>uploadFile(f));}
 function handleDrop(e){e.preventDefault();document.querySelector(".up-zone")?.classList.remove("drag");[...e.dataTransfer.files].forEach(f=>uploadFile(f));}
 function handleDragOver(e){e.preventDefault();document.querySelector(".up-zone")?.classList.add("drag");}
 function handleDragLeave(){document.querySelector(".up-zone")?.classList.remove("drag");}
+
+async function uploadToHost(file){
+  if(!SETTINGS.imgbbKey){
+    throw new Error("No API key — add your free imgbb key in Settings → Photo Hosting");
+  }
+  const fd=new FormData();
+  fd.append("image",file);
+  const res=await fetch(`https://api.imgbb.com/1/upload?key=${encodeURIComponent(SETTINGS.imgbbKey)}`,{method:"POST",body:fd});
+  if(!res.ok)throw new Error("imgbb server error "+res.status);
+  const data=await res.json();
+  if(!data.success)throw new Error(data.error?.message||"imgbb upload failed — check API key in Settings");
+  return data.data.url;
+}
+
 async function uploadFile(file){
   const uid=gid();
   S.uploadFiles.push({uid,name:file.name,url:null,uploading:true,error:null});
   render();
   try{
-    const fd=new FormData();
-    fd.append("reqtype","fileupload");
-    fd.append("fileToUpload",file);
-    if(SETTINGS.catboxHash){fd.append("userhash",SETTINGS.catboxHash);}
-    const res=await fetch("https://catbox.moe/user/api.php",{method:"POST",body:fd});
-    if(!res.ok)throw new Error("Server error "+res.status);
-    const url=(await res.text()).trim();
-    if(!url.startsWith("http"))throw new Error("Unexpected response");
+    const url=await uploadToHost(file);
     const item=S.uploadFiles.find(x=>x.uid===uid);
     if(item){item.url=url;item.uploading=false;}
     S.draft.photos=S.uploadFiles.filter(x=>x.url).map(x=>x.url);
   }catch(err){
     const item=S.uploadFiles.find(x=>x.uid===uid);
-    if(item){item.error="Upload failed - try catbox.moe directly, or paste URL below";item.uploading=false;}
+    if(item){item.error=err.message;item.uploading=false;}
   }
   render();
 }
@@ -1127,20 +1134,13 @@ async function uploadKnifePhoto(file){
   S.kfUploads.push({uid,name:file.name,url:null,uploading:true,error:null});
   render();
   try{
-    const fd=new FormData();
-    fd.append("reqtype","fileupload");
-    fd.append("fileToUpload",file);
-    if(SETTINGS.catboxHash){fd.append("userhash",SETTINGS.catboxHash);}
-    const res=await fetch("https://catbox.moe/user/api.php",{method:"POST",body:fd});
-    if(!res.ok)throw new Error("Server error "+res.status);
-    const url=(await res.text()).trim();
-    if(!url.startsWith("http"))throw new Error("Unexpected response");
+    const url=await uploadToHost(file);
     const item=S.kfUploads.find(x=>x.uid===uid);
     if(item){item.url=url;item.uploading=false;}
     S.kf.photos=[...S.kfUploads.filter(x=>x.url).map(x=>x.url)];
   }catch(err){
     const item=S.kfUploads.find(x=>x.uid===uid);
-    if(item){item.error="Upload failed - try catbox.moe directly";item.uploading=false;}
+    if(item){item.error=err.message;item.uploading=false;}
   }
   render();
 }
@@ -1803,14 +1803,14 @@ function renderCompose(){
       <label>Photos &amp; Timestamp</label>
       <div class="ts-req">📸 Include one photo showing <strong>all knives</strong> in this post with a handwritten note: your Reddit username + full date (e.g. <em>u/yourname - March 14, 2026</em>)</div>
       <div class="up-zone" onclick="triggerUpload()" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave()">
-        <div class="up-lbl">Drop photos or videos here or click to upload</div>
-        <div class="up-sub">Uploads to Catbox.moe - free hosting${SETTINGS.catboxHash?" (linked to your account)":""}</div>
+        <div class="up-lbl">Drop photos here or click to upload</div>
+        <div class="up-sub">${SETTINGS.imgbbKey?"Uploads to imgbb.com · free permanent hosting":"⚠️ Add your free imgbb API key in Settings → Photo Hosting to enable uploads"}</div>
       </div>
       ${upFiles.filter(f=>f.url).length>=2&&SETTINGS.catboxHash?`<button class="btn btn-pu btn-sm" onclick="createCatboxAlbum()" style="margin-top:8px" type="button">📁 Create Catbox Album</button><span style="font-size:11px;color:var(--t3);margin-left:6px">Groups all photos into one album link</span>`:""}
-      <div style="font-size:11px;color:var(--t4);line-height:1.5;margin-top:6px;padding:0 2px">⚠️ Catbox uploads are <strong>permanent</strong> - files cannot be deleted without a Catbox account. <a href="https://catbox.moe" target="_blank" style="color:var(--blue);text-decoration:none">Create a free account</a> and add your userhash in Settings to manage your files.</div>
+      ${!SETTINGS.imgbbKey?`<div style="font-size:11px;color:var(--oranget);background:var(--orangebg);border-radius:var(--rxs);padding:6px 10px;margin-top:6px;line-height:1.5">No API key — <a href="https://api.imgbb.com/" target="_blank" style="color:var(--oranget);font-weight:700">get a free imgbb key</a> and add it in <button onclick="S.view='settings';render()" style="background:none;border:none;cursor:pointer;font-size:inherit;font-weight:700;color:var(--oranget);padding:0;font-family:var(--font)">Settings → Photo Hosting</button></div>`:""}
       ${upRows?`<div class="up-files">${upRows}</div>`:""}
       <div style="margin-top:8px;display:flex;align-items:center;gap:6px"><div style="flex:1;height:.5px;background:rgba(0,0,0,.1)"></div><span style="font-size:11px;color:var(--t4);white-space:nowrap">or paste URL manually</span><div style="flex:1;height:.5px;background:rgba(0,0,0,.1)"></div></div>
-      <input type="text" id="d-manualUrl" placeholder="https://catbox.moe/... or https://imgur.com/..." style="margin-top:8px" onchange="syncDraft()"/>
+      <input type="text" id="d-manualUrl" placeholder="https://i.ibb.co/... or https://imgur.com/..." style="margin-top:8px" onchange="syncDraft()"/>
       ${d.photos.length?`<div style="font-size:11px;color:var(--greent);margin-top:5px;font-weight:500">${d.photos.length} photo${d.photos.length>1?"s":""} linked</div>`:""}
     </div>
     <div style="margin-bottom:12px"><div class="field"><label>Payment <button onclick="S.modal='rules';render()" style="background:none;border:none;cursor:pointer;font-size:11px;font-weight:600;color:var(--blue);padding:0 0 0 6px;font-family:var(--font)">Rules &#8599;</button></label><div style="font-size:11px;color:var(--oranget);background:var(--orangebg);border-radius:var(--rxs);padding:6px 10px;margin:5px 0 8px;line-height:1.4">Venmo, Zelle, Cash App, Apple Pay &amp; Other require <strong>25+ confirmed swaps</strong>. PayPal G&amp;S is required until then.</div><div class="chips" style="margin-top:5px">${PAYS.map(p=>`<button class="chip sm mul${d.payment.includes(p)?" on":""}" onclick="syncDraft();S.draft.payment=tm(S.draft.payment,'${p}').length?tm(S.draft.payment,'${p}'):S.draft.payment;render()">${p}</button>`).join("")}</div>${d.payment.includes("Other")?`<input type="text" id="d-paymentOther" value="${esc(d.paymentOther)}" placeholder="Please specify payment method…" style="margin-top:8px" oninput="syncDraft()"/>`:""}
@@ -1892,8 +1892,9 @@ function renderSettings(){
   <div class="settings-section-lbl">About</div>
   <div class="sgroup">
     <div class="srow"><div class="srow-lbl">Version</div><div style="font-size:13px;color:var(--t3);margin-left:auto">3.1 - ${BRANDS.length} brands, ${STEELS.length} steels</div></div>
-    <div class="srow"><div><div class="srow-lbl">Photo Hosting</div><div class="srow-sub" style="max-width:340px;line-height:1.5">Photos upload directly to <strong>Catbox.moe</strong> - free, permanent hosting. Files cannot be deleted without a Catbox account. <a href="https://catbox.moe" target="_blank" style="color:var(--blue);text-decoration:none">Create a free Catbox account</a> to manage your files.</div></div></div>
-    <div class="srow"><div><div class="srow-lbl">Catbox Userhash</div><div class="srow-sub" style="max-width:260px;line-height:1.5">Link uploads to your Catbox account so you can delete them later. Find your userhash on the <a href="https://catbox.moe/user/manage.php" target="_blank" style="color:var(--blue);text-decoration:none">Catbox account page</a>.</div></div><div class="srow-ctrl"><input type="text" style="max-width:190px;font-size:13px;padding:7px 10px" value="${esc(sv.catboxHash||"")}" placeholder="(optional)" onchange="SETTINGS.catboxHash=this.value.trim();saveSettings()"/></div></div>
+    <div class="srow"><div><div class="srow-lbl">Photo Hosting</div><div class="srow-sub" style="max-width:340px;line-height:1.5">Photos upload to <strong>imgbb.com</strong> — free, permanent image hosting. <a href="https://api.imgbb.com/" target="_blank" style="color:var(--blue);text-decoration:none">Create a free imgbb account</a> to get your API key (takes 30 seconds).</div></div></div>
+    <div class="srow"><div><div class="srow-lbl">imgbb API Key <span style="color:var(--redt);font-size:11px;font-weight:600">Required for uploads</span></div><div class="srow-sub" style="max-width:260px;line-height:1.5">Get your free key at <a href="https://api.imgbb.com/" target="_blank" style="color:var(--blue);text-decoration:none">api.imgbb.com</a> — sign up, then copy the API key shown on the page.</div></div><div class="srow-ctrl"><input type="text" style="max-width:190px;font-size:13px;padding:7px 10px" value="${esc(sv.imgbbKey||"")}" placeholder="Paste API key here" onchange="SETTINGS.imgbbKey=this.value.trim();saveSettings()"/></div></div>
+    <div class="srow"><div><div class="srow-lbl">Catbox Userhash</div><div class="srow-sub" style="max-width:260px;line-height:1.5">Optional — for the <strong>Create Album</strong> feature. Find your userhash on the <a href="https://catbox.moe/user/manage.php" target="_blank" style="color:var(--blue);text-decoration:none">Catbox account page</a>.</div></div><div class="srow-ctrl"><input type="text" style="max-width:190px;font-size:13px;padding:7px 10px" value="${esc(sv.catboxHash||"")}" placeholder="(optional)" onchange="SETTINGS.catboxHash=this.value.trim();saveSettings()"/></div></div>
   </div>
   ${S.authStatus==="signed_in"?`
   <div class="settings-section-lbl" style="color:var(--redt);margin-top:8px">Danger Zone</div>
