@@ -12,28 +12,31 @@
 <meta id="og-desc" property="og:description" content="View knife photos on KnifeSwap Post Generator">
 <title>KnifeSwap Gallery</title>
 <style>
-  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
-  /* ── TOKENS ── */
+/* ── TOKENS ── */
+:root{
+  --bg:#0d0d0d;
+  --surf:#1a1a1a;
+  --surf2:#222;
+  --surf3:#2c2c2e;
+  --b1:rgba(255,255,255,.08);
+  --b2:rgba(255,255,255,.05);
+  --t1:#ffffff;
+  --t2:rgba(255,255,255,.65);
+  --t3:rgba(255,255,255,.35);
+  --acc:#FF9500;
+  --acc2:rgba(255,149,0,.18);
+  --sh:0 2px 12px rgba(0,0,0,.5);
+  --r:12px;
+  --font:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif;
+}
+@media(prefers-color-scheme:light){
   :root{
-    --bg:#0d0d0d;
-    --surf:#1a1a1a;
-    --surf2:#222;
-    --b1:rgba(255,255,255,.08);
-    --b2:rgba(255,255,255,.05);
-    --t1:#ffffff;
-    --t2:rgba(255,255,255,.65);
-    --t3:rgba(255,255,255,.35);
-    --acc:#FF9500;
-    --acc2:rgba(255,149,0,.15);
-    --sh:0 2px 12px rgba(0,0,0,.5);
-    --r:12px;
-    --font:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif;
-  }
-  [data-theme="light"]{
     --bg:#f2f2f7;
     --surf:#ffffff;
     --surf2:#f5f5f7;
+    --surf3:#e8e8ed;
     --b1:rgba(0,0,0,.08);
     --b2:rgba(0,0,0,.05);
     --t1:#1d1d1f;
@@ -41,286 +44,250 @@
     --t3:rgba(0,0,0,.35);
     --sh:0 2px 12px rgba(0,0,0,.12);
   }
-  @media(prefers-color-scheme:light){
-    :root:not([data-theme="dark"]){
-      --bg:#f2f2f7;
-      --surf:#ffffff;
-      --surf2:#f5f5f7;
-      --b1:rgba(0,0,0,.08);
-      --b2:rgba(0,0,0,.05);
-      --t1:#1d1d1f;
-      --t2:rgba(0,0,0,.55);
-      --t3:rgba(0,0,0,.35);
-      --sh:0 2px 12px rgba(0,0,0,.12);
-    }
-  }
+}
 
-  html,body{height:100%;overflow:hidden}
-  body{
-    font-family:var(--font);
-    background:var(--bg);
-    color:var(--t1);
-    display:flex;
-    flex-direction:column;
-    height:100dvh;
-    -webkit-font-smoothing:antialiased;
-    transition:background .25s,color .25s;
-  }
+html,body{height:100%;overflow:hidden}
+body{
+  font-family:var(--font);
+  background:var(--bg);
+  color:var(--t1);
+  display:flex;
+  flex-direction:column;
+  height:100dvh;
+  -webkit-font-smoothing:antialiased;
+}
 
-  /* ── HEADER ── */
-  .hdr{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    padding:10px 14px;
-    background:var(--surf);
-    border-bottom:.5px solid var(--b1);
-    flex-shrink:0;
-    position:relative;
-    z-index:10;
-  }
-  .brand{
-    display:flex;
-    align-items:center;
-    gap:7px;
-    text-decoration:none;
-    flex-shrink:0;
-  }
-  .brand-icon{
-    width:30px;height:30px;
-    background:var(--acc);
-    border-radius:8px;
-    display:flex;align-items:center;justify-content:center;
-    font-size:16px;
-    flex-shrink:0;
-  }
-  .brand-name{
-    font-size:14px;font-weight:700;
-    color:var(--t1);letter-spacing:-.3px;
-    white-space:nowrap;
-  }
-  .brand-sub{
-    font-size:10px;font-weight:500;
-    color:var(--t3);letter-spacing:.02em;
-    white-space:nowrap;
-  }
-  .hdr-divider{width:.5px;height:28px;background:var(--b1);flex-shrink:0}
-  .hdr-knife{flex:1;min-width:0;overflow:hidden}
-  .hdr-knife-name{
-    font-size:14px;font-weight:600;
-    color:var(--t1);
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  }
-  .hdr-knife-price{
-    font-size:12px;font-weight:600;
-    color:var(--acc);margin-top:1px;
-  }
-  .hdr-right{
-    display:flex;align-items:center;gap:6px;flex-shrink:0;
-  }
-  .hdr-user{
-    font-size:12px;font-weight:500;color:var(--t2);
-    white-space:nowrap;
-  }
-  .icon-btn{
-    background:none;border:.5px solid var(--b1);
-    color:var(--t2);
-    width:32px;height:32px;border-radius:8px;
-    cursor:pointer;font-size:15px;
-    display:flex;align-items:center;justify-content:center;
-    transition:background .15s,color .15s;
-    flex-shrink:0;
-  }
-  .icon-btn:hover{background:var(--b1);color:var(--t1)}
-  .icon-btn:active{background:var(--b2)}
+/* ── HEADER ── */
+.hdr{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;
+  background:var(--surf);
+  border-bottom:.5px solid var(--b1);
+  flex-shrink:0;z-index:10;
+}
+.brand{display:flex;align-items:center;gap:7px;text-decoration:none;flex-shrink:0}
+.brand-icon{width:30px;height:30px;background:var(--acc);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.brand-name{font-size:14px;font-weight:700;color:var(--t1);letter-spacing:-.3px;white-space:nowrap}
+.brand-sub{font-size:10px;font-weight:500;color:var(--t3);letter-spacing:.02em;white-space:nowrap}
+.hdr-divider{width:.5px;height:28px;background:var(--b1);flex-shrink:0}
+.hdr-info{flex:1;min-width:0;overflow:hidden}
+.hdr-title{font-size:14px;font-weight:600;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hdr-sub{font-size:11px;color:var(--t3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hdr-user{font-size:12px;font-weight:500;color:var(--t2);white-space:nowrap;flex-shrink:0}
 
-  /* ── MAIN VIEWER ── */
-  .viewer{
-    flex:1;
-    position:relative;
-    overflow:hidden;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    background:var(--bg);
-    cursor:default;
-    min-height:0;
-  }
+/* ── MOBILE TABS ── */
+.mob-tabs{
+  display:none;
+  overflow-x:auto;
+  background:var(--surf);
+  border-bottom:.5px solid var(--b1);
+  padding:0 4px;
+  flex-shrink:0;
+  scrollbar-width:none;
+  align-items:stretch;
+}
+.mob-tabs::-webkit-scrollbar{display:none}
+.mob-tab{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:9px 12px;
+  cursor:pointer;
+  border:none;background:none;
+  border-bottom:2px solid transparent;
+  white-space:nowrap;
+  font-size:12.5px;font-weight:500;color:var(--t2);
+  font-family:var(--font);
+  transition:color .12s,border-color .12s;
+  flex-shrink:0;
+}
+.mob-tab.active{color:var(--acc);border-bottom-color:var(--acc);font-weight:600}
+.mob-tab-ico{font-size:13px;line-height:1}
+.mob-tab-count{font-size:10px;background:var(--surf3);color:var(--t3);border-radius:20px;padding:1px 5px;font-weight:600}
+.mob-tab.active .mob-tab-count{background:var(--acc2);color:var(--acc)}
 
-  .slide{
-    position:absolute;
-    inset:0;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    padding:12px;
-    opacity:0;
-    transition:opacity .25s ease;
-    pointer-events:none;
-  }
-  .slide.active{opacity:1;pointer-events:auto}
-  .slide.prev-out{opacity:0}
-  .slide img{
-    max-width:100%;max-height:100%;
-    object-fit:contain;
-    border-radius:4px;
-    display:block;
-    touch-action:pinch-zoom;
-    user-select:none;
-    -webkit-user-drag:none;
-  }
+/* ── MAIN LAYOUT ── */
+.main{flex:1;display:flex;overflow:hidden;min-height:0}
 
-  /* Spinner */
-  .spinner{
-    position:absolute;
-    width:36px;height:36px;
-    border:3px solid var(--b1);
-    border-top-color:var(--acc);
-    border-radius:50%;
-    animation:spin .7s linear infinite;
-  }
-  @keyframes spin{to{transform:rotate(360deg)}}
+/* ── SIDEBAR NAV ── */
+.knife-nav{
+  width:195px;flex-shrink:0;
+  background:var(--surf);
+  border-right:.5px solid var(--b1);
+  overflow-y:auto;
+  display:flex;flex-direction:column;
+  padding:8px 6px;
+  scrollbar-width:none;
+}
+.knife-nav::-webkit-scrollbar{display:none}
+.knife-nav.single{display:none}
+.nav-section-lbl{
+  font-size:10px;font-weight:600;color:var(--t3);
+  letter-spacing:.06em;text-transform:uppercase;
+  padding:8px 10px 4px;
+}
+.nav-item{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 10px;border-radius:9px;
+  cursor:pointer;border:none;
+  background:transparent;text-align:left;
+  font-family:var(--font);
+  transition:background .12s;
+  width:100%;
+}
+.nav-item:hover{background:var(--surf3)}
+.nav-item.active{background:var(--acc2)}
+.nav-item-ico{font-size:15px;flex-shrink:0;line-height:1}
+.nav-item-body{flex:1;min-width:0}
+.nav-item-name{
+  font-size:12.5px;font-weight:500;color:var(--t2);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  line-height:1.3;
+}
+.nav-item.active .nav-item-name{color:var(--acc);font-weight:600}
+.nav-item-meta{font-size:11px;color:var(--t3);margin-top:1px;line-height:1.2}
+.nav-badge{
+  font-size:10px;font-weight:700;
+  background:var(--surf3);color:var(--t3);
+  border-radius:20px;padding:2px 6px;flex-shrink:0;
+}
+.nav-item.active .nav-badge{background:var(--acc2);color:var(--acc)}
 
-  /* Nav arrows */
-  .nav{
-    position:absolute;
-    top:50%;transform:translateY(-50%);
-    background:rgba(0,0,0,.45);
-    backdrop-filter:blur(12px) saturate(180%);
-    -webkit-backdrop-filter:blur(12px) saturate(180%);
-    border:.5px solid rgba(255,255,255,.15);
-    color:white;
-    width:44px;height:44px;border-radius:50%;
-    font-size:20px;
-    cursor:pointer;
-    display:flex;align-items:center;justify-content:center;
-    transition:opacity .15s,background .15s,transform .15s;
-    opacity:0;
-    z-index:5;
-    user-select:none;
-  }
-  .viewer:hover .nav{opacity:.8}
-  .nav:hover{opacity:1!important;background:rgba(0,0,0,.65)}
-  .nav:active{transform:translateY(-50%) scale(.93)}
-  .nav.hidden{display:none}
-  .nav-prev{left:14px}
-  .nav-next{right:14px}
+/* ── VIEWER AREA ── */
+.viewer-area{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.viewer{
+  flex:1;position:relative;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--bg);cursor:default;min-height:0;
+}
+.slide{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  padding:12px;
+  opacity:0;transition:opacity .22s ease;pointer-events:none;
+}
+.slide.active{opacity:1;pointer-events:auto}
+.slide img{
+  max-width:100%;max-height:100%;
+  object-fit:contain;border-radius:4px;
+  display:block;touch-action:pinch-zoom;
+  user-select:none;-webkit-user-drag:none;
+}
+.spinner{
+  position:absolute;width:36px;height:36px;
+  border:3px solid var(--b1);
+  border-top-color:var(--acc);
+  border-radius:50%;animation:spin .7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-  /* Counter */
-  .counter{
-    position:absolute;
-    top:12px;right:12px;
-    background:rgba(0,0,0,.5);
-    backdrop-filter:blur(10px);
-    -webkit-backdrop-filter:blur(10px);
-    border-radius:20px;
-    padding:4px 11px;
-    font-size:12px;font-weight:600;
-    color:rgba(255,255,255,.9);
-    letter-spacing:.02em;
-    z-index:5;
-    pointer-events:none;
-  }
+/* Nav arrows */
+.nav-arrow{
+  position:absolute;top:50%;transform:translateY(-50%);
+  background:rgba(0,0,0,.45);
+  backdrop-filter:blur(12px) saturate(180%);
+  -webkit-backdrop-filter:blur(12px) saturate(180%);
+  border:.5px solid rgba(255,255,255,.15);
+  color:white;width:44px;height:44px;border-radius:50%;
+  font-size:20px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:opacity .15s,background .15s,transform .15s;
+  opacity:0;z-index:5;user-select:none;
+}
+.viewer:hover .nav-arrow{opacity:.8}
+.nav-arrow:hover{opacity:1!important;background:rgba(0,0,0,.65)}
+.nav-arrow:active{transform:translateY(-50%) scale(.93)}
+.nav-arrow.hidden{display:none}
+.nav-arrow.prev{left:14px}
+.nav-arrow.next{right:14px}
 
-  /* ── THUMBNAIL STRIP ── */
-  .thumbs{
-    display:flex;
-    gap:6px;
-    padding:10px 12px;
-    background:var(--surf);
-    border-top:.5px solid var(--b1);
-    overflow-x:auto;
-    flex-shrink:0;
-    scrollbar-width:none;
-    scroll-behavior:smooth;
-  }
-  .thumbs::-webkit-scrollbar{display:none}
-  .thumbs.hidden{display:none}
-  .thumb{
-    width:58px;height:58px;flex-shrink:0;
-    border-radius:8px;
-    object-fit:cover;
-    cursor:pointer;
-    border:2px solid transparent;
-    opacity:.55;
-    transition:opacity .15s,border-color .15s,transform .15s;
-    background:var(--surf2);
-  }
-  .thumb:hover{opacity:.85;transform:scale(1.04)}
-  .thumb.active{border-color:var(--acc);opacity:1}
+/* Counter */
+.counter{
+  position:absolute;top:12px;right:12px;
+  background:rgba(0,0,0,.5);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border-radius:20px;padding:4px 11px;
+  font-size:12px;font-weight:600;color:rgba(255,255,255,.9);
+  letter-spacing:.02em;z-index:5;pointer-events:none;
+}
 
-  /* ── FOOTER ── */
-  .footer{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:8px 14px;
-    background:var(--surf);
-    border-top:.5px solid var(--b1);
-    flex-shrink:0;
-    gap:10px;
-  }
-  .footer-btns{display:flex;gap:6px}
-  .footer-btn{
-    display:flex;align-items:center;gap:5px;
-    background:var(--surf2);
-    border:.5px solid var(--b1);
-    border-radius:8px;
-    color:var(--t2);
-    font-size:12px;font-weight:500;
-    font-family:var(--font);
-    padding:5px 10px;
-    cursor:pointer;
-    transition:background .15s,color .15s;
-    white-space:nowrap;
-  }
-  .footer-btn:hover{background:var(--b1);color:var(--t1)}
-  .footer-btn:active{background:var(--b2)}
-  .footer-btn .ico{font-size:14px}
-  .made-with{
-    font-size:11px;color:var(--t3);
-    white-space:nowrap;
-    flex-shrink:0;
-  }
-  .made-with a{color:var(--t2);text-decoration:none;font-weight:500}
-  .made-with a:hover{color:var(--acc)}
+/* ── THUMBNAIL STRIP ── */
+.thumbs{
+  display:flex;gap:6px;padding:10px 12px;
+  background:var(--surf);border-top:.5px solid var(--b1);
+  overflow-x:auto;flex-shrink:0;
+  scrollbar-width:none;scroll-behavior:smooth;
+}
+.thumbs::-webkit-scrollbar{display:none}
+.thumbs.hidden{display:none}
+.thumb{
+  width:58px;height:58px;flex-shrink:0;
+  border-radius:8px;object-fit:cover;cursor:pointer;
+  border:2px solid transparent;opacity:.55;
+  transition:opacity .15s,border-color .15s,transform .15s;
+  background:var(--surf2);
+}
+.thumb:hover{opacity:.85;transform:scale(1.04)}
+.thumb.active{border-color:var(--acc);opacity:1}
 
-  /* ── TOAST ── */
-  .toast{
-    position:fixed;
-    bottom:80px;left:50%;
-    transform:translateX(-50%) translateY(12px);
-    background:var(--t1);color:var(--bg);
-    font-size:13px;font-weight:600;
-    padding:9px 18px;border-radius:20px;
-    box-shadow:var(--sh);
-    opacity:0;
-    transition:opacity .2s,transform .2s;
-    pointer-events:none;
-    z-index:100;
-    white-space:nowrap;
-  }
-  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+/* ── FOOTER ── */
+.footer{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 14px;
+  background:var(--surf);border-top:.5px solid var(--b1);
+  flex-shrink:0;gap:8px;
+  flex-wrap:nowrap;
+}
+.footer-btns{display:flex;gap:6px;flex-shrink:0}
+.footer-btn{
+  display:flex;align-items:center;gap:5px;
+  background:var(--surf2);border:.5px solid var(--b1);
+  border-radius:8px;color:var(--t2);
+  font-size:12px;font-weight:500;font-family:var(--font);
+  padding:7px 12px;cursor:pointer;
+  transition:background .15s,color .15s;white-space:nowrap;
+}
+.footer-btn:hover{background:var(--b1);color:var(--t1)}
+.footer-btn:active{background:var(--b2)}
+.footer-btn .ico{font-size:14px}
+.made-with{font-size:11px;color:var(--t3);white-space:nowrap;flex-shrink:0;overflow:hidden;text-overflow:ellipsis}
+.made-with a{color:var(--t2);text-decoration:none;font-weight:500}
+.made-with a:hover{color:var(--acc)}
 
-  /* ── ERROR STATE ── */
-  .err{
-    flex:1;display:flex;flex-direction:column;
-    align-items:center;justify-content:center;
-    gap:12px;text-align:center;padding:24px;
-    color:var(--t2);
-  }
-  .err-icon{font-size:48px}
-  .err-title{font-size:18px;font-weight:600;color:var(--t1)}
-  .err-sub{font-size:14px;max-width:300px;line-height:1.5}
+/* ── TOAST ── */
+.toast{
+  position:fixed;bottom:80px;left:50%;
+  transform:translateX(-50%) translateY(12px);
+  background:var(--t1);color:var(--bg);
+  font-size:13px;font-weight:600;
+  padding:9px 18px;border-radius:20px;
+  box-shadow:var(--sh);opacity:0;
+  transition:opacity .2s,transform .2s;
+  pointer-events:none;z-index:100;white-space:nowrap;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-  /* ── MOBILE ── */
-  @media(max-width:600px){
-    .brand-sub,.hdr-knife-price{display:none}
-    .hdr-divider{display:none}
-    .footer-btn span{display:none}
-    .footer-btn{padding:6px 8px}
-    .nav{opacity:.7}
-  }
+/* ── ERROR ── */
+.err-wrap{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:12px;text-align:center;padding:24px;color:var(--t2);
+}
+.err-icon{font-size:48px}
+.err-title{font-size:18px;font-weight:600;color:var(--t1)}
+.err-sub{font-size:14px;max-width:300px;line-height:1.5}
+
+/* ── MOBILE ── */
+@media(max-width:640px){
+  .knife-nav{display:none!important}
+  .mob-tabs{display:flex}
+  .brand-sub{display:none}
+  .hdr-divider{display:none}
+  .made-with{display:none}
+  .nav-arrow{opacity:.7}
+}
+@media(max-width:400px){
+  .footer-btn span:not(.ico){display:none}
+  .footer-btn{padding:7px 10px}
+}
 </style>
 </head>
 <body>
@@ -335,58 +302,65 @@
     </div>
   </a>
   <div class="hdr-divider"></div>
-  <div class="hdr-knife">
-    <div class="hdr-knife-name" id="hdr-name">Loading…</div>
-    <div class="hdr-knife-price" id="hdr-price"></div>
+  <div class="hdr-info">
+    <div class="hdr-title" id="hdr-title">Loading…</div>
+    <div class="hdr-sub" id="hdr-sub"></div>
   </div>
-  <div class="hdr-right">
-    <span class="hdr-user" id="hdr-user"></span>
-  </div>
+  <span class="hdr-user" id="hdr-user"></span>
 </header>
 
-<!-- VIEWER -->
-<div class="viewer" id="viewer"
-  onmousedown="onDragStart(event)"
-  ontouchstart="onTouchStart(event)"
-  ontouchend="onTouchEnd(event)">
+<!-- MOBILE TABS (shown below 640px) -->
+<div class="mob-tabs" id="mob-tabs"></div>
 
-  <div class="spinner" id="spinner"></div>
-  <div id="slides"></div>
-  <button class="nav nav-prev hidden" id="nav-prev" onclick="go(-1)" aria-label="Previous">‹</button>
-  <button class="nav nav-next hidden" id="nav-next" onclick="go(1)" aria-label="Next">›</button>
-  <div class="counter" id="counter" style="display:none"></div>
+<!-- MAIN: sidebar + viewer -->
+<div class="main">
+
+  <!-- SIDEBAR NAV -->
+  <nav class="knife-nav" id="knife-nav">
+    <div class="nav-section-lbl">Photos</div>
+    <div id="nav-items"></div>
+  </nav>
+
+  <!-- VIEWER AREA -->
+  <div class="viewer-area">
+    <div class="viewer" id="viewer"
+      onmousedown="onDragStart(event)"
+      ontouchstart="onTouchStart(event)"
+      ontouchend="onTouchEnd(event)">
+      <div class="spinner" id="spinner"></div>
+      <div id="slides"></div>
+      <button class="nav-arrow prev hidden" id="nav-prev" onclick="go(-1)" aria-label="Previous">‹</button>
+      <button class="nav-arrow next hidden" id="nav-next" onclick="go(1)" aria-label="Next">›</button>
+      <div class="counter" id="counter" style="display:none"></div>
+    </div>
+    <div class="thumbs hidden" id="thumbs"></div>
+  </div>
 </div>
-
-<!-- THUMBNAILS -->
-<div class="thumbs hidden" id="thumbs"></div>
 
 <!-- FOOTER -->
 <footer class="footer">
   <div class="footer-btns">
-    <button class="footer-btn" onclick="downloadCurrent()" title="Download photo">
-      <span class="ico">↓</span><span>Download</span>
-    </button>
-    <button class="footer-btn" onclick="openCurrent()" title="Open full size">
-      <span class="ico">⛶</span><span>Full size</span>
-    </button>
-    <button class="footer-btn" onclick="copyLink()" title="Copy gallery link" id="btn-copy">
+    <button class="footer-btn" onclick="copyLink()" id="btn-copy">
       <span class="ico">🔗</span><span>Copy link</span>
     </button>
-    <button class="footer-btn" id="btn-fs" onclick="toggleFullscreen()" title="Fullscreen">
+    <button class="footer-btn" id="btn-fs" onclick="toggleFullscreen()">
       <span class="ico" id="fs-icon">⛶</span><span id="fs-label">Fullscreen</span>
     </button>
   </div>
-  <div class="made-with">Built by <a href="https://www.reddit.com/user/smashedllama2" target="_blank" rel="noopener">u/smashedllama2</a> · <a href="https://buymeacoffee.com/erunyan" target="_blank" rel="noopener">☕ Buy me a coffee</a> · <a href="https://smashedllama.github.io/knife-swap-tool/" target="_blank">KnifeSwap Tool</a></div>
+  <div class="made-with">Built by <a href="https://www.reddit.com/user/smashedllama2" target="_blank" rel="noopener">u/smashedllama2</a> · <a href="https://buymeacoffee.com/erunyan" target="_blank" rel="noopener">☕ Support</a> · <a href="https://smashedllama.github.io/knife-swap-tool/" target="_blank">KnifeSwap Tool</a></div>
 </footer>
 
 <div class="toast" id="toast"></div>
 
 <script>
-// ─── PARSE DATA ───────────────────────────────────────────────
-let imgs = [], knifeInfo = {};
-let cur = 0;
+// ─── STATE ──────────────────────────────────────────────────────
+let sections = []; // [{label, ico, imgs, price}]
+let curSection = 0;
+let curSlide = 0;
+let galleryUser = "";
 let dragStartX = 0, touchStartX = 0;
 
+// ─── PARSE + INIT ───────────────────────────────────────────────
 function init() {
   const params = new URLSearchParams(location.search);
   const raw = params.get('d');
@@ -394,141 +368,238 @@ function init() {
 
   try {
     const json = decodeURIComponent(escape(atob(raw)));
-    knifeInfo = JSON.parse(json);
-    imgs = (knifeInfo.imgs || []).filter(Boolean);
+    const data = JSON.parse(json);
+
+    if (data.knives) {
+      // NEW FORMAT: {user, knives:[{name,price,imgs}], timestamp:[], startAt:N}
+      galleryUser = data.user || "";
+      const ts = (data.timestamp || []).filter(Boolean);
+      if (ts.length) {
+        sections.push({ label: "Timestamp", ico: "📸", imgs: ts, price: "" });
+      }
+      (data.knives || []).forEach(k => {
+        const imgs = (k.imgs || []).filter(Boolean);
+        if (imgs.length) {
+          sections.push({ label: k.name || "Knife", ico: "🔪", imgs, price: k.price || "" });
+        }
+      });
+      curSection = Math.max(0, Math.min(typeof data.startAt === 'number' ? data.startAt : 0, Math.max(0, sections.length - 1)));
+    } else {
+      // OLD FORMAT: {knife, price, user, imgs}
+      galleryUser = data.user || "";
+      const imgs = (data.imgs || []).filter(Boolean);
+      if (!imgs.length) { showError('No photos in this gallery.'); return; }
+      sections.push({ label: data.knife || "Knife Photos", ico: "🔪", imgs, price: data.price || "" });
+    }
   } catch(e) {
     showError('Could not load gallery data.');
     return;
   }
 
-  if (!imgs.length) { showError('No photos in this gallery.'); return; }
+  if (!sections.length) { showError('No photos in this gallery.'); return; }
 
   // OG meta
-  document.getElementById('og-title').content = knifeInfo.knife || 'Knife Photos';
-  document.getElementById('og-image').content = imgs[0] || '';
-  document.getElementById('og-desc').content =
-    `${imgs.length} photo${imgs.length>1?'s':''} — ${knifeInfo.knife||''}${knifeInfo.price?' | '+knifeInfo.price:''}`;
-  document.title = (knifeInfo.knife || 'Knife Photos') + ' — KnifeSwap Gallery';
+  const firstSec = sections[0];
+  document.getElementById('og-title').content = firstSec.label;
+  document.getElementById('og-image').content = firstSec.imgs[0] || '';
+  const totalPhotos = sections.reduce((n, s) => n + s.imgs.length, 0);
+  document.getElementById('og-desc').content = `${totalPhotos} photo${totalPhotos > 1 ? 's' : ''} — ${sections.map(s => s.label).join(', ')}`;
+  document.title = sections.map(s => s.label).join(' | ') + ' — KnifeSwap Gallery';
 
-  // Header
-  document.getElementById('hdr-name').textContent = knifeInfo.knife || 'Knife Photos';
-  if (knifeInfo.price) document.getElementById('hdr-price').textContent = knifeInfo.price;
-  if (knifeInfo.user) document.getElementById('hdr-user').textContent = 'u/' + knifeInfo.user;
+  if (galleryUser) document.getElementById('hdr-user').textContent = 'u/' + galleryUser;
 
-  buildSlides();
-  buildThumbs();
-  showSlide(0, false);
-  updateNav();
+  buildNav();
+  loadSection(curSection, false);
 
-  // Keyboard
   document.addEventListener('keydown', e => {
     if (e.key === 'ArrowRight' || e.key === 'ArrowDown') go(1);
     if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') go(-1);
     if (e.key === 'Escape') history.back();
     if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+    if (e.key === 'Tab') { e.preventDefault(); selectSection((curSection + 1) % sections.length); }
+    if (e.key === '[') selectSection(Math.max(0, curSection - 1));
+    if (e.key === ']') selectSection(Math.min(sections.length - 1, curSection + 1));
   });
-
-  // Fullscreen change
   document.addEventListener('fullscreenchange', updateFsBtn);
 }
 
-// ─── SLIDES ──────────────────────────────────────────────────
-function buildSlides() {
-  const container = document.getElementById('slides');
-  container.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center';
-  imgs.forEach((url, i) => {
+// ─── NAV ────────────────────────────────────────────────────────
+function buildNav() {
+  const navItems = document.getElementById('nav-items');
+  const mobTabs = document.getElementById('mob-tabs');
+  const single = sections.length <= 1;
+
+  if (single) {
+    document.getElementById('knife-nav').classList.add('single');
+    document.getElementById('mob-tabs').style.display = 'none';
+  }
+
+  sections.forEach((s, i) => {
+    // Sidebar button
+    const btn = document.createElement('button');
+    btn.className = 'nav-item' + (i === curSection ? ' active' : '');
+    btn.id = `nav-item-${i}`;
+    btn.innerHTML =
+      `<span class="nav-item-ico">${s.ico}</span>` +
+      `<span class="nav-item-body">` +
+        `<span class="nav-item-name">${esc(s.label)}</span>` +
+        (s.price ? `<div class="nav-item-meta">${esc(s.price)}</div>` : '') +
+      `</span>` +
+      `<span class="nav-badge">${s.imgs.length}</span>`;
+    btn.onclick = () => selectSection(i);
+    navItems.appendChild(btn);
+
+    // Mobile tab
+    const tab = document.createElement('button');
+    tab.className = 'mob-tab' + (i === curSection ? ' active' : '');
+    tab.id = `mob-tab-${i}`;
+    tab.innerHTML =
+      `<span class="mob-tab-ico">${s.ico}</span>` +
+      `<span>${esc(s.label)}</span>` +
+      `<span class="mob-tab-count">${s.imgs.length}</span>`;
+    tab.onclick = () => selectSection(i);
+    mobTabs.appendChild(tab);
+  });
+}
+
+function selectSection(idx) {
+  if (idx < 0 || idx >= sections.length) return;
+  const prevBtn = document.getElementById(`nav-item-${curSection}`);
+  const prevTab = document.getElementById(`mob-tab-${curSection}`);
+  if (prevBtn) prevBtn.classList.remove('active');
+  if (prevTab) prevTab.classList.remove('active');
+
+  curSection = idx;
+  const btn = document.getElementById(`nav-item-${curSection}`);
+  const tab = document.getElementById(`mob-tab-${curSection}`);
+  if (btn) { btn.classList.add('active'); btn.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+  if (tab) { tab.classList.add('active'); tab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); }
+
+  loadSection(curSection, true);
+}
+
+// ─── SECTION LOADER ─────────────────────────────────────────────
+function loadSection(idx, animate) {
+  curSection = idx;
+  curSlide = 0;
+  const s = sections[idx];
+  if (!s) return;
+
+  // Update header
+  document.getElementById('hdr-title').textContent = s.label;
+  const subParts = [];
+  if (s.price) subParts.push(s.price);
+  if (galleryUser) subParts.push('u/' + galleryUser);
+  document.getElementById('hdr-sub').textContent = subParts.join(' · ');
+
+  // Rebuild slides
+  const slidesEl = document.getElementById('slides');
+  slidesEl.innerHTML = '';
+  slidesEl.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center';
+
+  // Rebuild thumbs
+  const thumbsEl = document.getElementById('thumbs');
+  thumbsEl.innerHTML = '';
+  thumbsEl.classList.add('hidden');
+
+  s.imgs.forEach((url, i) => {
     const slide = document.createElement('div');
     slide.className = 'slide';
     slide.id = `slide-${i}`;
     const img = document.createElement('img');
     img.src = url;
-    img.alt = `Photo ${i+1}`;
+    img.alt = `${s.label} photo ${i + 1}`;
     img.draggable = false;
     img.addEventListener('load', () => {
-      if (i === cur) document.getElementById('spinner').style.display = 'none';
+      if (i === curSlide) document.getElementById('spinner').style.display = 'none';
     });
     img.addEventListener('error', () => {
       img.alt = '⚠ Could not load photo';
       img.style.cssText = 'width:80px;height:80px;opacity:.3';
+      if (i === curSlide) document.getElementById('spinner').style.display = 'none';
     });
     slide.appendChild(img);
-    container.appendChild(slide);
+    slidesEl.appendChild(slide);
+
+    if (s.imgs.length > 1) {
+      const t = document.createElement('img');
+      t.className = 'thumb' + (i === 0 ? ' active' : '');
+      t.src = url;
+      t.alt = `Thumb ${i + 1}`;
+      t.draggable = false;
+      t.addEventListener('click', () => showSlide(i));
+      thumbsEl.appendChild(t);
+    }
   });
+
+  if (s.imgs.length > 1) thumbsEl.classList.remove('hidden');
+  showSlide(0, false);
 }
 
-function buildThumbs() {
-  if (imgs.length < 2) return;
-  const strip = document.getElementById('thumbs');
-  strip.classList.remove('hidden');
-  imgs.forEach((url, i) => {
-    const img = document.createElement('img');
-    img.className = 'thumb' + (i===0?' active':'');
-    img.src = url;
-    img.alt = `Thumb ${i+1}`;
-    img.draggable = false;
-    img.addEventListener('click', () => showSlide(i));
-    strip.appendChild(img);
-  });
-}
-
+// ─── SLIDES ─────────────────────────────────────────────────────
 function showSlide(n, animate = true) {
-  const prev = document.getElementById(`slide-${cur}`);
-  const prevThumb = document.querySelectorAll('.thumb')[cur];
+  const imgs = sections[curSection]?.imgs || [];
+  const prev = document.getElementById(`slide-${curSlide}`);
+  const prevThumb = document.querySelectorAll('.thumb')[curSlide];
   if (prev) prev.classList.remove('active');
   if (prevThumb) prevThumb.classList.remove('active');
 
-  cur = Math.max(0, Math.min(n, imgs.length - 1));
+  curSlide = Math.max(0, Math.min(n, imgs.length - 1));
   document.getElementById('spinner').style.display = 'flex';
 
-  const next = document.getElementById(`slide-${cur}`);
-  const nextThumb = document.querySelectorAll('.thumb')[cur];
+  const next = document.getElementById(`slide-${curSlide}`);
+  const nextThumb = document.querySelectorAll('.thumb')[curSlide];
   if (next) next.classList.add('active');
   if (nextThumb) {
     nextThumb.classList.add('active');
-    nextThumb.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+    nextThumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
   }
 
-  // Check if already loaded
   const img = next?.querySelector('img');
   if (img?.complete && img?.naturalHeight) {
     document.getElementById('spinner').style.display = 'none';
   }
 
-  updateNav();
-
+  updateArrows();
   const c = document.getElementById('counter');
   if (imgs.length > 1) {
     c.style.display = 'block';
-    c.textContent = `${cur+1} / ${imgs.length}`;
+    c.textContent = `${curSlide + 1} / ${imgs.length}`;
+  } else {
+    c.style.display = 'none';
   }
 }
 
 function go(dir) {
-  const n = cur + dir;
+  const imgs = sections[curSection]?.imgs || [];
+  const n = curSlide + dir;
   if (n < 0 || n >= imgs.length) return;
   showSlide(n);
 }
 
-function updateNav() {
+function updateArrows() {
+  const imgs = sections[curSection]?.imgs || [];
   const prev = document.getElementById('nav-prev');
   const next = document.getElementById('nav-next');
   if (imgs.length > 1) {
     prev.classList.remove('hidden');
     next.classList.remove('hidden');
-    prev.style.opacity = cur === 0 ? '.2' : '';
-    next.style.opacity = cur === imgs.length-1 ? '.2' : '';
-    prev.style.pointerEvents = cur === 0 ? 'none' : '';
-    next.style.pointerEvents = cur === imgs.length-1 ? 'none' : '';
+    prev.style.opacity = curSlide === 0 ? '.2' : '';
+    next.style.opacity = curSlide === imgs.length - 1 ? '.2' : '';
+    prev.style.pointerEvents = curSlide === 0 ? 'none' : '';
+    next.style.pointerEvents = curSlide === imgs.length - 1 ? 'none' : '';
+  } else {
+    prev.classList.add('hidden');
+    next.classList.add('hidden');
   }
 }
 
-// ─── TOUCH / SWIPE ───────────────────────────────────────────
+// ─── TOUCH / DRAG ───────────────────────────────────────────────
 function onTouchStart(e) { touchStartX = e.touches[0].clientX; }
 function onTouchEnd(e) {
   const dx = e.changedTouches[0].clientX - touchStartX;
   if (Math.abs(dx) > 40) go(dx < 0 ? 1 : -1);
 }
-
 function onDragStart(e) {
   dragStartX = e.clientX;
   const onUp = up => {
@@ -539,21 +610,7 @@ function onDragStart(e) {
   window.addEventListener('mouseup', onUp);
 }
 
-// ─── ACTIONS ─────────────────────────────────────────────────
-function downloadCurrent() {
-  const url = imgs[cur];
-  if (!url) return;
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `knife-photo-${cur+1}.jpg`;
-  a.target = '_blank';
-  a.click();
-}
-
-function openCurrent() {
-  window.open(imgs[cur], '_blank');
-}
-
+// ─── ACTIONS ────────────────────────────────────────────────────
 function copyLink() {
   navigator.clipboard.writeText(location.href).then(() => {
     toast('Gallery link copied!');
@@ -576,9 +633,7 @@ function updateFsBtn() {
   document.getElementById('fs-label').textContent = on ? 'Exit' : 'Fullscreen';
 }
 
-// Theme follows system preference automatically
-
-// ─── TOAST ───────────────────────────────────────────────────
+// ─── TOAST ──────────────────────────────────────────────────────
 let toastTimer;
 function toast(msg) {
   const el = document.getElementById('toast');
@@ -588,16 +643,23 @@ function toast(msg) {
   toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
 }
 
-// ─── ERROR ───────────────────────────────────────────────────
+// ─── ERROR ──────────────────────────────────────────────────────
 function showError(msg) {
   document.getElementById('spinner').style.display = 'none';
+  document.getElementById('knife-nav').classList.add('single');
+  document.getElementById('mob-tabs').style.display = 'none';
   const viewer = document.getElementById('viewer');
   viewer.innerHTML = `
-    <div class="err">
+    <div class="err-wrap">
       <div class="err-icon">📷</div>
       <div class="err-title">No Photos Found</div>
       <div class="err-sub">${msg}</div>
     </div>`;
+}
+
+// ─── UTIL ────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 init();

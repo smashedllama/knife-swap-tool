@@ -1109,6 +1109,37 @@ function galleryUrl(k){
   }catch(e){return imgs[0];}
 }
 
+// Post-level gallery URL — encodes all knives + timestamp so buyer can navigate
+// between the full post's sections. startAt = absolute section index for the target knife.
+function buildPostGalleryUrl(post, knifeIdx){
+  const timestampPhotos=(post.photos||[]).filter(Boolean);
+  const knifeData=(post.knives||[]).map(k=>({
+    name:(k.brand+" "+k.model).trim(),
+    price:knifePrice(k),
+    imgs:(k.photos||[]).filter(Boolean)
+  }));
+  const hasKnifePhotos=knifeData.some(k=>k.imgs.length>0);
+  if(!hasKnifePhotos&&!timestampPhotos.length)return null;
+  const hasTs=timestampPhotos.length>0;
+  // Calculate which section index corresponds to knifeIdx
+  // Section 0 = timestamp (if present), then knives with photos in order
+  let startAt=0;
+  if(knifeIdx!==undefined&&knifeData[knifeIdx]?.imgs.length>0){
+    let si=hasTs?1:0;
+    for(let i=0;i<knifeIdx;i++){if(knifeData[i].imgs.length>0)si++;}
+    startAt=si;
+  }
+  try{
+    const d=btoa(unescape(encodeURIComponent(JSON.stringify({
+      user:SETTINGS.username||"",
+      knives:knifeData,
+      timestamp:timestampPhotos,
+      startAt
+    }))));
+    return`https://smashedllama.github.io/knife-swap-tool/gallery.html?d=${d}`;
+  }catch(e){return null;}
+}
+
 function buildPost(post,v){
   v=v!==undefined?v:(post.variant||0);
   const ts=new Date().toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"});
@@ -1137,7 +1168,7 @@ function buildPost(post,v){
       const ac=k.accessories.filter(x=>x!=="None").join(", ")||"None";
       const pl=knifePrice(k);
       const kphotos=(k.photos||[]).filter(Boolean);
-      const nameLinked=kphotos.length?`[${k.brand} ${k.model}](${galleryUrl(k)})`:(`${k.brand} ${k.model}`);
+      const nameLinked=kphotos.length?`[${k.brand} ${k.model}](${buildPostGalleryUrl(post,i)||galleryUrl(k)})`:(`${k.brand} ${k.model}`);
       const statusLabel=k.sold?"[SOLD]":k.pending?"[PENDING]":"";
       const hdr=k.sold
         ?`~~**${dot(k)} ${i+1}. ${nameLinked} [SOLD]**~~ | ~~${pl}~~`
@@ -1169,7 +1200,7 @@ function buildPost(post,v){
       const iss=k.issues.filter(x=>x!=="None").join(", ")||"None";
       const ac=k.accessories.filter(x=>x!=="None").join(", ")||"None";
       const kphotos=(k.photos||[]).filter(Boolean);
-      const nameLinked=kphotos.length?`[${k.brand} ${k.model}](${galleryUrl(k)})`:(`${k.brand} ${k.model}`);
+      const nameLinked=kphotos.length?`[${k.brand} ${k.model}](${buildPostGalleryUrl(post,i)||galleryUrl(k)})`:(`${k.brand} ${k.model}`);
       const statusLabel=k.sold?" [SOLD]":k.pending?" [PENDING]":"";
       let block=`${dot(k)} **${i+1}. ${nameLinked}**${statusLabel} | ${knifePrice(k)}`;
       block+=`\n${k.steel||"N/A"} | ${k.bladeCondition} | ${k.owners} owner | Centering: ${k.centering}`;
@@ -1197,9 +1228,9 @@ function buildPost(post,v){
     const sig=un?`*${un} - ${ts}*`:`*${ts}*`;
     const bundleBlock=bundle?`\n\n---\n\n**Bundle: $${post.bundlePrice} takes all${post.knives.length>1?" ("+post.knives.length+" knives)":""}**`:"";
     const ownOrd=n=>{const x=parseInt(n)||1;return x===1?"1st":x===2?"2nd":x===3?"3rd":x+"th";};
-    const rows=post.knives.map(k=>{
+    const rows=post.knives.map((k,i)=>{
       const kphotos3=(k.photos||[]).filter(Boolean);
-      const gurl3=galleryUrl(k);
+      const gurl3=kphotos3.length?(buildPostGalleryUrl(post,i)||galleryUrl(k)):null;
       const nameCell=gurl3
         ?`[${k.brand} ${k.model}](${gurl3})${k.sold?" \\[SOLD\\]":k.pending?" \\[PENDING\\]":""}`
         :`${k.brand} ${k.model}${k.sold?" \\[SOLD\\]":k.pending?" \\[PENDING\\]":""}`;
@@ -1232,7 +1263,7 @@ function buildPost(post,v){
   const noshipLine=noShipList.length?` | No ship: ${noShipList.join(", ")}`:"";
   const tradeFooter=isWTT?(ti?` | Trades: ${ti}`:""):" | No Trades";
   const sig=un?`${un} - ${ts}`:ts;
-  return`${type} ${title}${rp}\n${photoLine}${headerBlock}\n\n${post.knives.map(k=>{const gu=galleryUrl(k);const nm=gu?`[${k.brand} ${k.model}](${gu})`:(`${k.brand} ${k.model}`);return`${dot(k)} ${nm}${k.sold?" [SOLD]":k.pending?" [PENDING]":""} | ${knifePrice(k)} | ${k.steel||"N/A"}, ${k.bladeCondition}`;}).join("\n")}${bundleLine}\n\nPayment: ${pay} | Shipping included${noshipLine}${tradeFooter}${post.notes?"\n"+post.notes:""}\n${sig}`;
+  return`${type} ${title}${rp}\n${photoLine}${headerBlock}\n\n${post.knives.map((k,i)=>{const gu=(k.photos||[]).filter(Boolean).length?(buildPostGalleryUrl(post,i)||galleryUrl(k)):null;const nm=gu?`[${k.brand} ${k.model}](${gu})`:(`${k.brand} ${k.model}`);return`${dot(k)} ${nm}${k.sold?" [SOLD]":k.pending?" [PENDING]":""} | ${knifePrice(k)} | ${k.steel||"N/A"}, ${k.bladeCondition}`;}).join("\n")}${bundleLine}\n\nPayment: ${pay} | Shipping included${noshipLine}${tradeFooter}${post.notes?"\n"+post.notes:""}\n${sig}`;
 }
 
 // ─── UPLOAD ───────────────────────────────────────────────────
@@ -1596,6 +1627,7 @@ function renderModal(type){
   if(type==="auth")return renderAuthModal();
   if(type==="tutorial")return renderTutorialModal();
   if(type==="about")return renderAboutModal();
+  if(type==="cloudinary")return renderCloudinaryModal();
   if(type!=="rules")return"";
   const rules=[
     {h:"Timestamp Required",b:"Every post must include a photo of <strong>all items for sale</strong> with a handwritten note showing your Reddit username and the full date (month, day, year). No timestamp = post removed."},
@@ -1673,6 +1705,71 @@ function renderAuthModal(){
     ${closeBtn}${inner}
   </div>
 </div>`;
+}
+function renderCloudinaryModal(){
+  const cloud=(SETTINGS.cloudinaryCloud||"").trim();
+  const preset=(SETTINGS.cloudinaryPreset||"").trim();
+  const isConnected=!!(cloud&&preset);
+  const statusHtml=isConnected
+    ?`<div style="display:flex;align-items:center;gap:8px;background:var(--greenbg);border:.5px solid rgba(52,199,89,.3);border-radius:10px;padding:11px 14px;margin-bottom:18px">
+        <span style="font-size:18px">✅</span>
+        <div><div style="font-size:13px;font-weight:700;color:var(--greent)">Cloudinary Connected</div><div style="font-size:11px;color:var(--greent);opacity:.8;margin-top:1px">Cloud: <strong>${esc(cloud)}</strong> · Preset: <strong>${esc(preset)}</strong></div></div>
+      </div>`
+    :`<div style="display:flex;align-items:center;gap:8px;background:var(--orangebg);border:.5px solid rgba(255,149,0,.3);border-radius:10px;padding:11px 14px;margin-bottom:18px">
+        <span style="font-size:18px">⚠️</span>
+        <div><div style="font-size:13px;font-weight:700;color:var(--oranget)">Not configured yet</div><div style="font-size:11px;color:var(--oranget);opacity:.8;margin-top:1px">Complete the steps below, then enter your credentials at the bottom.</div></div>
+      </div>`;
+  const steps=[
+    {n:"1",ico:"🌐",title:"Create a free Cloudinary account",body:`Go to <a href="https://cloudinary.com/users/register_free" target="_blank" rel="noopener" style="color:var(--blue);font-weight:600">cloudinary.com/users/register_free</a> and sign up. No credit card required — the free plan handles thousands of photos.`},
+    {n:"2",ico:"🔑",title:"Find your Cloud Name",body:`After signing in, your <strong>Cloud Name</strong> is shown in large text on the dashboard (top-left). It looks like <code style="font-size:11px;background:var(--bg);padding:2px 5px;border-radius:4px">dxyz12abc</code>. Copy it.`},
+    {n:"3",ico:"⚙️",title:"Create an Upload Preset",body:`In Cloudinary go to <strong>Settings → Upload → Upload presets</strong> and click <strong>Add upload preset</strong>. Give it a name (e.g. <code style="font-size:11px;background:var(--bg);padding:2px 5px;border-radius:4px">knife-swap</code>). Set <strong>Signing mode</strong> to <strong>Unsigned</strong>. Save.`},
+    {n:"4",ico:"🔒",title:"Your data stays private",body:`Photos are uploaded <strong>directly from your browser to your Cloudinary account</strong> — they never pass through our servers. Cloudinary stores all photos with <strong>AES-256 encryption</strong> at rest and all transfers use <strong>TLS 1.2+</strong> in transit. Only you control your account and your images.`},
+    {n:"5",ico:"✏️",title:"Enter your credentials below",body:`Paste your Cloud Name and preset name into the fields in Settings. They are saved locally to your browser. Once entered, drag-and-drop photo uploads will work immediately.`}
+  ];
+  const stepsHtml=steps.map(s=>`
+    <div style="display:flex;gap:12px;padding:12px 0;border-bottom:.5px solid var(--b2)">
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--surf2);border:.5px solid var(--b1);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-top:1px">${s.ico}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:var(--t1);margin-bottom:4px">${s.n}. ${s.title}</div>
+        <div style="font-size:12px;color:var(--t2);line-height:1.6">${s.body}</div>
+      </div>
+    </div>`).join("");
+  const inputsHtml=`
+    <div style="margin-top:16px;padding-top:16px;border-top:.5px solid var(--b1)">
+      <div style="font-size:12px;font-weight:700;color:var(--t3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:12px">Your Credentials</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <label style="font-size:12px;font-weight:600;color:var(--t2);width:110px;flex-shrink:0">Cloud Name</label>
+          <input type="text" style="flex:1;min-width:160px;font-size:13px;padding:8px 11px;border:.5px solid var(--b1);border-radius:8px;background:var(--surf2);color:var(--t1);outline:none;font-family:var(--font)" placeholder="e.g. dxyz12abc" value="${esc(cloud)}" oninput="SETTINGS.cloudinaryCloud=this.value.trim();saveSettings();renderCloudinaryStatus()"/>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <label style="font-size:12px;font-weight:600;color:var(--t2);width:110px;flex-shrink:0">Upload Preset</label>
+          <input type="text" style="flex:1;min-width:160px;font-size:13px;padding:8px 11px;border:.5px solid var(--b1);border-radius:8px;background:var(--surf2);color:var(--t1);outline:none;font-family:var(--font)" placeholder="e.g. knife-swap" value="${esc(preset)}" oninput="SETTINGS.cloudinaryPreset=this.value.trim();saveSettings();renderCloudinaryStatus()"/>
+        </div>
+      </div>
+      <div id="cl-status" style="margin-top:10px;font-size:12px;color:var(--greent);font-weight:600;min-height:18px">${isConnected?"✅ All set — drag-and-drop uploads are ready!":""}</div>
+    </div>`;
+  return`<div class="modal-overlay" onclick="S.modal=null;render()">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:500px">
+    <div class="modal-hdr">
+      <div class="modal-title">📸 Cloudinary Photo Setup</div>
+      <button class="modal-close" onclick="S.modal=null;render()">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      ${statusHtml}
+      <div style="font-size:12.5px;color:var(--t2);line-height:1.6;margin-bottom:14px">Set up your own free Cloudinary account for drag-and-drop photo uploads. Each user hosts their own photos — you own your images, not us.</div>
+      ${stepsHtml}
+      ${inputsHtml}
+    </div>
+  </div>
+</div>`;
+}
+function renderCloudinaryStatus(){
+  const el=document.getElementById('cl-status');
+  if(!el)return;
+  const c=(SETTINGS.cloudinaryCloud||"").trim();
+  const p=(SETTINGS.cloudinaryPreset||"").trim();
+  el.textContent=c&&p?"✅ All set — drag-and-drop uploads are ready!":"";
 }
 function renderTutorialModal(){
   const steps=[
@@ -2194,6 +2291,7 @@ function renderSettings(){
       </div>
     </div>
     ${S.authStatus!=="signed_in"?`<div class="srow"><div style="font-size:12px;line-height:1.6;color:var(--redt);background:rgba(255,59,48,.07);border-radius:8px;padding:10px 12px;border:.5px solid rgba(255,59,48,.2)">⚠️ <strong>Your data is only saved in this browser.</strong> If you clear your browser cache, browsing history, or site data - or switch to a different browser or device - all your posts and inventory will be <strong>permanently lost</strong> and cannot be recovered. Sign in to back up your data to the cloud.</div></div>`:""}
+    ${S.authStatus==="signed_in"?`<div class="srow"><div style="font-size:11.5px;line-height:1.6;color:var(--greent);background:rgba(52,199,89,.07);border-radius:8px;padding:9px 12px;border:.5px solid rgba(52,199,89,.2)">🔒 <strong>Your data is secure.</strong> All synced data is encrypted in transit using <strong>TLS 1.2+</strong> and stored with <strong>AES-256 encryption</strong> at rest on Supabase. We cannot read your posts or inventory.</div></div>`:""}
     <div class="srow">
       ${S.authStatus==="signed_in"
         ?`<button class="btn btn-sec btn-sm" onclick="signOut()">Sign Out</button>`
@@ -2206,9 +2304,9 @@ function renderSettings(){
     <div class="srow"><div class="srow-lbl">Version</div><div style="font-size:13px;color:var(--t3);margin-left:auto">3.1 - ${BRANDS.length} brands, ${STEELS.length} steels</div></div>
     <div class="srow"><div class="srow-lbl">Help</div><div class="srow-ctrl"><button class="btn btn-am btn-sm" onclick="S.modal='tutorial';S.tutStep=0;render()">📖 View Tutorial</button><button class="btn btn-sec btn-sm" onclick="S.modal='about';S.aboutTab='about';render()">ℹ️ About &amp; FAQ</button></div></div>
     <div class="srow"><div><div class="srow-lbl">Built by</div><div class="srow-sub">u/smashedllama2 — free tool for the r/Knife_Swap community</div></div><div class="srow-ctrl"><a href="https://buymeacoffee.com/erunyan" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#FFDD00;color:#000;font-size:12px;font-weight:700;padding:7px 13px;border-radius:8px;text-decoration:none;white-space:nowrap">☕ Buy me a coffee</a></div></div>
-    <div class="srow"><div><div class="srow-lbl">Photo Hosting</div><div class="srow-sub" style="max-width:340px;line-height:1.6">Drag-and-drop photo uploads via your own free <a href="https://cloudinary.com" target="_blank" style="color:var(--blue);text-decoration:none">Cloudinary</a> account. Setup takes 2 minutes:<br><br><strong>1.</strong> <a href="https://cloudinary.com/users/register_free" target="_blank" style="color:var(--blue);text-decoration:none">Sign up free at cloudinary.com</a> — no card needed<br><strong>2.</strong> Your <strong>Cloud Name</strong> is shown on the dashboard (top-left, e.g. <code style="font-size:11px;background:var(--bg);padding:1px 4px;border-radius:4px">dxyz12abc</code>)<br><strong>3.</strong> In Cloudinary go to <strong>Settings → Upload → Upload presets → Add upload preset</strong>. Give it any name (e.g. <code style="font-size:11px;background:var(--bg);padding:1px 4px;border-radius:4px">knife-swap</code>), set Signing mode to <strong>Unsigned</strong>, save it<br><strong>4.</strong> Paste your Cloud Name and that preset name into the fields below</div></div></div>
-    <div class="srow"><div><div class="srow-lbl">Cloud Name</div><div class="srow-sub">On your Cloudinary dashboard, top-left corner.</div></div><div class="srow-ctrl"><input type="text" style="width:170px;min-width:170px;font-size:13px;padding:7px 10px" value="${esc(sv.cloudinaryCloud||"")}" placeholder="e.g. dxyz12abc" onchange="SETTINGS.cloudinaryCloud=this.value.trim();saveSettings()"/></div></div>
-    <div class="srow"><div><div class="srow-lbl">Upload Preset</div><div class="srow-sub">The name you gave your preset — must be Unsigned.</div></div><div class="srow-ctrl"><input type="text" style="width:170px;min-width:170px;font-size:13px;padding:7px 10px" value="${esc(sv.cloudinaryPreset||"")}" placeholder="e.g. knife-swap" onchange="SETTINGS.cloudinaryPreset=this.value.trim();saveSettings()"/></div></div>
+    <div class="srow" style="flex-wrap:wrap;gap:10px"><div style="flex:1;min-width:200px"><div class="srow-lbl">Photo Hosting</div><div class="srow-sub">Drag-and-drop uploads via your own free <a href="https://cloudinary.com" target="_blank" style="color:var(--blue);text-decoration:none">Cloudinary</a> account. Photos go directly from your browser to your account — never through our servers. Stored with <strong>AES-256</strong> at rest, <strong>TLS 1.2+</strong> in transit.</div></div><div class="srow-ctrl" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${sv.cloudinaryCloud&&sv.cloudinaryPreset?`<span style="font-size:11px;font-weight:600;color:var(--greent);background:var(--greenbg);padding:4px 9px;border-radius:20px">✅ Connected</span>`:`<span style="font-size:11px;font-weight:600;color:var(--oranget);background:var(--orangebg);padding:4px 9px;border-radius:20px">Setup needed</span>`}<button class="btn btn-sec btn-sm" onclick="S.modal='cloudinary';render()">📖 Setup Guide</button></div></div>
+    <div class="srow"><div><div class="srow-lbl">Cloud Name</div><div class="srow-sub">Your Cloudinary cloud name (dashboard, top-left).</div></div><div class="srow-ctrl"><input type="text" style="width:170px;min-width:170px;font-size:13px;padding:7px 10px" value="${esc(sv.cloudinaryCloud||"")}" placeholder="e.g. dxyz12abc" onchange="SETTINGS.cloudinaryCloud=this.value.trim();saveSettings()"/></div></div>
+    <div class="srow"><div><div class="srow-lbl">Upload Preset</div><div class="srow-sub">Must be set to Unsigned in Cloudinary.</div></div><div class="srow-ctrl"><input type="text" style="width:170px;min-width:170px;font-size:13px;padding:7px 10px" value="${esc(sv.cloudinaryPreset||"")}" placeholder="e.g. knife-swap" onchange="SETTINGS.cloudinaryPreset=this.value.trim();saveSettings()"/></div></div>
   </div>
   ${S.authStatus==="signed_in"?`
   <div class="settings-section-lbl" style="color:var(--redt);margin-top:8px">Danger Zone</div>
@@ -2248,7 +2346,7 @@ window.triggerKnifeUpload=triggerKnifeUpload;window.handleKnifeFileInput=handleK
 window.confirmSoldFlow=confirmSoldFlow;window.cancelSoldFlow=cancelSoldFlow;window.copyConfirmComment=copyConfirmComment;window.buildConfirmComment=buildConfirmComment;
 window.markPending=markPending;window.markInvPending=markInvPending;
 window.sendMagicLink=sendMagicLink;window.signOut=signOut;window.deleteAccount=deleteAccount;window.migrateToSupabase=migrateToSupabase;window.skipMigrate=skipMigrate;
-window.renderTutorialModal=renderTutorialModal;window.renderAboutModal=renderAboutModal;
+window.renderTutorialModal=renderTutorialModal;window.renderAboutModal=renderAboutModal;window.renderCloudinaryModal=renderCloudinaryModal;window.renderCloudinaryStatus=renderCloudinaryStatus;
 window.autoPostType=autoPostType;window.buildTitleStr=buildTitleStr;window.doFetchPriceResearch=doFetchPriceResearch;window.clearPriceResearch=clearPriceResearch;window.applyPriceFromResearch=applyPriceFromResearch;
 
 // ─── KEYBOARD SHORTCUTS ───────────────────────────────────
