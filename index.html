@@ -399,6 +399,33 @@ button:disabled{opacity:.35;cursor:not-allowed}
 .title-prev .t-over{color:var(--redt)!important;font-weight:700}
 .title-prev .t-count{font-size:10.5px;font-weight:600;color:var(--t3)}
 
+/* ─── TUTORIAL MODAL ─────────────────────────────────────── */
+.tut-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:210;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px)}
+.tut-card{background:var(--card);border-radius:20px;width:100%;max-width:520px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 28px 70px rgba(0,0,0,.26),0 0 0 .5px rgba(0,0,0,.1);overflow:hidden}
+.tut-icon{font-size:52px;text-align:center;margin:28px 0 10px;line-height:1}
+.tut-body{padding:0 28px 4px;flex:1;overflow-y:auto}
+.tut-title{font-size:21px;font-weight:700;color:var(--t1);letter-spacing:-.03em;text-align:center;margin-bottom:12px}
+.tut-text{font-size:14px;color:var(--t2);line-height:1.7;text-align:center}
+.tut-tip{background:var(--orangebg);border:.5px solid rgba(255,149,0,.3);border-radius:10px;padding:11px 15px;margin-top:16px;font-size:12.5px;color:var(--oranget);line-height:1.6}
+.tut-tip strong{display:block;margin-bottom:3px;font-size:13px}
+.tut-footer{padding:20px 28px 26px;display:flex;flex-direction:column;align-items:center;gap:14px;flex-shrink:0}
+.tut-dots{display:flex;gap:7px;align-items:center}
+.tut-dot{width:8px;height:8px;border-radius:50%;background:rgba(0,0,0,.15);transition:all .2s;font-size:9px;display:flex;align-items:center;justify-content:center;cursor:default;flex-shrink:0}
+.tut-dot.current{width:22px;border-radius:20px;background:var(--orange)}
+.tut-dot.past{background:var(--greenbg);color:var(--greent);width:16px;height:16px;font-size:10px}
+.tut-btns{display:flex;gap:10px;align-items:center}
+.tut-skip{font-size:12px;color:var(--t4);background:none;border:none;cursor:pointer;font-family:var(--font);text-decoration:underline;padding:0}
+.tut-skip:hover{color:var(--t3)}
+
+/* ─── ABOUT / FAQ MODAL ──────────────────────────────────── */
+.about-tabs{display:flex;background:rgba(0,0,0,.06);border-radius:10px;padding:3px;gap:2px;margin-bottom:18px}
+.about-tab{flex:1;padding:7px 10px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--t3);font-family:var(--font);transition:all var(--tr);text-align:center}
+.about-tab.on{background:var(--card);color:var(--t1);font-weight:600;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.faq-item{padding:12px 0;border-bottom:.5px solid var(--b2)}
+.faq-item:last-child{border-bottom:none}
+.faq-q{font-size:13.5px;font-weight:600;color:var(--t1);margin-bottom:5px;line-height:1.4}
+.faq-a{font-size:13px;color:var(--t2);line-height:1.6}
+
 /* ─── UNDO TOAST ──────────────────────────────────────────── */
 .undo-toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#1C1C1E;color:#F2F2F7;padding:9px 14px 9px 16px;border-radius:980px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:10px;box-shadow:0 4px 24px rgba(0,0,0,.38),0 0 0 .5px rgba(255,255,255,.1);z-index:300;animation:sfIn .22s ease;white-space:nowrap;pointer-events:auto}
 .flair-toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--oranget);color:#fff;padding:9px 18px;border-radius:980px;font-size:13px;font-weight:600;box-shadow:0 4px 24px rgba(0,0,0,.28);z-index:301;animation:sfIn .22s ease;white-space:nowrap;pointer-events:none}
@@ -545,6 +572,12 @@ button:disabled{opacity:.35;cursor:not-allowed}
   /* Invisible separators fix */
   .pc-body{border-top-color:var(--b1)}
   .krows-hdr{border-top-color:var(--b1)}
+  /* Tutorial dark mode */
+  .tut-dot{background:rgba(255,255,255,.15)}
+  .tut-dot.current{background:var(--orange)}
+  /* About tabs dark mode */
+  .about-tabs{background:rgba(255,255,255,.08)}
+  .about-tab.on{background:#3A3A3C}
 }
 
 /* ─── MOBILE ─────────────────────────────────────────────── */
@@ -696,7 +729,7 @@ async function saveSettings(){
 const EK=()=>({brand:"",model:"",steel:"",price:"",obo:false,knifeType:"WTS",tradeValue:"",sharpened:"No",usedCut:"No",carried:"No",bladeCondition:"Factory edge, carried",owners:"1",centering:"Perfect",lockup:"Solid",lockupNotes:"",issues:["None"],accessories:["None"],notes:"",inventoryId:null,prevPrice:"",photos:[],pending:false,priceHistory:[],comps:[]});
 const EI=()=>({id:gid(),brand:"",model:"",steel:"",price:"",obo:false,knifeType:"WTS",tradeValue:"",sharpened:"No",usedCut:"No",carried:"No",bladeCondition:"Factory edge, carried",owners:"1",centering:"Perfect",lockup:"Solid",lockupNotes:"",issues:["None"],accessories:["None"],notes:"",status:"available",addedAt:new Date().toISOString(),soldAt:null,photos:[],pending:false,priceHistory:[],comps:[]});
 const ED=()=>({postType:"[WTS]",knives:[],payment:[...SETTINGS.payment],paymentOther:"",noShip:[...SETTINGS.noShip],noShipOther:"",repost:false,photos:[],notes:"",rulesConfirmed:false,bundleEnabled:false,bundlePrice:"",tradeInterests:SETTINGS.tradeInterests||""});
-let S={posts:[],inventory:[],loaded:false,view:"list",expanded:null,copied:null,draft:ED(),kfOpen:false,kfIdx:-1,kf:EK(),kfMode:"draft",adv:false,err:"",saveNotice:false,lockerFilter:"all",lockerPicker:false,movingKnife:null,uploadFiles:[],kfUploads:[],priceResearch:{status:"idle",results:[],query:""},modal:null,authStatus:"guest",authEmail:"",showMigrate:false,soldFlow:null,delFlowEmail:null,authLoading:true,mdPreview:new Set(),undoStack:[],undoToast:null,_undoTid:null,flairToast:null,_flairTid:null,rollSort:"added"};
+let S={posts:[],inventory:[],loaded:false,view:"list",expanded:null,copied:null,draft:ED(),kfOpen:false,kfIdx:-1,kf:EK(),kfMode:"draft",adv:false,err:"",saveNotice:false,lockerFilter:"all",lockerPicker:false,movingKnife:null,uploadFiles:[],kfUploads:[],priceResearch:{status:"idle",results:[],query:""},modal:null,authStatus:"guest",authEmail:"",showMigrate:false,soldFlow:null,delFlowEmail:null,authLoading:true,mdPreview:new Set(),undoStack:[],undoToast:null,_undoTid:null,flairToast:null,_flairTid:null,rollSort:"added",tutStep:0,aboutTab:"about"};
 
 // ─── STORAGE ──────────────────────────────────────────────────
 async function load(){
@@ -1561,6 +1594,8 @@ function render(){
 }
 function renderModal(type){
   if(type==="auth")return renderAuthModal();
+  if(type==="tutorial")return renderTutorialModal();
+  if(type==="about")return renderAboutModal();
   if(type!=="rules")return"";
   const rules=[
     {h:"Timestamp Required",b:"Every post must include a photo of <strong>all items for sale</strong> with a handwritten note showing your Reddit username and the full date (month, day, year). No timestamp = post removed."},
@@ -1636,6 +1671,130 @@ function renderAuthModal(){
   return`<div class="modal-overlay" onclick="S.modal=null;S.err='';render()">
   <div class="modal" onclick="event.stopPropagation()" style="max-width:400px;position:relative">
     ${closeBtn}${inner}
+  </div>
+</div>`;
+}
+function renderTutorialModal(){
+  const steps=[
+    {
+      icon:"🔪",
+      title:"Welcome to KnifeSwap Post Generator",
+      body:"This is a free tool built for the <a href='https://www.reddit.com/r/Knife_Swap/' target='_blank' rel='noopener' style='color:var(--blue)'>r/Knife_Swap</a> community. If you sell or trade knives on Reddit, this tool does the tedious work for you. It formats your listings, tracks your inventory, enforces subreddit rules, and keeps a record of everything you have sold. No account required, no ads, no tracking. Your data stays in your browser.",
+      tip:null
+    },
+    {
+      icon:"📋",
+      title:"The Roll: Your Knife Inventory",
+      body:"The Roll is your personal knife collection. Add a knife once with all its details: brand, model, steel, condition, price, photos. From that point on you can pull it into any listing with one click. The Roll also tracks how many days you have held each knife, shows price history when you drop the price, and lets you filter by status: available, listed, pending, or sold. You can also export your full inventory as a CSV.",
+      tip:{head:"Tip",text:"Set a knife's status to Pending when you have a buyer lined up. Mark it Sold once payment clears. The Roll keeps a record of every sold knife automatically."}
+    },
+    {
+      icon:"📝",
+      title:"Building a Post",
+      body:"Click New Listing to start a post. Add knives from The Roll, or enter details manually. The tool auto-generates the Reddit title and the full post body in the format the subreddit expects. You can switch between four templates at any time. Once a knife sells, mark it sold right from the listing card. The tool updates the post text, records the sale, and moves the knife to your sold history.",
+      tip:{head:"Templates",text:"Four post templates are available: Detailed, Compact, Minimal, and Table. Hit the Switch button to cycle through them and pick the one that fits your style."}
+    },
+    {
+      icon:"📸",
+      title:"Timestamp Photo",
+      body:"r/Knife_Swap requires a timestamp photo with every post. It must show all the knives you are selling, along with a handwritten note that includes your Reddit username and the full date (month, day, year). For example: u/yourname - March 16, 2026. A photo on your phone or a sticky note in the frame both work fine. The Copy button in the tool stays disabled until you add a timestamp photo link. Once you paste a link, the post unlocks.",
+      tip:{head:"What makes a valid timestamp",text:"All knives visible, username spelled correctly, full date written by hand. Digital text overlaid in a photo editor does not count. If in doubt, check the subreddit sidebar."}
+    },
+    {
+      icon:"🖼",
+      title:"Photos and Galleries",
+      body:"You can upload photos by dragging and dropping files into the upload zone, which uses a free Cloudinary account you set up in Settings. You can also paste any direct image URL, including Imgur links in the format i.imgur.com/xxx.jpg. If you add two or more photos to a knife, the tool automatically turns the knife name in the post into a clickable gallery link. Buyers click the knife name and get a swipeable photo viewer.",
+      tip:{head:"Imgur tip",text:"Use direct image links (i.imgur.com/xxx.jpg), not album or gallery page URLs. Right-click an image on Imgur and choose Copy Image Address to get the direct link."}
+    },
+    {
+      icon:"⚙️",
+      title:"Templates and Settings",
+      body:"Settings lets you save your Reddit username, preferred payment methods, trade interests, and a custom post header so you do not have to type them every time. Four post templates are available: Detailed, Compact, Minimal, and Table. You can cycle through them with the Switch button on any listing. Optional cloud sync is available after a free sign-in, keeping your data in sync across devices. Cloudinary credentials for photo uploads are also set here.",
+      tip:null
+    },
+    {
+      icon:"✅",
+      title:"You are Ready to Go",
+      body:"That covers the basics. Head to The Roll to add your first knife, then open New Listing to build your first post. If you run into anything confusing or have a feature idea, reach out. This tool was built by <strong>u/smashedllama2</strong>, an active r/Knife_Swap member who got tired of formatting posts by hand. If it saves you time, consider buying a coffee.",
+      tip:{head:"Feedback and support",text:'Reach out to u/smashedllama2 on Reddit with feedback or bug reports. If you find the tool useful: <a href="https://buymeacoffee.com/erunyan" target="_blank" rel="noopener" style="color:var(--oranget);font-weight:600">buymeacoffee.com/erunyan</a>'}
+    }
+  ];
+  const st=Math.max(0,Math.min(6,S.tutStep||0));
+  const step=steps[st];
+  const dotsHtml=steps.map((_,i)=>{
+    if(i<st)return`<div class="tut-dot past">✓</div>`;
+    if(i===st)return`<div class="tut-dot current"></div>`;
+    return`<div class="tut-dot"></div>`;
+  }).join("");
+  const backBtn=st>0?`<button class="btn btn-sec btn-sm" onclick="S.tutStep=Math.max(0,S.tutStep-1);render()">← Back</button>`:`<div style="width:70px"></div>`;
+  const nextBtn=st<6
+    ?`<button class="btn btn-pri btn-sm" onclick="S.tutStep=Math.min(6,S.tutStep+1);render()">Next →</button>`
+    :`<button class="btn btn-pri btn-sm" onclick="localStorage.setItem('ks-tutorial-done','1');S.modal=null;render()">Start Using the Tool</button>`;
+  const tipHtml=step.tip?`<div class="tut-tip"><strong>${step.tip.head}</strong>${step.tip.text}</div>`:"";
+  return`<div class="tut-overlay" onclick="event.stopPropagation()">
+  <div class="tut-card" onclick="event.stopPropagation()">
+    <div class="tut-icon">${step.icon}</div>
+    <div class="tut-body">
+      <div class="tut-title">${step.title}</div>
+      <div class="tut-text">${step.body}${tipHtml}</div>
+    </div>
+    <div class="tut-footer">
+      <div class="tut-dots">${dotsHtml}</div>
+      <div class="tut-btns">${backBtn}${nextBtn}</div>
+      <button class="tut-skip" onclick="localStorage.setItem('ks-tutorial-done','1');S.modal=null;render()">Skip tutorial</button>
+    </div>
+  </div>
+</div>`;
+}
+function renderAboutModal(){
+  const tab=S.aboutTab||"about";
+  const tabsHtml=`<div class="about-tabs">
+    <button class="about-tab${tab==="about"?" on":""}" onclick="S.aboutTab='about';render()">About</button>
+    <button class="about-tab${tab==="faq"?" on":""}" onclick="S.aboutTab='faq';render()">FAQ</button>
+  </div>`;
+  let content="";
+  if(tab==="about"){
+    content=`
+      <div style="text-align:center;margin-bottom:20px">
+        <div style="width:58px;height:58px;border-radius:16px;background:linear-gradient(145deg,#1C1C1E,#3A3A3C);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:0 6px 20px rgba(0,0,0,.2)"><span style="font-size:18px;font-weight:800;color:#fff;letter-spacing:.02em">KS</span></div>
+        <div style="font-size:18px;font-weight:700;color:var(--t1);letter-spacing:-.02em">KnifeSwap Post Generator</div>
+        <div style="font-size:12px;color:var(--t3);margin-top:3px">Free tool for r/Knife_Swap</div>
+      </div>
+      <div style="font-size:13.5px;color:var(--t2);line-height:1.75;margin-bottom:14px">Built by <strong style="color:var(--t1)">u/smashedllama2</strong>, an active r/Knife_Swap member. After manually formatting post after post, and losing track of what sold and at what price, a proper tool was the obvious answer.</div>
+      <div style="font-size:13.5px;color:var(--t2);line-height:1.75;margin-bottom:14px">The goal was simple: handle the repetitive stuff so you can focus on the actual trading. Auto-generated post bodies, subreddit rule checking, inventory tracking, price history, repost eligibility, all in one place.</div>
+      <div style="font-size:13.5px;color:var(--t2);line-height:1.75;margin-bottom:20px">Completely free. No ads, no tracking, no account required. Runs entirely in your browser. Your data stays on your device unless you opt into cloud sync.</div>
+      <div style="background:var(--bg);border:.5px solid var(--b1);border-radius:12px;padding:14px 16px;margin-bottom:16px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--t3);margin-bottom:10px">Links</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <a href="https://www.reddit.com/r/Knife_Swap/" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--t1);font-size:13px;font-weight:500"><span style="font-size:18px">🔪</span>r/Knife_Swap subreddit</a>
+          <a href="https://buymeacoffee.com/erunyan" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--t1);font-size:13px;font-weight:500"><span style="font-size:18px">☕</span>Buy me a coffee</a>
+        </div>
+      </div>
+      <div style="font-size:11.5px;color:var(--t4);line-height:1.6">Not affiliated with or endorsed by r/Knife_Swap moderators. Always check the official subreddit rules before posting.</div>`;
+  } else {
+    const faqs=[
+      {q:"Do I need an account?",a:"No. The tool works completely without an account. Sign-in is only needed if you want to sync your data across multiple devices using cloud backup."},
+      {q:"Where is my data stored?",a:"By default everything is stored in your browser's localStorage. If you sign in with a free account, data syncs to the cloud and is available on any device."},
+      {q:"What is The Roll?",a:"The Roll is your knife inventory. Add a knife once with all its details, then pull it into any listing with one click. It tracks price history, days held, and status."},
+      {q:"Why is the Copy button grayed out?",a:"A timestamp photo link is required before you can copy a post. Paste a direct link to your timestamp photo and the Copy button will unlock."},
+      {q:"What is Cloudinary and do I need it?",a:"Cloudinary is a free image hosting service. You only need it if you want to drag-and-drop upload photos directly from the tool. You can skip it entirely and paste direct image URLs instead."},
+      {q:"Will Imgur links work?",a:"Yes, but only direct image links in the format i.imgur.com/xxx.jpg. Album page URLs (imgur.com/a/xxx) will not work as photo links in posts."},
+      {q:"How does the price drop checker work?",a:"r/Knife_Swap requires either a 10% drop or a $25 drop to repost within 7 days. After 7 days you can repost at the same price. The tool checks these rules automatically and shows you the minimum valid repost price."},
+      {q:"Can I use this for WTT posts?",a:"Yes. Each knife can be set to WTS, WTT, or WTS/WTT. The tool picks the correct post type for the title automatically based on what you add."},
+      {q:"What are the four templates?",a:"Detailed, Compact, Minimal, and Table. Detailed includes all condition info. Compact is shorter. Minimal is just the essentials. Table lays everything out in a Reddit markdown table. Switch between them with the Switch button."},
+      {q:"Is this affiliated with r/Knife_Swap moderators?",a:"No. This is a fan-built tool. It is not officially affiliated with or endorsed by the r/Knife_Swap moderators. Always check the official subreddit rules for the latest requirements."},
+      {q:"How do I set up photos?",a:"Option 1: Set up a free Cloudinary account and enter your Cloud Name and Upload Preset in Settings. Option 2: Paste any direct image URL into the photo URL field on a knife."},
+      {q:"What happens to my data if I clear my browser?",a:"If you have not signed in for cloud sync, clearing your browser cache will permanently delete all your listings, inventory, and settings. Sign in to back up your data."}
+    ];
+    content=faqs.map(f=>`<div class="faq-item"><div class="faq-q">${f.q}</div><div class="faq-a">${f.a}</div></div>`).join("");
+  }
+  return`<div class="modal-overlay" onclick="S.modal=null;render()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-hdr"><div class="modal-title">About &amp; FAQ</div><button class="modal-close" onclick="S.modal=null;render()">&#x2715;</button></div>
+    <div class="modal-body">
+      ${tabsHtml}
+      ${content}
+    </div>
   </div>
 </div>`;
 }
@@ -2045,6 +2204,7 @@ function renderSettings(){
   <div class="settings-section-lbl">About</div>
   <div class="sgroup">
     <div class="srow"><div class="srow-lbl">Version</div><div style="font-size:13px;color:var(--t3);margin-left:auto">3.1 - ${BRANDS.length} brands, ${STEELS.length} steels</div></div>
+    <div class="srow"><div class="srow-lbl">Help</div><div class="srow-ctrl"><button class="btn btn-am btn-sm" onclick="S.modal='tutorial';S.tutStep=0;render()">📖 View Tutorial</button><button class="btn btn-sec btn-sm" onclick="S.modal='about';S.aboutTab='about';render()">ℹ️ About &amp; FAQ</button></div></div>
     <div class="srow"><div><div class="srow-lbl">Built by</div><div class="srow-sub">u/smashedllama2 — free tool for the r/Knife_Swap community</div></div><div class="srow-ctrl"><a href="https://buymeacoffee.com/erunyan" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#FFDD00;color:#000;font-size:12px;font-weight:700;padding:7px 13px;border-radius:8px;text-decoration:none;white-space:nowrap">☕ Buy me a coffee</a></div></div>
     <div class="srow"><div><div class="srow-lbl">Photo Hosting</div><div class="srow-sub" style="max-width:340px;line-height:1.6">Drag-and-drop photo uploads via your own free <a href="https://cloudinary.com" target="_blank" style="color:var(--blue);text-decoration:none">Cloudinary</a> account. Setup takes 2 minutes:<br><br><strong>1.</strong> <a href="https://cloudinary.com/users/register_free" target="_blank" style="color:var(--blue);text-decoration:none">Sign up free at cloudinary.com</a> — no card needed<br><strong>2.</strong> Your <strong>Cloud Name</strong> is shown on the dashboard (top-left, e.g. <code style="font-size:11px;background:var(--bg);padding:1px 4px;border-radius:4px">dxyz12abc</code>)<br><strong>3.</strong> In Cloudinary go to <strong>Settings → Upload → Upload presets → Add upload preset</strong>. Give it any name (e.g. <code style="font-size:11px;background:var(--bg);padding:1px 4px;border-radius:4px">knife-swap</code>), set Signing mode to <strong>Unsigned</strong>, save it<br><strong>4.</strong> Paste your Cloud Name and that preset name into the fields below</div></div></div>
     <div class="srow"><div><div class="srow-lbl">Cloud Name</div><div class="srow-sub">On your Cloudinary dashboard, top-left corner.</div></div><div class="srow-ctrl"><input type="text" style="width:170px;min-width:170px;font-size:13px;padding:7px 10px" value="${esc(sv.cloudinaryCloud||"")}" placeholder="e.g. dxyz12abc" onchange="SETTINGS.cloudinaryCloud=this.value.trim();saveSettings()"/></div></div>
@@ -2088,6 +2248,7 @@ window.triggerKnifeUpload=triggerKnifeUpload;window.handleKnifeFileInput=handleK
 window.confirmSoldFlow=confirmSoldFlow;window.cancelSoldFlow=cancelSoldFlow;window.copyConfirmComment=copyConfirmComment;window.buildConfirmComment=buildConfirmComment;
 window.markPending=markPending;window.markInvPending=markInvPending;
 window.sendMagicLink=sendMagicLink;window.signOut=signOut;window.deleteAccount=deleteAccount;window.migrateToSupabase=migrateToSupabase;window.skipMigrate=skipMigrate;
+window.renderTutorialModal=renderTutorialModal;window.renderAboutModal=renderAboutModal;
 window.autoPostType=autoPostType;window.buildTitleStr=buildTitleStr;window.doFetchPriceResearch=doFetchPriceResearch;window.clearPriceResearch=clearPriceResearch;window.applyPriceFromResearch=applyPriceFromResearch;
 
 // ─── KEYBOARD SHORTCUTS ───────────────────────────────────
@@ -2286,6 +2447,7 @@ render();
   await loadSettings();
   await initSupabase();
   if(!currentUser){await load();}
+  if(!localStorage.getItem('ks-tutorial-done')){S.modal='tutorial';S.tutStep=0;}
   render();
 })();
 </script>
