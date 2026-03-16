@@ -1063,17 +1063,20 @@ function buildPost(post,v){
 
   if(v===0){
     // DETAILED - full structured format with clear sections
-    const photoBlock=allPhotos.length?allPhotos.join("\n"):"[ paste your timestamp photo link here ]";
+    const knifePhotos=post.knives.flatMap(k=>(k.photos||[]).filter(Boolean));
+    const combinedPhotos=[...allPhotos,...knifePhotos];
+    const photoBlock=combinedPhotos.length?combinedPhotos.join("\n"):"[ paste your timestamp photo link here ]";
     const headerBlock=ph?`\n\n${ph}`:"";
     const blocks=post.knives.map((k,i)=>{
       const iss=k.issues.filter(x=>x!=="None").join(", ")||"None";
       const ac=k.accessories.filter(x=>x!=="None").join(", ")||"None";
       const pl=knifePrice(k);
       const kphotos=(k.photos||[]).filter(Boolean);
+      const nameLinked=kphotos.length?`[${k.brand} ${k.model}](${kphotos[0]})`:(`${k.brand} ${k.model}`);
       const statusLabel=k.sold?"[SOLD]":k.pending?"[PENDING]":"";
       const hdr=k.sold
-        ?`~~**${dot(k)} ${i+1}. ${k.brand} ${k.model} [SOLD]**~~ | ~~${pl}~~`
-        :`**${dot(k)} ${i+1}. ${k.brand} ${k.model}${statusLabel?" "+statusLabel:""}** | **${pl}**`;
+        ?`~~**${dot(k)} ${i+1}. ${nameLinked} [SOLD]**~~ | ~~${pl}~~`
+        :`**${dot(k)} ${i+1}. ${nameLinked}${statusLabel?" "+statusLabel:""}** | **${pl}**`;
       const lines=[
         `- **Steel:** ${k.steel||"N/A"} | **Condition:** ${k.bladeCondition}`,
         `- **Owners:** ${k.owners} | **Carried:** ${k.carried} | **Cut:** ${k.usedCut} | **Sharpened:** ${k.sharpened}`,
@@ -1081,7 +1084,6 @@ function buildPost(post,v){
         `- **Issues:** ${iss} | **Accessories:** ${ac}`,
       ];
       if(k.notes)lines.push(`- **Notes:** ${k.notes}`);
-      if(kphotos.length)lines.push(`- **Photos:** ${kphotos.join(" | ")}`);
       return`${hdr}\n${lines.join("\n")}`;
     }).join("\n\n---\n\n");
     const bundleBlock=bundle?`\n\n---\n\n**Bundle: $${post.bundlePrice} takes all ${post.knives.length>1?post.knives.length+" knives":""}**`:"";
@@ -1094,19 +1096,21 @@ function buildPost(post,v){
 
   if(v===1){
     // COMPACT - one block per knife, key details only
-    const photoLine=allPhotos.length?allPhotos.join("\n"):"[ paste your timestamp photo link here ]";
+    const knifePhotos1=post.knives.flatMap(k=>(k.photos||[]).filter(Boolean));
+    const combinedPhotos1=[...allPhotos,...knifePhotos1];
+    const photoLine=combinedPhotos1.length?combinedPhotos1.join("\n"):"[ paste your timestamp photo link here ]";
     const headerBlock=ph?`\n\n${ph}`:"";
     const lines=post.knives.map((k,i)=>{
       const iss=k.issues.filter(x=>x!=="None").join(", ")||"None";
       const ac=k.accessories.filter(x=>x!=="None").join(", ")||"None";
       const kphotos=(k.photos||[]).filter(Boolean);
+      const nameLinked=kphotos.length?`[${k.brand} ${k.model}](${kphotos[0]})`:(`${k.brand} ${k.model}`);
       const statusLabel=k.sold?" [SOLD]":k.pending?" [PENDING]":"";
-      let block=`${dot(k)} **${i+1}. ${k.brand} ${k.model}**${statusLabel} | ${knifePrice(k)}`;
+      let block=`${dot(k)} **${i+1}. ${nameLinked}**${statusLabel} | ${knifePrice(k)}`;
       block+=`\n${k.steel||"N/A"} | ${k.bladeCondition} | ${k.owners} owner | Centering: ${k.centering}`;
       if(iss!=="None")block+=` | Issues: ${iss}`;
       if(ac!=="None")block+=` | Accessories: ${ac}`;
       if(k.notes)block+=`\n${k.notes}`;
-      if(kphotos.length)block+=`\nPhotos: ${kphotos.join(" | ")}`;
       return block;
     }).join("\n\n");
     const bundleLine=bundle?`\n\nBundle: $${post.bundlePrice} for all`:"";
@@ -1118,7 +1122,9 @@ function buildPost(post,v){
 
   // TABLE (v=3) - Reddit markdown table
   if(v===3){
-    const photoBlock=allPhotos.length?allPhotos.join("\n"):"[ paste your timestamp photo link here ]";
+    const knifePhotos3=post.knives.flatMap(k=>(k.photos||[]).filter(Boolean));
+    const combinedPhotos3=[...allPhotos,...knifePhotos3];
+    const photoBlock=combinedPhotos3.length?combinedPhotos3.join("\n"):"[ paste your timestamp photo link here ]";
     const hdrBlock=ph?`\n\n${ph}`:"";
     const noshipLine=noShipList.length?`\n**Will NOT ship to:** ${noShipList.join(", ")}`:"";
     const tradeFooter=isWTT?(ti?`\n**Trade Interests:** ${ti}`:""):"\n**No Trades**";
@@ -1127,7 +1133,10 @@ function buildPost(post,v){
     const bundleBlock=bundle?`\n\n---\n\n**Bundle: $${post.bundlePrice} takes all${post.knives.length>1?" ("+post.knives.length+" knives)":""}**`:"";
     const ownOrd=n=>{const x=parseInt(n)||1;return x===1?"1st":x===2?"2nd":x===3?"3rd":x+"th";};
     const rows=post.knives.map(k=>{
-      const nameCell=`${k.brand} ${k.model}${k.sold?" \\[SOLD\\]":k.pending?" \\[PENDING\\]":""}`;
+      const kphotos3=(k.photos||[]).filter(Boolean);
+      const nameCell=kphotos3.length
+        ?`[${k.brand} ${k.model}](${kphotos3[0]})${k.sold?" \\[SOLD\\]":k.pending?" \\[PENDING\\]":""}`
+        :`${k.brand} ${k.model}${k.sold?" \\[SOLD\\]":k.pending?" \\[PENDING\\]":""}`;
       const priceCell=knifePrice(k);
       const parts=[];
       if(k.steel)parts.push(`**${k.steel}**`);
@@ -1149,13 +1158,15 @@ function buildPost(post,v){
   }
 
   // MINIMAL (v=2) - one line per knife
-  const photoLine=allPhotos.length?allPhotos[0]:"[ paste your timestamp photo link here ]";
+  const knifePhotos2=post.knives.flatMap(k=>(k.photos||[]).filter(Boolean));
+  const combinedPhotos2=[...allPhotos,...knifePhotos2];
+  const photoLine=combinedPhotos2.length?combinedPhotos2.join("\n"):"[ paste your timestamp photo link here ]";
   const headerBlock=ph?`\n${ph}`:"";
   const bundleLine=bundle?`\nBundle: $${post.bundlePrice} for all`:"";
   const noshipLine=noShipList.length?` | No ship: ${noShipList.join(", ")}`:"";
   const tradeFooter=isWTT?(ti?` | Trades: ${ti}`:""):" | No Trades";
   const sig=un?`${un} - ${ts}`:ts;
-  return`${type} ${title}${rp}\n${photoLine}${headerBlock}\n\n${post.knives.map(k=>`${dot(k)} ${k.brand} ${k.model}${k.sold?" [SOLD]":k.pending?" [PENDING]":""} | ${knifePrice(k)} | ${k.steel||"N/A"}, ${k.bladeCondition}`).join("\n")}${bundleLine}\n\nPayment: ${pay} | Shipping included${noshipLine}${tradeFooter}${post.notes?"\n"+post.notes:""}\n${sig}`;
+  return`${type} ${title}${rp}\n${photoLine}${headerBlock}\n\n${post.knives.map(k=>{const kp=(k.photos||[]).filter(Boolean);const nm=kp.length?`[${k.brand} ${k.model}](${kp[0]})`:(`${k.brand} ${k.model}`);return`${dot(k)} ${nm}${k.sold?" [SOLD]":k.pending?" [PENDING]":""} | ${knifePrice(k)} | ${k.steel||"N/A"}, ${k.bladeCondition}`;}).join("\n")}${bundleLine}\n\nPayment: ${pay} | Shipping included${noshipLine}${tradeFooter}${post.notes?"\n"+post.notes:""}\n${sig}`;
 }
 
 // ─── UPLOAD ───────────────────────────────────────────────────
