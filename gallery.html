@@ -346,8 +346,11 @@ body{
 @media(max-width:640px){
   .knife-nav{display:none!important}
   .mob-menu-btn{display:flex}
-  .brand-sub{display:none}
+  /* Collapse brand to icon only — frees ~80px for the title */
+  .brand-name,.brand-sub{display:none}
   .hdr-divider{display:none}
+  /* User is already shown in hdr-sub; hide the separate label */
+  .hdr-user{display:none}
   .made-with{display:none}
   .nav-arrow{opacity:.7}
 }
