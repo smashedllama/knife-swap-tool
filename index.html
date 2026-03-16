@@ -1044,6 +1044,21 @@ function knifePrice(k){
   return sv||"$TBD";
 }
 
+function galleryUrl(k){
+  const imgs=(k.photos||[]).filter(Boolean);
+  if(!imgs.length)return null;
+  if(imgs.length===1)return imgs[0];
+  try{
+    const d=btoa(unescape(encodeURIComponent(JSON.stringify({
+      knife:k.brand+" "+k.model,
+      price:knifePrice(k),
+      user:SETTINGS.username||"",
+      imgs
+    }))));
+    return`https://smashedllama.github.io/knife-swap-tool/gallery.html?d=${d}`;
+  }catch(e){return imgs[0];}
+}
+
 function buildPost(post,v){
   v=v!==undefined?v:(post.variant||0);
   const ts=new Date().toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"});
@@ -1072,7 +1087,7 @@ function buildPost(post,v){
       const ac=k.accessories.filter(x=>x!=="None").join(", ")||"None";
       const pl=knifePrice(k);
       const kphotos=(k.photos||[]).filter(Boolean);
-      const nameLinked=kphotos.length?`[${k.brand} ${k.model}](${kphotos[0]})`:(`${k.brand} ${k.model}`);
+      const nameLinked=kphotos.length?`[${k.brand} ${k.model}](${galleryUrl(k)})`:(`${k.brand} ${k.model}`);
       const statusLabel=k.sold?"[SOLD]":k.pending?"[PENDING]":"";
       const hdr=k.sold
         ?`~~**${dot(k)} ${i+1}. ${nameLinked} [SOLD]**~~ | ~~${pl}~~`
@@ -1104,7 +1119,7 @@ function buildPost(post,v){
       const iss=k.issues.filter(x=>x!=="None").join(", ")||"None";
       const ac=k.accessories.filter(x=>x!=="None").join(", ")||"None";
       const kphotos=(k.photos||[]).filter(Boolean);
-      const nameLinked=kphotos.length?`[${k.brand} ${k.model}](${kphotos[0]})`:(`${k.brand} ${k.model}`);
+      const nameLinked=kphotos.length?`[${k.brand} ${k.model}](${galleryUrl(k)})`:(`${k.brand} ${k.model}`);
       const statusLabel=k.sold?" [SOLD]":k.pending?" [PENDING]":"";
       let block=`${dot(k)} **${i+1}. ${nameLinked}**${statusLabel} | ${knifePrice(k)}`;
       block+=`\n${k.steel||"N/A"} | ${k.bladeCondition} | ${k.owners} owner | Centering: ${k.centering}`;
@@ -1134,8 +1149,9 @@ function buildPost(post,v){
     const ownOrd=n=>{const x=parseInt(n)||1;return x===1?"1st":x===2?"2nd":x===3?"3rd":x+"th";};
     const rows=post.knives.map(k=>{
       const kphotos3=(k.photos||[]).filter(Boolean);
-      const nameCell=kphotos3.length
-        ?`[${k.brand} ${k.model}](${kphotos3[0]})${k.sold?" \\[SOLD\\]":k.pending?" \\[PENDING\\]":""}`
+      const gurl3=galleryUrl(k);
+      const nameCell=gurl3
+        ?`[${k.brand} ${k.model}](${gurl3})${k.sold?" \\[SOLD\\]":k.pending?" \\[PENDING\\]":""}`
         :`${k.brand} ${k.model}${k.sold?" \\[SOLD\\]":k.pending?" \\[PENDING\\]":""}`;
       const priceCell=knifePrice(k);
       const parts=[];
@@ -1166,7 +1182,7 @@ function buildPost(post,v){
   const noshipLine=noShipList.length?` | No ship: ${noShipList.join(", ")}`:"";
   const tradeFooter=isWTT?(ti?` | Trades: ${ti}`:""):" | No Trades";
   const sig=un?`${un} - ${ts}`:ts;
-  return`${type} ${title}${rp}\n${photoLine}${headerBlock}\n\n${post.knives.map(k=>{const kp=(k.photos||[]).filter(Boolean);const nm=kp.length?`[${k.brand} ${k.model}](${kp[0]})`:(`${k.brand} ${k.model}`);return`${dot(k)} ${nm}${k.sold?" [SOLD]":k.pending?" [PENDING]":""} | ${knifePrice(k)} | ${k.steel||"N/A"}, ${k.bladeCondition}`;}).join("\n")}${bundleLine}\n\nPayment: ${pay} | Shipping included${noshipLine}${tradeFooter}${post.notes?"\n"+post.notes:""}\n${sig}`;
+  return`${type} ${title}${rp}\n${photoLine}${headerBlock}\n\n${post.knives.map(k=>{const gu=galleryUrl(k);const nm=gu?`[${k.brand} ${k.model}](${gu})`:(`${k.brand} ${k.model}`);return`${dot(k)} ${nm}${k.sold?" [SOLD]":k.pending?" [PENDING]":""} | ${knifePrice(k)} | ${k.steel||"N/A"}, ${k.bladeCondition}`;}).join("\n")}${bundleLine}\n\nPayment: ${pay} | Shipping included${noshipLine}${tradeFooter}${post.notes?"\n"+post.notes:""}\n${sig}`;
 }
 
 // ─── UPLOAD ───────────────────────────────────────────────────
