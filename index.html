@@ -317,7 +317,8 @@ textarea{resize:vertical;line-height:1.55}
 .settings-main{padding:18px 18px 50px;max-width:520px;margin:0 auto}
 .settings-section-lbl{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--t3);margin:20px 0 8px;padding-left:4px}
 .settings-section-lbl:first-child{margin-top:0}
-.save-notice{font-size:12px;color:var(--greent);font-weight:500;padding:6px 0;text-align:center}
+.save-notice{font-size:12px;color:var(--greent);font-weight:500;padding:6px 0;text-align:center;visibility:hidden}
+.save-notice.on{visibility:visible}
 
 /* AUTH */
 .auth-btn{display:flex;align-items:center;gap:6px;background:var(--card);border:.5px solid var(--b1);border-radius:20px;padding:5px 11px 5px 7px;font-size:12px;font-weight:500;color:var(--t2);cursor:pointer;transition:background var(--tr);white-space:nowrap;max-width:180px;overflow:hidden}
@@ -1935,7 +1936,7 @@ function renderSettings(){
   const sv=SETTINGS;
   const hdr=`<div class="hdr"><div class="hdr-logo" onclick="S.view='list';render()"><div class="hdr-ico"><span class="hdr-ico-lbl">KS</span></div><div><div class="hdr-title">Settings</div><div class="hdr-sub">Defaults &amp; preferences</div></div></div><div class="hdr-r"><button class="btn-hdr-ghost" onclick="S.view='list';render()">Done</button></div></div>`;
   return`<div class="app">${hdr}<div class="settings-main">
-  ${S.saveNotice?`<div class="save-notice">Settings saved</div>`:""}
+  <div class="save-notice${S.saveNotice?' on':''}">Settings saved</div>
   <div class="settings-section-lbl">Your Profile</div>
   <div class="sgroup">
     <div class="srow"><div><div class="srow-lbl">Reddit Username</div><div class="srow-sub">Added to generated posts (optional)</div></div><div class="srow-ctrl"><input type="text" style="max-width:180px;font-size:13px;padding:7px 10px" value="${esc(sv.username)}" placeholder="u/yourname" onchange="SETTINGS.username=this.value;saveSettings()"/></div></div>
