@@ -2821,40 +2821,71 @@ function renderSold(){
 
 // ─── INTERACTIVE TOUR ─────────────────────────────────────────
 const TOUR_DEMO_ID='__ks_tour__';
+function _tourOpenKnife(s){
+  // Open the first demo knife in the form so checklist + price research are visible
+  const demoIdx=S.inventory.findIndex(k=>k._tourDemo);
+  if(demoIdx<0)return;
+  s.kfMode='locker';s.kfIdx=demoIdx;
+  s.kf=JSON.parse(JSON.stringify(S.inventory[demoIdx]));
+  s.kfUploads=(s.kf.photos||[]).filter(Boolean).map(url=>({uid:gid(),url,name:url.split('/').pop()||url,uploading:false}));
+  s.kfOpen=true;s.adv=false;
+}
+
 const TOUR_STEPS=[
   {icon:"👋",title:"Welcome to KnifeSwap Post Generator",
-   body:"We've loaded 3 demo knives and a sample listing so you can see the tool in action. This 10-step tour walks through the full workflow — from adding a knife to shipped.",
-   target:null,nav:s=>{s.view='list';s.expanded=TOUR_DEMO_ID;s.modal=null;}},
+   body:"We've loaded 3 demo knives (Spyderco PM2 S30V, Benchmade Bugout S30V, CRK Sebenza 31 MagnaCut) and a sample listing. This 11-step tour walks through the whole workflow — adding knives, generating a post, and tracking shipping.",
+   target:null,
+   nav:s=>{s.view='list';s.expanded=TOUR_DEMO_ID;s.kfOpen=false;s.modal=null;}},
+
   {icon:"📋",title:"The Roll — Your Knife Locker",
-   body:"The Roll stores all your knives. These 3 demo knives are ready to list: a Spyderco PM2, Benchmade Bugout, and CRK Sebenza 31. Each card shows steel, price, condition, and listing status.",
-   target:'.lk-grid',nav:s=>{s.view='roll';s.kfOpen=false;s.modal=null;}},
+   body:"The Roll is where you store all your knives. Each card shows brand, model, steel, condition, price, and listing status. Knives move from Available → Listed → Sold automatically as you use them.",
+   target:'.lk-grid',
+   nav:s=>{s.view='roll';s.kfOpen=false;s.modal=null;}},
+
   {icon:"✅",title:"Auto-Ticking Knife Checklist",
-   body:"Tap Edit on any knife to see the live checklist: Brand, Model, Steel, Price, and Knife Photos. Items tick green as you fill them in. Advisory only — you can still save an incomplete knife.",
-   target:'.lk-card',nav:s=>{s.view='roll';s.kfOpen=false;s.modal=null;}},
-  {icon:"📊",title:"Price Research — r/Knife_Swap Comps",
-   body:"Inside the knife form, hit 🔍 Search r/Knife_Swap to pull real sold comps. The tool scans post titles and bodies, filters by steel, and shows avg/median prices from up to 100 recent listings.",
-   target:'.lk-card',nav:s=>{s.view='roll';s.kfOpen=false;s.modal=null;}},
+   body:"The knife form has a live checklist at the bottom. Every field you fill in — Brand, Model, Steel, Price, and Knife Photos — ticks green instantly when you tab out. Advisory only; you can still save without completing every item.",
+   target:'.cl',
+   nav:s=>{s.view='roll';s.modal=null;_tourOpenKnife(s);}},
+
+  {icon:"📊",title:"Price Research — Real r/Knife_Swap Comps",
+   body:"Hit 🔍 Search r/Knife_Swap while editing a knife to pull real sold listings. The tool scans up to 100 recent posts, filters by steel, and shows avg/median prices so you can price competitively.",
+   target:'.pr-btn',
+   nav:s=>{s.view='roll';s.modal=null;_tourOpenKnife(s);}},
+
   {icon:"📝",title:"Your Generated Listing",
-   body:"Here's the demo listing with all 3 knives. Expand it to see the auto-generated post text. Four templates available: Detailed, Compact, Minimal, and Table — switch anytime.",
-   target:'.pc',nav:s=>{s.view='list';s.expanded=TOUR_DEMO_ID;s.modal=null;}},
+   body:"Here's the demo listing with all 3 knives already loaded. Expand it to see the auto-generated post text. Four templates available — Detailed, Compact, Minimal, and Table. Hit Switch to cycle between them anytime.",
+   target:'.pc',
+   nav:s=>{s.view='list';s.expanded=TOUR_DEMO_ID;s.kfOpen=false;s.modal=null;}},
+
   {icon:"🛡️",title:"Auto Rule Checker",
-   body:"These tags validate your post against r/Knife_Swap rules in real time: timestamp, payment method, pricing. A red ✗ tag blocks posting — fix the issue and it flips green automatically.",
-   target:'.rule-tags',nav:s=>{s.view='list';s.expanded=TOUR_DEMO_ID;s.modal=null;}},
-  {icon:"📸",title:"Timestamp — Required by the Sub",
-   body:"Every r/Knife_Swap post needs a photo of your knives with your Reddit username + today's date handwritten. Paste the URL right here in the warning box — the listing unlocks instantly.",
-   target:'.ts-gate',nav:s=>{s.view='list';s.expanded=TOUR_DEMO_ID;s.modal=null;}},
-  {icon:"🚀",title:"Pre-flight Check Before Posting",
-   body:"Clicking Copy Post opens the pre-flight checklist. Every rule is validated and you must confirm you've read the subreddit rules. Only then does the post text unlock for copying.",
-   target:'.pc-acts',nav:s=>{s.view='list';s.expanded=TOUR_DEMO_ID;s.modal=null;}},
-  {icon:"🔴",title:"Mark Sold & Capture Shipping Info",
-   body:"When a knife sells, hit 🔴 Sold on the knife row. The sold form captures the buyer's Reddit username and shipping address — ZIP auto-fills city and state for quick entry.",
-   target:'.krow',nav:s=>{s.view='list';s.expanded=TOUR_DEMO_ID;s.modal=null;}},
-  {icon:"📦",title:"Shipping Pipeline",
-   body:"The Shipping tab organizes sold knives into 4 stages: Ready to Ship → In Transit → Delivered → Confirmed. Add tracking numbers, copy buyer links, or jump to PirateShip for discounted labels.",
-   target:null,nav:s=>{s.view='shipping';s.modal=null;}},
+   body:"These tags auto-validate your post against r/Knife_Swap rules: timestamp required, payment method compliance, pricing rules. A red ✗ tag blocks the post from being copied — fix the issue and it flips green.",
+   target:'.rule-tags',
+   nav:s=>{s.view='list';s.expanded=TOUR_DEMO_ID;s.kfOpen=false;s.modal=null;}},
+
+  {icon:"📸",title:"Timestamp — Required Before Posting",
+   body:"Every post needs a timestamp photo: your knives with your username + today's date handwritten. No timestamp = no post. Paste the URL right here in the input field to unlock the listing instantly.",
+   target:'.ts-gate',
+   nav:s=>{s.view='list';s.expanded=TOUR_DEMO_ID;s.kfOpen=false;s.modal=null;}},
+
+  {icon:"🚀",title:"Copy Post & Pre-flight Check",
+   body:"Clicking Copy Post opens the pre-flight checklist — every rule is validated and you must confirm you've read the subreddit rules before the post text unlocks. No more accidental rule violations.",
+   target:'.pc-acts',
+   nav:s=>{s.view='list';s.expanded=TOUR_DEMO_ID;s.kfOpen=false;s.modal=null;}},
+
+  {icon:"🔴",title:"Mark Sold & Capture Buyer Info",
+   body:"When a knife sells, hit 🔴 Sold on the knife row. A form captures the buyer's Reddit username and shipping address — just enter the ZIP and city/state auto-fills via the zippopotam.us API.",
+   target:'.krow',
+   nav:s=>{s.view='list';s.expanded=TOUR_DEMO_ID;s.kfOpen=false;s.modal=null;}},
+
+  {icon:"📦",title:"Shipping Pipeline — Ready to Ship",
+   body:"The Shipping tab organizes sold knives through 4 stages. The demo Bugout is sitting in Ready to Ship. Enter a tracking number → Mark Shipped, then copy the tracking link for your buyer or jump straight to PirateShip for a discounted label.",
+   target:'.stats',
+   nav:s=>{s.view='shipping';s.kfOpen=false;s.modal=null;}},
+
   {icon:"🎉",title:"You're all set!",
-   body:"That's the full lifecycle — from listing to shipped. Remove the demo data when you're ready, or start adding your real knives right now.",
-   target:null,nav:s=>{s.view='list';s.expanded=TOUR_DEMO_ID;s.modal=null;},last:true},
+   body:"That's the full lifecycle — from listing to shipped. Hit 'Remove Demo Data' to clean up, or keep exploring with the demo knives in place.",
+   target:null,
+   nav:s=>{s.view='list';s.expanded=null;s.kfOpen=false;s.modal=null;},last:true},
 ];
 
 function startTour(){
@@ -2882,7 +2913,15 @@ function startTour(){
     const demoPm2=S.inventory.find(k=>k.id===pm2Id)||{brand:"Spyderco",model:"Para Military 2",steel:"S30V",price:"145",...EK()};
     const demoBugout=S.inventory.find(k=>k.id===bugoutId)||{brand:"Benchmade",model:"Bugout 535",steel:"S30V",price:"110",...EK()};
     const demoPm2K={...JSON.parse(JSON.stringify(demoPm2)),inventoryId:pm2Id,knifeType:"WTS",pending:false,sold:false};
-    const demoBugoutK={...JSON.parse(JSON.stringify(demoBugout)),inventoryId:bugoutId,knifeType:"WTS",pending:false,sold:false};
+    // Bugout: pre-sold so the Shipping tab has a "Ready to Ship" card to demo
+    const demaBugoutInv=S.inventory.find(k=>k.id===bugoutId)||demoBugout;
+    const demoBugoutK={...JSON.parse(JSON.stringify(demaBugoutInv)),inventoryId:bugoutId,knifeType:"WTS",pending:false,
+      sold:true,soldAt:now2,soldTo:"ExampleBuyer99",
+      shippingAddress:{name:"Alex Johnson",line1:"456 Oak Ave",line2:"Apt 3B",city:"Austin",state:"TX",zip:"78701"},
+      trackingNumber:null,trackingCarrier:"USPS"};
+    // Update Bugout inventory status
+    const bugoutInvItem=S.inventory.find(k=>k.id===bugoutId);
+    if(bugoutInvItem)bugoutInvItem.status="sold";
     // Sebenza — add from inventory clone
     const demaSeba=S.inventory.find(k=>k.id===sebaId)||{brand:"Chris Reeve Knives",model:"Sebenza 31 Large",steel:"MagnaCut",price:"395",...EK()};
     const demoSebaK={...JSON.parse(JSON.stringify(demaSeba)),inventoryId:sebaId,knifeType:"WTS/WTT",tradeValue:"395",pending:false,sold:false};
@@ -2892,7 +2931,7 @@ function startTour(){
       knives:[demoPm2K,demoBugoutK,demoSebaK],
       payment:["PayPal G&S","Venmo"],
       paymentOther:"",noShip:[],noShipOther:"",
-      repost:false,photos:[],  // no timestamp — to show the warning
+      repost:false,photos:[],  // no timestamp — to show the warning + inline input
       notes:"Demo listing — created by the interactive tour",
       rulesConfirmed:false,bundleEnabled:false,bundlePrice:"",
       tradeInterests:"Hinderer XM-18, Microtech Ultratech",
@@ -2935,6 +2974,8 @@ function endTour(keepData){
     saveInv();save();
   }
   S.tour=null;
+  S.kfOpen=false; // close knife form if it was opened by the tour
+  S.view='list';
   render();
 }
 
