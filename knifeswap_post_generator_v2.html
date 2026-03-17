@@ -1866,6 +1866,7 @@ function render(){
     S.view==="compose"?renderCompose():
     S.view==="roll"?renderRoll():
     S.view==="sold"?renderSold():
+    S.view==="guide"?renderGuide():
     renderList();
   const toastHtml=S.undoToast?`<div class="undo-toast">↩ ${esc(S.undoToast)} <button class="undo-toast-btn" onclick="undoLast()">Undo</button></div>`:"";
   const flairToastHtml=S.flairToast?`<div class="flair-toast">${esc(S.flairToast)}</div>`:"";
@@ -2423,6 +2424,154 @@ function renderTutorialModal(){
   </div>
 </div>`;
 }
+function renderGuide(){
+  const sec=(icon,title,color,content)=>`
+    <div style="margin-bottom:28px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding-bottom:10px;border-bottom:1.5px solid var(--b2)">
+        <div style="width:32px;height:32px;border-radius:10px;background:${color};display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0">${icon}</div>
+        <div style="font-size:16px;font-weight:700;color:var(--t1)">${title}</div>
+      </div>
+      ${content}
+    </div>`;
+  const step=(n,label,body)=>`
+    <div style="display:grid;grid-template-columns:28px 1fr;gap:0 12px;margin-bottom:14px;align-items:start">
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--acc);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">${n}</div>
+      <div>
+        <div style="font-size:14px;font-weight:600;color:var(--t1);margin-bottom:4px">${label}</div>
+        <div style="font-size:13px;color:var(--t2);line-height:1.7">${body}</div>
+      </div>
+    </div>`;
+  const tool=(txt)=>`<div style="background:rgba(0,122,255,.08);border:.5px solid rgba(0,122,255,.25);border-radius:10px;padding:10px 13px;margin-top:8px;font-size:12.5px;color:var(--blue);line-height:1.6"><strong style="display:block;margin-bottom:2px">In the tool:</strong>${txt}</div>`;
+  const warn=(txt)=>`<div style="background:var(--redbg);border:.5px solid rgba(255,59,48,.2);border-radius:10px;padding:10px 13px;margin-top:8px;font-size:12.5px;color:var(--redt);line-height:1.6"><strong>Important:</strong> ${txt}</div>`;
+  const tip=(txt)=>`<div style="background:var(--orangebg);border:.5px solid rgba(255,149,0,.3);border-radius:10px;padding:10px 13px;margin-top:8px;font-size:12.5px;color:var(--oranget);line-height:1.6"><strong>Tip:</strong> ${txt}</div>`;
+  const ul=(items)=>`<ul style="margin:6px 0 0;padding-left:18px;line-height:1.9">${items.map(i=>`<li>${i}</li>`).join("")}</ul>`;
+  return`<div class="main">
+  <div style="max-width:680px;margin:0 auto;padding:20px 16px 60px">
+    <div style="margin-bottom:24px">
+      <div style="font-size:22px;font-weight:700;color:var(--t1);margin-bottom:6px">How to Sell a Knife on r/Knife_Swap</div>
+      <div style="font-size:14px;color:var(--t3);line-height:1.6">The complete process from first-time setup to confirmed trade, using this tool alongside the subreddit.</div>
+    </div>
+
+    ${sec("⚙️","First-Time Setup","rgba(0,122,255,.15)",`
+      <p style="font-size:13px;color:var(--t2);line-height:1.7;margin:0 0 12px">Do this once before your first listing. Takes about 5 minutes.</p>
+      ${step(1,"Set your Reddit username","Go to Settings and enter your Reddit handle. It gets stamped into every post and dibs message automatically.")}
+      ${step(2,"Set your payment methods","PayPal Goods &amp; Services (G&amp;S) is required for all sellers with fewer than 25 confirmed trades. Once you hit 25 you can accept Venmo, Cash App, Zelle, or anything else. Check the ones you accept in Settings.")}
+      ${step(3,"Add your payment links","Paste your PayPal.me URL, Venmo handle, Cash App $tag, etc. in Settings. They auto-fill into every payment message you send buyers — you never retype them.")}
+      ${step(4,"Set up photo uploads (optional)","You can skip this entirely and paste direct image URLs. If you want drag-and-drop uploads, set up a free Cloudinary account and enter your Cloud Name and Upload Preset in Settings → Photo Hosting.")}
+    `)}
+
+    ${sec("🔪","Step 1: Add Your Knife to The Roll","rgba(52,199,89,.15)",`
+      <p style="font-size:13px;color:var(--t2);line-height:1.7;margin:0 0 12px">The Roll is your knife inventory. Add every knife you want to sell here first — you only fill in the details once, then pull it into any listing with a single tap.</p>
+      ${step(1,"Open The Roll tab and hit + New Knife","")}
+      ${step(2,"Fill in brand, model, steel, and condition","Be thorough — the more detail you add, the more your listing stands out. Note blade condition, whether it's been sharpened or used to cut, and any accessories included.")}
+      ${step(3,"Add your own photos","Drag-and-drop or paste a direct image URL. Stock photos and manufacturer images are not allowed. Your own photos only.")}
+      ${step(4,"Set type and price","WTS (selling), WTT (trading), or WTS/WTT (open to both). Enter your asking price in the SV field. For trades, also add a TV (trade value).")}
+      ${tip("New to the sub? Users with 0 confirmed trades can only list one knife per post. Once you have flair you can list multiple knives in one post.")}
+    `)}
+
+    ${sec("💰","Step 2: Price Your Knife","rgba(255,204,0,.2)",`
+      <p style="font-size:13px;color:var(--t2);line-height:1.7;margin:0 0 12px">Overpriced knives sit. Check what that exact knife actually sold for on the sub before you post.</p>
+      ${step(1,"Click Check Comps in the knife form","After filling in brand, model, and steel, hit the Check Comps button. The tool searches r/Knife_Swap for recent sold listings of that exact knife filtered by steel.")}
+      ${step(2,"Review average and median prices","Use the comps to set a competitive price. You can save any comp as a reference on the knife.")}
+      ${step(3,"Set your price in the SV field","Enter your asking price. If you're open to negotiation, you can note OBO (or best offer) in your post.")}
+      ${tip("Pricing slightly below market moves knives fast. Pricing at or above market is fine too — just expect more time on the sub.")}
+    `)}
+
+    ${sec("📷","Step 3: Take Your Timestamp Photo","rgba(255,59,48,.12)",`
+      <p style="font-size:13px;color:var(--t2);line-height:1.7;margin:0 0 12px">Every r/Knife_Swap post requires a timestamp photo. Posts without one are removed by mods — no exceptions.</p>
+      ${step(1,"Gather all the knives you are listing","Every knife in the post must appear in the timestamp photo, all in one frame.")}
+      ${step(2,"Write a handwritten note","On a piece of paper, write your Reddit username and today's full date (month, day, year). This must be handwritten — digital text overlaid in a photo editor does not count.")}
+      ${step(3,"Take the photo","Place the handwritten note next to all your knives in the same shot. Make sure the note is legible.")}
+      ${step(4,"Upload and get a direct link","Upload to Imgur (get a direct i.imgur.com/xxx.jpg link) or use Cloudinary drag-and-drop. You need a direct image URL, not an album page.")}
+      ${warn("Never sell without a timestamp. If mods remove your post for missing a timestamp and someone already yoloed, you are in an awkward spot. Get the timestamp right before posting.")}
+      ${tool("Paste the direct timestamp URL into the Timestamp field on your listing. The pre-flight check confirms it's there before you can copy the post.")}
+    `)}
+
+    ${sec("📝","Step 4: Build Your Listing","rgba(0,122,255,.12)",`
+      ${step(1,"Go to Listings → + New Listing","")}
+      ${step(2,"Add knives from The Roll","Tap + Add from Roll and select your knife. Or add knives manually if you prefer.")}
+      ${step(3,"Paste your timestamp URL","Required before you can post.")}
+      ${step(4,"Pick a template","Detailed includes all condition notes. Compact is a clean one-liner. Minimal is bare essentials. Table is a markdown table layout. Hit Switch to cycle between them anytime.")}
+      ${step(5,"Review the generated title and body","The tool fills in everything — post type, knife details, prices, payment methods, and shipping. Check that it looks right.")}
+      ${step(6,"Add a custom header (optional)","A personal intro at the top of every post — your house rules, payment requirements, or trade interests. Set it once in Settings and it appears on every listing.")}
+      ${tip("Common header example: PayPal G&S only · CONUS · Yolo &gt; Chat · Payment within 24 hours")}
+    `)}
+
+    ${sec("🚀","Step 5: Post to r/Knife_Swap","rgba(52,199,89,.12)",`
+      ${step(1,"Click Copy Post or Post to Reddit","The pre-flight check runs first. All rules must pass before the post text unlocks.")}
+      ${step(2,"Complete the pre-flight checklist","Timestamp linked, prices set, payment methods selected, rules checkbox confirmed. Fix any red items.")}
+      ${step(3,"On Reddit, go to r/Knife_Swap and create a new post","Paste your title and body.")}
+      ${step(4,"Set your post flair","You set this yourself — WTS, WTT, WTS/WTT, or WTB. Pick the one that matches your post. This is different from your user flair (which is your trade count, set automatically by the bot).")}
+      ${step(5,"Submit","Double-check title and body before hitting submit.")}
+      ${warn("Do not delete your post after submitting, especially if someone has already called dibs in the comments. Deleting after a claim creates problems.")}
+    `)}
+
+    ${sec("💬","Step 6: When Someone Yolos","rgba(255,149,0,.15)",`
+      <p style="font-size:13px;color:var(--t2);line-height:1.7;margin:0 0 12px">"Yolo" or "dibs" in the comments means they want to buy at your listed price. This is the standard claim format on r/Knife_Swap.</p>
+      ${step(1,"First visible comment has priority","The first person who comments on the post gets first dibs. Sellers technically can choose who to sell to, but going out of order creates tension on the post and is generally frowned upon.")}
+      ${step(2,"Comments only — never DMs alone","A buyer must comment on the post publicly. Never sell to someone who only sends you a DM without commenting. This protects you: buyers who can't comment may be shadowbanned or otherwise restricted on the sub, which creates problems.")}
+      ${step(3,"Reply to their comment","Something like 'Yours, sending a chat' in the comments. Then send them a chat/DM with payment details.")}
+      ${step(4,"If multiple people are interested","They will call seconds, thirds, etc. in the comments. If your first buyer backs out, move to the next person in line in comment order.")}
+      ${tool("Hit the Payment Info button on the knife row to copy a pre-formatted payment message — knife name, price, payment links, and a no-notes warning. Paste it straight into Reddit chat.")}
+      ${warn("The no-notes warning matters: adding any mention of knives in the payment memo on Venmo, Cash App, or Zelle can get payment accounts flagged or banned. The payment message the tool generates already includes this warning for your buyer.")}
+    `)}
+
+    ${sec("💵","Step 7: Collect Payment","rgba(52,199,89,.12)",`
+      ${step(1,"Under 25 confirmed trades: PayPal G&amp;S only","No exceptions. PayPal Friends &amp; Family to avoid fees is a rule violation and can get you banned from the sub.")}
+      ${step(2,"25+ confirmed trades: any method","Once you hit 25 flair, Venmo, Cash App, Zelle, crypto — anything goes.")}
+      ${step(3,"Payment timing","This is at your discretion. If you have a specific window (e.g., payment within 24 hours), say so in your post header. Otherwise it's flexible — just be clear with your buyer.")}
+      ${step(4,"Once payment clears, use Pending","If payment is incoming but not yet cleared, hit the Pending button on the knife. Mark it Sold once the money is confirmed in your account.")}
+      ${warn("Do not ship before payment is confirmed. Once you have funds in hand, move forward.")}
+    `)}
+
+    ${sec("🔴","Step 8: Mark the Knife Sold","rgba(255,59,48,.1)",`
+      ${step(1,"Click the Sold button on the knife row","Found in your listing on the Listings tab.")}
+      ${step(2,"Enter the buyer's Reddit username","This is used to generate the confirmed trade comment.")}
+      ${step(3,"Enter the final sale price","This updates the post text and shows in your sold history.")}
+      ${step(4,"Enter the shipping address","ZIP code auto-fills city and state. This gets saved for PirateShip.")}
+      ${tool("The post text updates automatically with a strikethrough [SOLD] label next to the knife. Your Roll entry moves to sold status.")}
+    `)}
+
+    ${sec("📦","Step 9: Ship the Knife","rgba(0,122,255,.1)",`
+      ${step(1,"Package the knife securely","Use appropriate padding. A box is better than a poly mailer for most folders. Blade must be covered.")}
+      ${step(2,"Go to the Shipping tab","The knife appears under Ready to Ship once marked sold.")}
+      ${step(3,"Open PirateShip for a discounted label","Hit the Ship on PirateShip button. It opens PirateShip in a new tab and copies the buyer's address to your clipboard simultaneously — just paste it in. PirateShip rates are typically 30-40% cheaper than retail post office pricing.")}
+      ${step(4,"Insurance is strongly recommended","It protects both you and the buyer if the package is lost or damaged. Both USPS First Class (under 1 lb, most folders qualify) and Priority (faster, up to $100 included insurance) are available at discounted rates on PirateShip.")}
+      ${step(5,"Enter your tracking number in the tool","Go to the knife row in the Shipping tab, enter carrier and tracking number, and hit Mark Shipped.")}
+      ${step(6,"Send tracking to your buyer","Use Copy Tracking Link on the knife row to copy a clickable tracking URL. Paste it into your chat with the buyer.")}
+      ${tip("Communicate proactively. A quick message with the tracking number goes a long way toward a smooth confirmed trade.")}
+    `)}
+
+    ${sec("🤝","Step 10: Confirm the Trade","rgba(52,199,89,.15)",`
+      <p style="font-size:13px;color:var(--t2);line-height:1.7;margin:0 0 12px">This is how your trade count (flair) gets updated. Do not confirm until the buyer has actually received the knife.</p>
+      ${step(1,"Wait for delivery confirmation","Your buyer should let you know when it arrives. Mark the knife Delivered in the Shipping tab.")}
+      ${step(2,"Post a confirmation comment on the original listing","Either party can do this — you can post 'Sold and confirmed' or the buyer can post 'Received and confirmed.' It goes on the original WTS post, not in a separate thread.")}
+      ${step(3,"Copy the pre-formatted confirm comment","Hit Confirm Comment on the delivered knife in the Shipping tab. The tool generates a comment in the correct format.")}
+      ${step(4,"Mark Confirmed Trade in the tool","Hit the Confirmed button. The knife moves out of your active shipping pipeline.")}
+      ${warn("Only confirm after the item is received. Confirming before delivery skips the buyer's ability to flag a problem if something went wrong in transit.")}
+      ${tip("At 25 confirmed trades your flair unlocks additional payment methods. Keep confirming every trade — it builds your reputation on the sub.")}
+    `)}
+
+    ${sec("📋","Rules Quick Reference","rgba(0,0,0,.06)",`
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        ${[
+          ["Timestamp required","Every post — no exceptions. Posts without one get removed."],
+          ["Payment","G&amp;S only under 25 trades. Anything goes at 25+."],
+          ["Own photos only","No stock images or manufacturer photos."],
+          ["State your price","No 'offers only' posts. Price must be clearly listed."],
+          ["Repost rules","Within 7 days: 10% drop or $25 drop required. After 7 days: same price is fine."],
+          ["0 flair limit","New sellers can only list one knife per post."],
+          ["Mixed lots","At least 50% of items must be knives."],
+          ["No external links","No eBay, Etsy, or other platform links in posts."],
+          ["CONUS default","State clearly if you ship internationally."],
+          ["Post flair","Set by you (WTS, WTT, etc.). User flair is your trade count, set by the bot."],
+        ].map(([r,d])=>`<div style="background:var(--bg);border:.5px solid var(--b2);border-radius:10px;padding:10px 12px"><div style="font-size:12px;font-weight:700;color:var(--t1);margin-bottom:3px">${r}</div><div style="font-size:12px;color:var(--t3);line-height:1.5">${d}</div></div>`).join("")}
+      </div>
+    `)}
+
+  </div>
+</div>`;
+}
 function renderAboutModal(){
   const tab=S.aboutTab||"about";
   const tabsHtml=`<div class="about-tabs">
@@ -2492,7 +2641,7 @@ function mainHdr(){
   const demoBanner=hasDemoData?`<div class="demo-banner">🎬 Demo data is active <button class="demo-rm-btn" onclick="endTour(false)">Remove Demo Data</button></div>`:"";
   return`<div class="hdr">
     <div class="hdr-logo" onclick="S.view='list';render()"><div class="hdr-ico"><span class="hdr-ico-lbl">KS</span></div><div><div class="hdr-title">Knife_Swap</div><div class="hdr-sub">Post Generator &amp; Tracker</div></div></div>
-    <div class="hdr-tabs"><div class="tab-seg"><button class="tab-item${S.view==='list'?' on':''}" onclick="S.view='list';render()">Listings</button><button class="tab-item${S.view==='roll'?' on':''}" onclick="S.view='roll';render()">The Roll</button><button class="tab-item${S.view==='sold'?' on':''}" onclick="S.view='sold';render()">Sold</button><button class="tab-item${S.view==='shipping'?' on':''}" onclick="S.view='shipping';render()" style="position:relative">📦 Shipping${(()=>{const n=S.posts.reduce((a,p)=>a+p.knives.filter(k=>{const s=kShipStatus(k);return s==='ready'||s==='shipped'||s==='delivered';}).length,0);return n?`<span style="position:absolute;top:3px;right:3px;background:var(--oranget);color:#fff;font-size:9px;font-weight:700;border-radius:10px;min-width:15px;height:15px;display:flex;align-items:center;justify-content:center;padding:0 3px;line-height:1">${n}</span>`:"";})()}</button></div></div>
+    <div class="hdr-tabs"><div class="tab-seg"><button class="tab-item${S.view==='list'?' on':''}" onclick="S.view='list';render()">Listings</button><button class="tab-item${S.view==='roll'?' on':''}" onclick="S.view='roll';render()">The Roll</button><button class="tab-item${S.view==='sold'?' on':''}" onclick="S.view='sold';render()">Sold</button><button class="tab-item${S.view==='shipping'?' on':''}" onclick="S.view='shipping';render()" style="position:relative">📦 Shipping${(()=>{const n=S.posts.reduce((a,p)=>a+p.knives.filter(k=>{const s=kShipStatus(k);return s==='ready'||s==='shipped'||s==='delivered';}).length,0);return n?`<span style="position:absolute;top:3px;right:3px;background:var(--oranget);color:#fff;font-size:9px;font-weight:700;border-radius:10px;min-width:15px;height:15px;display:flex;align-items:center;justify-content:center;padding:0 3px;line-height:1">${n}</span>`:"";})()}</button><button class="tab-item${S.view==='guide'?' on':''}" onclick="S.view='guide';render()">📖 How-To</button></div></div>
     <div class="hdr-r"><button class="hdr-ico-btn" onclick="S.modal='rules';render()"><span class="ico">&#128214;</span><span class="btn-lbl">Rules</span></button><button class="hdr-ico-btn" onclick="S.view='settings';render()"><span class="ico">&#9881;</span><span class="btn-lbl">Settings</span></button><a class="hdr-ico-btn" href="https://buymeacoffee.com/erunyan" target="_blank" rel="noopener" title="Support the developer"><span class="ico">☕</span><span class="btn-lbl">Support</span></a>${authBtn}</div>
   </div>${demoBanner}`;
 }
