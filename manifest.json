@@ -1,22 +1,22 @@
 {
-  "name": "r/Knife_Swap Post Generator",
-  "short_name": "KnifeSwap",
+  "name": "BladeFlow",
+  "short_name": "BladeFlow",
   "description": "Post generator and inventory tracker for r/Knife_Swap",
-  "start_url": "/knife-swap-tool/",
-  "scope": "/knife-swap-tool/",
+  "start_url": "/bladeflow/",
+  "scope": "/bladeflow/",
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#1C1C1E",
   "theme_color": "#1C1C1E",
   "icons": [
     {
-      "src": "/knife-swap-tool/icon.svg",
+      "src": "/bladeflow/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "/knife-swap-tool/icon.svg",
+      "src": "/bladeflow/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "maskable"

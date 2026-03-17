@@ -1,6 +1,6 @@
-// KnifeSwap Service Worker — stale-while-revalidate
-const CACHE = 'ks-app-v1';
-const CORE = ['/knife-swap-tool/', '/knife-swap-tool/index.html'];
+// BladeFlow Service Worker - stale-while-revalidate
+const CACHE = 'bf-app-v1';
+const CORE = ['/bladeflow/', '/bladeflow/index.html'];
 
 self.addEventListener('install', e => {
   e.waitUntil(
