@@ -425,6 +425,12 @@ button:disabled{opacity:.35;cursor:not-allowed}
 .tut-btns{display:flex;gap:10px;align-items:center}
 .tut-skip{font-size:12px;color:var(--t4);background:none;border:none;cursor:pointer;font-family:var(--font);text-decoration:underline;padding:0}
 .tut-skip:hover{color:var(--t3)}
+.tut-phase{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--t3);text-align:center;margin-bottom:6px}
+.tut-preview{background:var(--bg);border:.5px solid var(--b2);border-radius:12px;padding:13px 15px;margin:14px 0;text-align:left;font-size:12.5px;color:var(--t2);line-height:1.6}
+.tut-chip{display:inline-flex;align-items:center;background:var(--surf);border:.5px solid var(--b1);border-radius:6px;padding:1px 7px;font-size:12px;font-weight:600;color:var(--t1);white-space:nowrap}
+.tut-cta-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+.tut-bar-wrap{width:100%;height:4px;background:var(--b1);border-radius:2px;overflow:hidden;margin-bottom:6px}
+.tut-bar-fill{height:100%;background:var(--orange);border-radius:2px;transition:width .3s}
 
 /* ─── ABOUT / FAQ MODAL ──────────────────────────────────── */
 .about-tabs{display:flex;background:rgba(0,0,0,.06);border-radius:10px;padding:3px;gap:2px;margin-bottom:18px}
@@ -2019,72 +2025,195 @@ function renderCloudinaryStatus(){
   const p=(SETTINGS.cloudinaryPreset||"").trim();
   el.textContent=c&&p?"✅ All set — drag-and-drop uploads are ready!":"";
 }
+function tutDone(){localStorage.setItem('ks-tutorial-done','1');S.modal=null;render();}
+function tutGo(view){localStorage.setItem('ks-tutorial-done','1');S.modal=null;S.view=view;render();}
 function renderTutorialModal(){
+  const done=()=>`tutDone()`;
+  const go=(view)=>`tutGo('${view}')`;
+  const chip=(t)=>`<span class="tut-chip">${t}</span>`;
+  const preview=(html)=>`<div class="tut-preview">${html}</div>`;
+  const tip=(head,body)=>`<div class="tut-tip"><strong>${head}</strong>${body}</div>`;
   const steps=[
-    {
-      icon:"🔪",
-      title:"Welcome to KnifeSwap Post Generator",
-      body:"This is a free tool built for the <a href='https://www.reddit.com/r/Knife_Swap/' target='_blank' rel='noopener' style='color:var(--blue)'>r/Knife_Swap</a> community. If you sell or trade knives on Reddit, this tool does the tedious work for you. It formats your listings, tracks your inventory, enforces subreddit rules, and keeps a record of everything you have sold. No account required, no ads, no tracking. Your data stays in your browser.",
-      tip:null
-    },
-    {
-      icon:"📋",
-      title:"The Roll: Your Knife Inventory",
-      body:"The Roll is your personal knife collection. Add a knife once with all its details: brand, model, steel, condition, price, photos. From that point on you can pull it into any listing with one click. The Roll also tracks how many days you have held each knife, shows price history when you drop the price, and lets you filter by status: available, listed, pending, or sold. You can also export your full inventory as a CSV.",
-      tip:{head:"Tip",text:"Set a knife's status to Pending when you have a buyer lined up. Mark it Sold once payment clears. The Roll keeps a record of every sold knife automatically."}
-    },
-    {
-      icon:"📝",
-      title:"Building a Post",
-      body:"Click New Listing to start a post. Add knives from The Roll, or enter details manually. The tool auto-generates the Reddit title and the full post body in the format the subreddit expects. You can switch between four templates at any time. Once a knife sells, mark it sold right from the listing card. The tool updates the post text, records the sale, and moves the knife to your sold history.",
-      tip:{head:"Templates",text:"Four post templates are available: Detailed, Compact, Minimal, and Table. Hit the Switch button to cycle through them and pick the one that fits your style."}
-    },
-    {
-      icon:"📸",
-      title:"Timestamp Photo",
-      body:"r/Knife_Swap requires a timestamp photo with every post. It must show all the knives you are selling, along with a handwritten note that includes your Reddit username and the full date (month, day, year). For example: u/yourname - March 16, 2026. A photo on your phone or a sticky note in the frame both work fine. The Copy button in the tool stays disabled until you add a timestamp photo link. Once you paste a link, the post unlocks.",
-      tip:{head:"What makes a valid timestamp",text:"All knives visible, username spelled correctly, full date written by hand. Digital text overlaid in a photo editor does not count. If in doubt, check the subreddit sidebar."}
-    },
-    {
-      icon:"🖼",
-      title:"Photos and Galleries",
-      body:"You can upload photos by dragging and dropping files into the upload zone, which uses a free Cloudinary account you set up in Settings. You can also paste any direct image URL, including Imgur links in the format i.imgur.com/xxx.jpg. If you add two or more photos to a knife, the tool automatically turns the knife name in the post into a clickable gallery link. Buyers click the knife name and get a swipeable photo viewer.",
-      tip:{head:"Imgur tip",text:"Use direct image links (i.imgur.com/xxx.jpg), not album or gallery page URLs. Right-click an image on Imgur and choose Copy Image Address to get the direct link."}
-    },
-    {
-      icon:"⚙️",
-      title:"Templates and Settings",
-      body:"Settings lets you save your Reddit username, preferred payment methods, trade interests, and a custom post header so you do not have to type them every time. Four post templates are available: Detailed, Compact, Minimal, and Table. You can cycle through them with the Switch button on any listing. Optional cloud sync is available after a free sign-in, keeping your data in sync across devices. Cloudinary credentials for photo uploads are also set here.",
-      tip:null
-    },
-    {
-      icon:"✅",
-      title:"You are Ready to Go",
-      body:"That covers the basics. Head to The Roll to add your first knife, then open New Listing to build your first post. If you run into anything confusing or have a feature idea, reach out. This tool was built by <strong>u/smashedllama2</strong>, an active r/Knife_Swap member who got tired of formatting posts by hand. If it saves you time, consider buying a coffee.",
-      tip:{head:"Feedback and support",text:'Reach out to u/smashedllama2 on Reddit with feedback or bug reports. If you find the tool useful: <a href="https://buymeacoffee.com/erunyan" target="_blank" rel="noopener" style="color:var(--oranget);font-weight:600">buymeacoffee.com/erunyan</a>'}
-    }
+    // 0 — Welcome
+    {phase:"Welcome",icon:"🔪",title:"Welcome to KnifeSwap Post Generator",
+     body:`A free tool built for <a href='https://www.reddit.com/r/Knife_Swap/' target='_blank' rel='noopener' style='color:var(--blue)'>r/Knife_Swap</a> by u/smashedllama2. It handles all the tedious parts of selling knives on Reddit so you can focus on the knives.<br><br>
+     This walkthrough covers everything from first-time setup to closing a confirmed trade. Takes about 3 minutes.
+     ${preview(`<strong style="color:var(--t1)">What we cover:</strong>
+     <ul style="margin:8px 0 0;padding-left:18px;line-height:2">
+       <li>⚙️ First-time setup — username, payments, photos</li>
+       <li>📋 The Roll — your knife inventory</li>
+       <li>📝 Building and posting a listing</li>
+       <li>💬 When someone yolos — the dibs message</li>
+       <li>📦 Marking sold and shipping tracking</li>
+       <li>🤝 The confirmed trade thread</li>
+     </ul>`)}`},
+    // 1 — Settings: username + payment
+    {phase:"Setup · Step 1 of 3",icon:"⚙️",title:"Set Up Your Profile",
+     body:`Before your first post, configure three things in Settings. They auto-fill into every listing you make from here on.
+     ${preview(`<strong style="color:var(--t1)">Username</strong> — your Reddit handle, included in the timestamp callout in every post<br><br>
+     <strong style="color:var(--t1)">Payment Methods</strong> — PayPal G&amp;S is required until you have 25+ confirmed swaps. Add others once you qualify<br><br>
+     <strong style="color:var(--t1)">Payment Links</strong> — paste your PayPal.me, Venmo handle, Cash App tag etc. They auto-fill into the message you send buyers when they yolo`)}
+     <div class="tut-cta-row"><button class="btn btn-pri btn-sm" onclick="${go('settings')}">⚙️ Open Settings</button></div>`,
+     cta:null},
+    // 2 — Photo hosting
+    {phase:"Setup · Step 2 of 3",icon:"📸",title:"Set Up Photo Uploads",
+     body:`Drag-and-drop photo uploads use a free <strong>Cloudinary</strong> account. Your photos upload directly from your browser to your own account — they never touch our servers.
+     ${preview(`<strong style="color:var(--t1)">Takes about 2 minutes:</strong>
+     <ol style="margin:8px 0 0;padding-left:18px;line-height:2">
+       <li>Sign up free at <a href="https://cloudinary.com/users/register_free" target="_blank" rel="noopener" style="color:var(--blue)">cloudinary.com</a></li>
+       <li>Copy your Cloud Name from the dashboard</li>
+       <li>Create an Unsigned upload preset in Settings → Upload</li>
+       <li>Paste both into Settings → Photo Hosting here</li>
+     </ol>
+     <div style="margin-top:8px;font-size:11px;color:var(--t3)">🔒 AES-256 at rest · TLS 1.2+ in transit · You own your images</div>`)}
+     <div class="tut-cta-row"><button class="btn btn-sec btn-sm" onclick="tutDone();S.modal='cloudinary';S.view='settings';render()">📸 Open Photo Setup Guide</button></div>`},
+    // 3 — Custom post header
+    {phase:"Setup · Step 3 of 3",icon:"✍️",title:"Custom Post Header",
+     body:`Settings lets you add a personal intro that appears at the top of every generated post. Use it for your house rules, disclaimer, or trade interests.
+     ${preview(`<strong style="color:var(--t1)">Example header:</strong><br>
+     <div style="font-family:monospace;font-size:12px;margin-top:6px;color:var(--t2);white-space:pre-wrap">* PayPal G&S only · CONUS · Yolo &gt; Chat
+* Not looking for trades at this time
+* All prices shipped, insurance included</div>`)}
+     ${tip("Tip","You can also set default trade interests here — added automatically to any WTT or WTS/WTT post you create.")}`},
+    // 4 — The Roll
+    {phase:"The Roll",icon:"📋",title:"The Roll — Your Knife Inventory",
+     body:`The Roll is your personal knife inventory. Add a knife once with all its details and it's available to pull into any listing with one click — no re-entering info.
+     ${preview(`<strong style="color:var(--t1)">The Roll tracks:</strong>
+     <ul style="margin:8px 0 0;padding-left:18px;line-height:2">
+       <li>Days held — so you know when to drop price</li>
+       <li>Price history — every price change is logged</li>
+       <li>Status — Available, Listed, Pending, Sold</li>
+       <li>Photos — stored with the knife, ready to add to any post</li>
+     </ul>`)}
+     <div class="tut-cta-row"><button class="btn btn-pri btn-sm" onclick="${go('roll')}">📋 Go to The Roll</button></div>`},
+    // 5 — Adding a knife
+    {phase:"The Roll",icon:"🔪",title:"Adding a Knife",
+     body:`Click ${chip("+ Add First Knife")} or ${chip("+ New Knife")} to open the knife form. Fill in brand, model, steel, condition and price. The more detail you add, the more useful your listing becomes.
+     ${preview(`<strong style="color:var(--t1)">Key fields:</strong><br>
+     <div style="display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin-top:8px;font-size:12px">
+       <span style="color:var(--t3)">Brand / Model</span><span>Spyderco / Para 3 LW</span>
+       <span style="color:var(--t3)">Steel</span><span>CPM-S30V — affects pricing</span>
+       <span style="color:var(--t3)">Condition</span><span>Factory edge, carried</span>
+       <span style="color:var(--t3)">SV Price</span><span>Your asking price in USD</span>
+       <span style="color:var(--t3)">Photos</span><span>Drag-and-drop or paste URL</span>
+     </div>`)}
+     ${tip("Price Research","After entering brand, model and steel, click Check Comps — it searches r/Knife_Swap for the 25 most recent sold listings of that exact model so you can price accurately.")}`},
+    // 6 — Creating a listing
+    {phase:"Listings",icon:"📝",title:"Creating a Post",
+     body:`Click ${chip("+ New Listing")} from the Listings tab. Add knives from The Roll with one click, or enter them manually. The tool generates the full Reddit post — title and body — automatically.
+     ${preview(`<strong style="color:var(--t1)">4 post templates available:</strong>
+     <ul style="margin:8px 0 0;padding-left:18px;line-height:2">
+       <li><strong>Detailed</strong> — full condition notes, issues, accessories</li>
+       <li><strong>Compact</strong> — clean one-liner per knife</li>
+       <li><strong>Table</strong> — markdown table layout</li>
+       <li><strong>Minimal</strong> — bare essentials only</li>
+     </ul>
+     Use the ${chip("Switch")} button on any listing to cycle between them anytime.`)}
+     <div class="tut-cta-row"><button class="btn btn-pri btn-sm" onclick="tutDone();startCompose()">📝 Start a New Listing</button></div>`},
+    // 7 — Timestamp
+    {phase:"Listings",icon:"📷",title:"The Timestamp — Required",
+     body:`Every r/Knife_Swap post must include a timestamp photo. Posts without one are removed by mods. No exceptions.
+     ${preview(`<strong style="color:var(--t1)">A valid timestamp must show:</strong>
+     <ul style="margin:8px 0 0;padding-left:18px;line-height:2">
+       <li>All knives you are selling in the same frame</li>
+       <li>A handwritten note with your Reddit username</li>
+       <li>The full date written by hand — month, day, year</li>
+     </ul>
+     <div style="margin-top:8px;font-size:12px;padding:8px 10px;background:var(--redbg);border-radius:8px;color:var(--redt)">❌ Digital text overlaid in a photo editor does not count</div>`)}
+     ${tip("How to add it","Upload your timestamp photo to Imgur or use Cloudinary drag-and-drop. Paste the direct image URL into the timestamp field on your listing. The pre-flight check will confirm it's there before allowing you to copy.")}`},
+    // 8 — Pre-flight
+    {phase:"Listings",icon:"✅",title:"The Pre-flight Check",
+     body:`When you click ${chip("Copy Post")} or ${chip("Post to Reddit")}, a pre-flight checklist runs before anything is generated.
+     ${preview(`<strong style="color:var(--t1)">The checklist verifies:</strong>
+     <ul style="margin:8px 0 0;padding-left:18px;line-height:2">
+       <li>✅ Timestamp photo is linked</li>
+       <li>✅ All WTS knives have a price</li>
+       <li>✅ Payment method is selected</li>
+       <li>✅ Post type is set (e.g. [WTS])</li>
+       <li>✅ Shipping info is mentioned</li>
+     </ul>
+     You also confirm you've read the r/Knife_Swap rules. Nothing copies until everything checks out. If the timestamp is missing you can paste it right in the modal.`)}
+     ${tip("Rules checkbox","Once you confirm the rules checkbox, it stays checked across all future posts — you only need to do it once.")}`},
+    // 9 — Dibs message
+    {phase:"Selling",icon:"💬",title:"When Someone Yolos",
+     body:`When a buyer calls dibs or yolos, hit ${chip("📬 Payment Info")} on that knife row. It copies a complete payment message to your clipboard — ready to paste into Reddit DMs.
+     ${preview(`<strong style="color:var(--t1)">The message includes:</strong>
+     <ul style="margin:8px 0 0;padding-left:18px;line-height:2">
+       <li>The knife name and price</li>
+       <li>Your payment methods and links (from Settings)</li>
+       <li>A "No Notes" warning — critical for Venmo, Cash App, Zelle etc. Adding notes about knives in payment apps can get accounts flagged or banned</li>
+     </ul>`)}
+     ${tip("Set up payment links first","Go to Settings → Payment Links and fill in your PayPal.me, Venmo handle, Cash App tag etc. They auto-appear in every dibs message.")}`},
+    // 10 — Marking sold + address
+    {phase:"Selling",icon:"🔴",title:"Marking a Knife Sold",
+     body:`Click ${chip("🟢→🔴 Sold")} on any knife row. A quick form slides open to capture the sale details.
+     ${preview(`<strong style="color:var(--t1)">The sold form captures:</strong>
+     <ul style="margin:8px 0 0;padding-left:18px;line-height:2">
+       <li><strong>Buyer's Reddit username</strong> — used to generate the confirm comment</li>
+       <li><strong>Shipping address</strong> (optional) — saved for PirateShip. Enter the ZIP and city/state auto-fills</li>
+     </ul>
+     The knife moves to your sold history and the post text updates automatically.`)}
+     ${tip("Pending?","Use 🟡 Pending to flag a knife when payment is incoming but not cleared. Mark it Sold once payment hits.")}`},
+    // 11 — Shipping tab
+    {phase:"Shipping",icon:"📦",title:"Tracking Your Shipments",
+     body:`The Shipping tab organizes every sold knife through a clear 4-stage workflow.
+     ${preview(`<div style="display:grid;grid-template-columns:auto 1fr;gap:8px 12px;align-items:start">
+       <span style="font-size:18px">📦</span><div><strong style="color:var(--t1)">Ready to Ship</strong><br><span style="font-size:12px">Sold but not yet shipped. Enter carrier + tracking number and hit Mark Shipped.</span></div>
+       <span style="font-size:18px">🚚</span><div><strong style="color:var(--t1)">In Transit</strong><br><span style="font-size:12px">Tracking entered. Copy the tracking link to send to your buyer. Mark Delivered when it arrives.</span></div>
+       <span style="font-size:18px">✅</span><div><strong style="color:var(--t1)">Delivered</strong><br><span style="font-size:12px">Arrived! Confirm Comment is ready to copy for the trade thread.</span></div>
+       <span style="font-size:18px">🤝</span><div><strong style="color:var(--t1)">Confirmed</strong><br><span style="font-size:12px">Trade confirmed on Reddit. Done.</span></div>
+     </div>`)}
+     <div class="tut-cta-row"><button class="btn btn-sec btn-sm" onclick="${go('shipping')}">📦 View Shipping Tab</button></div>`},
+    // 12 — PirateShip
+    {phase:"Shipping",icon:"🚢",title:"Shipping with PirateShip",
+     body:`PirateShip offers deeply discounted USPS and UPS rates — often 30–40% cheaper than paying at the post office. It's free to use.
+     ${preview(`<strong style="color:var(--t1)">The tool integrates in two ways:</strong>
+     <ul style="margin:8px 0 0;padding-left:18px;line-height:2">
+       <li>${chip("🚢 Ship on PirateShip")} — opens PirateShip and copies the buyer's address to your clipboard simultaneously. Just paste it in.</li>
+       <li>${chip("📋 Copy Address")} — copies the address in a clean multi-line format to paste anywhere</li>
+     </ul>
+     Shipping address is captured when you mark a knife sold. ZIP code auto-looks up city and state.`)}
+     ${tip("USPS First Class vs Priority","First Class is cheaper for packages under 1 lb — most folding knives qualify. Priority is faster and includes up to $100 insurance. Both can be purchased on PirateShip at discounted rates.")}`},
+    // 13 — Confirmed trade
+    {phase:"Closing the Loop",icon:"🤝",title:"The Confirmed Trade Thread",
+     body:`After your buyer receives the knife, both parties should post in r/Knife_Swap's monthly <strong>Confirmed Trade Thread</strong>. This builds your swap count and unlocks additional payment methods at 25+ trades.
+     ${preview(`<strong style="color:var(--t1)">How it works:</strong>
+     <ol style="margin:8px 0 0;padding-left:18px;line-height:2">
+       <li>Go to the Shipping tab and find the delivered knife</li>
+       <li>Click ${chip("📋 Confirm Comment")} — copies your formatted comment</li>
+       <li>Paste it in the Confirmed Trade Thread on Reddit</li>
+       <li>Your buyer replies <strong>"Confirmed"</strong></li>
+       <li>u/ksbot records it and updates both your flair counts</li>
+     </ol>`)}
+     ${tip("Confirm Comment is available early","The Confirm Comment button appears in all shipping stages — Ready, In Transit, and Delivered — so you can copy it whenever you need it.")}`},
+    // 14 — Done
+    {phase:"All Done!",icon:"🎉",title:"You're All Set",
+     body:`That's everything. This tool handles the formatting, the rules, the photos, the dibs messages, the shipping tracking, and the trade confirmation — so you can spend more time on the knives.<br><br>Built by <strong>u/smashedllama2</strong>, an active r/Knife_Swap member. If it saves you time, a coffee is appreciated.
+     <div class="tut-cta-row" style="margin-top:18px">
+       <button class="btn btn-sec btn-sm" onclick="${go('roll')}">📋 Go to The Roll</button>
+       <button class="btn btn-pri btn-sm" onclick="tutDone();startCompose()">📝 Start a Listing</button>
+     </div>
+     <div style="margin-top:14px;text-align:center"><a href="https://buymeacoffee.com/erunyan" target="_blank" rel="noopener" style="font-size:12px;color:var(--oranget);font-weight:600;text-decoration:none">☕ buymeacoffee.com/erunyan</a></div>`}
   ];
-  const st=Math.max(0,Math.min(6,S.tutStep||0));
+  const TOTAL=steps.length;
+  const st=Math.max(0,Math.min(TOTAL-1,S.tutStep||0));
   const step=steps[st];
-  const dotsHtml=steps.map((_,i)=>{
-    if(i<st)return`<div class="tut-dot past">✓</div>`;
-    if(i===st)return`<div class="tut-dot current"></div>`;
-    return`<div class="tut-dot"></div>`;
-  }).join("");
-  const backBtn=st>0?`<button class="btn btn-sec btn-sm" onclick="S.tutStep=Math.max(0,S.tutStep-1);render()">← Back</button>`:`<div style="width:70px"></div>`;
-  const nextBtn=st<6
-    ?`<button class="btn btn-pri btn-sm" onclick="S.tutStep=Math.min(6,S.tutStep+1);render()">Next →</button>`
-    :`<button class="btn btn-pri btn-sm" onclick="localStorage.setItem('ks-tutorial-done','1');S.modal=null;render()">Start Using the Tool</button>`;
-  const tipHtml=step.tip?`<div class="tut-tip"><strong>${step.tip.head}</strong>${step.tip.text}</div>`:"";
+  const pct=Math.round((st/(TOTAL-1))*100);
+  const backBtn=st>0?`<button class="btn btn-sec btn-sm" onclick="S.tutStep=Math.max(0,S.tutStep-1);render()">← Back</button>`:`<div style="width:68px"></div>`;
+  const nextBtn=st<TOTAL-1
+    ?`<button class="btn btn-pri btn-sm" onclick="S.tutStep=Math.min(${TOTAL-1},S.tutStep+1);render()">Next →</button>`
+    :`<button class="btn btn-pri btn-sm" onclick="localStorage.setItem('ks-tutorial-done','1');S.modal=null;render()">Close</button>`;
   return`<div class="tut-overlay" onclick="event.stopPropagation()">
   <div class="tut-card" onclick="event.stopPropagation()">
     <div class="tut-icon">${step.icon}</div>
     <div class="tut-body">
+      <div class="tut-phase">${step.phase}</div>
       <div class="tut-title">${step.title}</div>
-      <div class="tut-text">${step.body}${tipHtml}</div>
+      <div class="tut-text">${step.body}</div>
     </div>
     <div class="tut-footer">
-      <div class="tut-dots">${dotsHtml}</div>
+      <div class="tut-bar-wrap"><div class="tut-bar-fill" style="width:${pct}%"></div></div>
+      <div style="font-size:11px;color:var(--t3);margin-bottom:8px">Step ${st+1} of ${TOTAL}</div>
       <div class="tut-btns">${backBtn}${nextBtn}</div>
       <button class="tut-skip" onclick="localStorage.setItem('ks-tutorial-done','1');S.modal=null;render()">Skip tutorial</button>
     </div>
@@ -2799,7 +2928,7 @@ window.startCompose=startCompose;window.cancelCompose=cancelCompose;
 window.openKF=openKF;window.closeKF=closeKF;window.syncKF=syncKF;window.saveKF=saveKF;
 window.removeKnife=removeKnife;window.setPrevPrice=setPrevPrice;window.applyDropPrice=applyDropPrice;window.addFromLocker=addFromLocker;window.removeFromInventory=removeFromInventory;window.markInvSold=markInvSold;
 window.syncDraft=syncDraft;window.submitPost=submitPost;
-window.markSold=markSold;window.cycleTmpl=cycleTmpl;window.deletePost=deletePost;window.copyPost=copyPost;window.copyText=copyText;window.openRedditPost=openRedditPost;window.startPriceDropRepost=startPriceDropRepost;window.startSamePriceRepost=startSamePriceRepost;window.openPreflight=openPreflight;window.closePreflight=closePreflight;window.addTimestampToPreflight=addTimestampToPreflight;window.copyFromPreflight=copyFromPreflight;window.openRedditFromPreflight=openRedditFromPreflight;
+window.markSold=markSold;window.cycleTmpl=cycleTmpl;window.deletePost=deletePost;window.copyPost=copyPost;window.copyText=copyText;window.openRedditPost=openRedditPost;window.startPriceDropRepost=startPriceDropRepost;window.startSamePriceRepost=startSamePriceRepost;window.tutDone=tutDone;window.tutGo=tutGo;window.openPreflight=openPreflight;window.closePreflight=closePreflight;window.addTimestampToPreflight=addTimestampToPreflight;window.copyFromPreflight=copyFromPreflight;window.openRedditFromPreflight=openRedditFromPreflight;
 window.startMove=startMove;window.cancelMove=cancelMove;window.executeMove=executeMove;
 window.updateModelList=updateModelList;window.autoFillInput=autoFillInput;window.saveSettings=saveSettings;
 window.triggerUpload=triggerUpload;window.handleFileInput=handleFileInput;window.handleDrop=handleDrop;window.handleDragOver=handleDragOver;window.handleDragLeave=handleDragLeave;window.removeUpload=removeUpload;
