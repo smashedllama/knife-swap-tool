@@ -737,8 +737,8 @@ async function saveSettings(){
 }
 
 // ─── STATE ────────────────────────────────────────────────────
-const EK=()=>({brand:"",model:"",steel:"",price:"",obo:false,knifeType:"WTS",tradeValue:"",sharpened:"No",usedCut:"No",carried:"No",bladeCondition:"Factory edge, carried",owners:"1",centering:"Perfect",lockup:"Solid",lockupNotes:"",issues:["None"],accessories:["None"],notes:"",inventoryId:null,prevPrice:"",photos:[],pending:false,priceHistory:[],comps:[],shippingClass:"Priority",shippingAddress:null});
-const EI=()=>({id:gid(),brand:"",model:"",steel:"",price:"",obo:false,knifeType:"WTS",tradeValue:"",sharpened:"No",usedCut:"No",carried:"No",bladeCondition:"Factory edge, carried",owners:"1",centering:"Perfect",lockup:"Solid",lockupNotes:"",issues:["None"],accessories:["None"],notes:"",status:"available",addedAt:new Date().toISOString(),soldAt:null,photos:[],pending:false,priceHistory:[],comps:[],shippingClass:"Priority",shippingAddress:null});
+const EK=()=>({brand:"",model:"",steel:"",price:"",obo:false,knifeType:"WTS",tradeValue:"",sharpened:"No",usedCut:"No",carried:"No",bladeCondition:"Factory edge, carried",owners:"1",centering:"Perfect",lockup:"Solid",lockupNotes:"",issues:["None"],accessories:["None"],notes:"",inventoryId:null,prevPrice:"",photos:[],pending:false,priceHistory:[],comps:[],shippingClass:"Priority",shippingAddress:null,trackingNumber:null,trackingCarrier:"USPS",shippedAt:null,deliveredAt:null,confirmedAt:null});
+const EI=()=>({id:gid(),brand:"",model:"",steel:"",price:"",obo:false,knifeType:"WTS",tradeValue:"",sharpened:"No",usedCut:"No",carried:"No",bladeCondition:"Factory edge, carried",owners:"1",centering:"Perfect",lockup:"Solid",lockupNotes:"",issues:["None"],accessories:["None"],notes:"",status:"available",addedAt:new Date().toISOString(),soldAt:null,photos:[],pending:false,priceHistory:[],comps:[],shippingClass:"Priority",shippingAddress:null,trackingNumber:null,trackingCarrier:"USPS",shippedAt:null,deliveredAt:null,confirmedAt:null});
 const ED=()=>({postType:"[WTS]",knives:[],payment:[...SETTINGS.payment],paymentOther:"",noShip:[...SETTINGS.noShip],noShipOther:"",repost:false,photos:[],notes:"",rulesConfirmed:false,bundleEnabled:false,bundlePrice:"",tradeInterests:SETTINGS.tradeInterests||"",shippingCarrier:SETTINGS.shippingCarrier||"USPS"});
 let S={posts:[],inventory:[],loaded:false,view:"list",expanded:null,copied:null,draft:ED(),kfOpen:false,kfIdx:-1,kf:EK(),kfMode:"draft",adv:false,err:"",saveNotice:false,lockerFilter:"all",lockerPicker:false,movingKnife:null,uploadFiles:[],kfUploads:[],priceResearch:{status:"idle",results:[],query:""},modal:null,authStatus:"guest",authEmail:"",showMigrate:false,soldFlow:null,delFlowEmail:null,authLoading:true,mdPreview:new Set(),undoStack:[],undoToast:null,_undoTid:null,flairToast:null,_flairTid:null,rollSort:"added",tutStep:0,aboutTab:"about",feedbackTab:"bug"};
 
@@ -1697,6 +1697,7 @@ function render(){
   if(dls&&!dls.childElementCount)dls.innerHTML=STEELS.map(s=>`<option value="${esc(s)}">`).join("");
   const view=
     S.view==="settings"?renderSettings():
+    S.view==="shipping"?renderShipping():
     S.view==="compose"?renderCompose():
     S.view==="roll"?renderRoll():
     S.view==="sold"?renderSold():
@@ -2048,7 +2049,7 @@ function mainHdr(){
       :`<button class="auth-btn" onclick="S.modal='auth';render()">&#9729;<span class="btn-lbl"> Sign In</span></button>`;
   return`<div class="hdr">
     <div class="hdr-logo" onclick="S.view='list';render()"><div class="hdr-ico"><span class="hdr-ico-lbl">KS</span></div><div><div class="hdr-title">Knife_Swap</div><div class="hdr-sub">Post Generator &amp; Tracker</div></div></div>
-    <div class="hdr-tabs"><div class="tab-seg"><button class="tab-item${S.view==='list'?' on':''}" onclick="S.view='list';render()">Listings</button><button class="tab-item${S.view==='roll'?' on':''}" onclick="S.view='roll';render()">The Roll</button><button class="tab-item${S.view==='sold'?' on':''}" onclick="S.view='sold';render()">Sold</button></div></div>
+    <div class="hdr-tabs"><div class="tab-seg"><button class="tab-item${S.view==='list'?' on':''}" onclick="S.view='list';render()">Listings</button><button class="tab-item${S.view==='roll'?' on':''}" onclick="S.view='roll';render()">The Roll</button><button class="tab-item${S.view==='sold'?' on':''}" onclick="S.view='sold';render()">Sold</button><button class="tab-item${S.view==='shipping'?' on':''}" onclick="S.view='shipping';render()" style="position:relative">📦 Shipping${(()=>{const n=S.posts.reduce((a,p)=>a+p.knives.filter(k=>{const s=kShipStatus(k);return s==='ready'||s==='shipped'||s==='delivered';}).length,0);return n?`<span style="position:absolute;top:3px;right:3px;background:var(--oranget);color:#fff;font-size:9px;font-weight:700;border-radius:10px;min-width:15px;height:15px;display:flex;align-items:center;justify-content:center;padding:0 3px;line-height:1">${n}</span>`:"";})()}</button></div></div>
     <div class="hdr-r"><button class="hdr-ico-btn" onclick="S.modal='rules';render()"><span class="ico">&#128214;</span><span class="btn-lbl">Rules</span></button><button class="hdr-ico-btn" onclick="S.view='settings';render()"><span class="ico">&#9881;</span><span class="btn-lbl">Settings</span></button><a class="hdr-ico-btn" href="https://buymeacoffee.com/erunyan" target="_blank" rel="noopener" title="Support the developer"><span class="ico">☕</span><span class="btn-lbl">Support</span></a>${authBtn}</div>
   </div>`;
 }
@@ -2252,6 +2253,146 @@ function renderList(){
 }
 
 // ─── RENDER: THE ROLL ─────────────────────────────────────────
+// ── Shipping helpers ──────────────────────────────────────────────────────────
+function kShipStatus(k){
+  if(!k.sold)return null;
+  if(k.confirmedAt)return"confirmed";
+  if(k.deliveredAt)return"delivered";
+  if(k.trackingNumber)return"shipped";
+  return"ready";
+}
+function trackingUrl(carrier,num){
+  if(!num)return null;
+  const n=encodeURIComponent((num||"").trim());
+  if(carrier==="USPS")return`https://tools.usps.com/go/TrackConfirmAction?tLabels=${n}`;
+  if(carrier==="UPS")return`https://www.ups.com/track?tracknum=${n}`;
+  if(carrier==="FedEx")return`https://www.fedex.com/fedextrack/?trknbr=${n}`;
+  if(carrier==="DHL")return`https://www.dhl.com/us-en/home/tracking.html?tracking-id=${n}`;
+  return null;
+}
+function markShipped(pid,ki){
+  const trk=(document.getElementById(`trk-${pid}-${ki}`)?.value||"").trim();
+  const carr=document.getElementById(`carr-${pid}-${ki}`)?.value||"USPS";
+  if(!trk){alert("Please enter a tracking number first.");return;}
+  pushUndo("Knife marked shipped");
+  up(s=>{const p=s.posts.find(x=>x.id===pid);if(!p)return;const k=p.knives[ki];k.trackingNumber=trk;k.trackingCarrier=carr;k.shippedAt=new Date().toISOString();});
+  saveInv();render();
+}
+function markDelivered(pid,ki){
+  pushUndo("Knife marked delivered");
+  up(s=>{const p=s.posts.find(x=>x.id===pid);if(!p)return;const k=p.knives[ki];k.deliveredAt=new Date().toISOString();});
+  saveInv();render();
+}
+function markConfirmedTrade(pid,ki){
+  pushUndo("Trade confirmed");
+  up(s=>{const p=s.posts.find(x=>x.id===pid);if(!p)return;const k=p.knives[ki];k.confirmedAt=new Date().toISOString();});
+  saveInv();render();
+}
+function renderShipping(){
+  const hdr=mainHdr();
+  // Collect all sold post-knives
+  const all=[];
+  S.posts.forEach(p=>p.knives.forEach((k,i)=>{if(k.sold)all.push({p,k,i});}));
+
+  const byStatus=g=>all.filter(({k})=>kShipStatus(k)===g);
+  const ready=byStatus("ready");
+  const shipped=byStatus("shipped");
+  const delivered=byStatus("delivered");
+  const confirmed=byStatus("confirmed");
+
+  if(!all.length){
+    return hdr+`<div class="main"><div class="empty"><div class="empty-ico">📦</div><div class="empty-h">No shipments yet</div><div class="empty-p">Knives you mark as sold in your listings will appear here so you can track shipping and confirm trades.</div></div></div>`;
+  }
+
+  const kHead=({p,k,i})=>{
+    const buyer=k.soldTo?`<span style="color:var(--blue);font-weight:600">u/${esc(k.soldTo)}</span>`:`<span style="color:var(--t3);font-style:italic">No buyer recorded</span>`;
+    const addr=k.shippingAddress?` <span style="color:var(--t3)">· ${esc(fmtAddress(k.shippingAddress))}</span>`:"";
+    return`<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:5px">
+      <div style="font-size:14px;font-weight:700;color:var(--t1)">${esc(k.brand)} ${esc(k.model)}</div>
+      <div style="font-size:13px;font-weight:700;color:var(--greent);white-space:nowrap;flex-shrink:0">${knifePrice(k)}</div>
+    </div>
+    <div style="font-size:12px;color:var(--t2);margin-bottom:10px">${buyer}${addr}</div>`;
+  };
+
+  const CARRIERS=["USPS","UPS","FedEx","DHL","Other"];
+
+  const readyCards=ready.map(({p,k,i})=>`<div class="pc" style="padding:13px 14px;margin-bottom:8px">
+    ${kHead({p,k,i})}
+    <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
+      <select id="carr-${p.id}-${i}" style="font-size:13px;padding:6px 9px;border:.5px solid var(--b2);border-radius:8px;background:var(--surf);color:var(--t1);font-family:var(--font)">
+        ${CARRIERS.map(c=>`<option${(k.trackingCarrier||"USPS")===c?" selected":""}>${c}</option>`).join("")}
+      </select>
+      <input id="trk-${p.id}-${i}" type="text" placeholder="Tracking number" style="flex:1;min-width:150px;font-size:13px;padding:6px 10px;border:.5px solid var(--b2);border-radius:8px;background:var(--surf);color:var(--t1);font-family:var(--font)"/>
+      <button class="btn btn-pri btn-sm" onclick="markShipped('${p.id}',${i})">📬 Mark Shipped</button>
+      ${k.shippingAddress?`<button class="btn btn-pu btn-sm" onclick="openPirateShip('${p.id}',${i})">🚢 PirateShip</button>`:""}
+    </div>
+  </div>`).join("");
+
+  const shippedCards=shipped.map(({p,k,i})=>{
+    const url=trackingUrl(k.trackingCarrier||"USPS",k.trackingNumber);
+    return`<div class="pc" style="padding:13px 14px;margin-bottom:8px">
+      ${kHead({p,k,i})}
+      <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
+        <span style="font-size:12px;font-weight:600;background:var(--bluebg);color:var(--bluet);padding:4px 10px;border-radius:20px;font-family:monospace">${esc(k.trackingCarrier||"USPS")} · ${esc(k.trackingNumber)}</span>
+        ${url?`<a href="${url}" target="_blank" rel="noopener" class="btn btn-sec btn-sm" style="text-decoration:none">🔗 Track Package</a>`:""}
+        <button class="btn btn-gn btn-sm" onclick="markDelivered('${p.id}',${i})">✅ Mark Delivered</button>
+      </div>
+      ${k.shippedAt?`<div style="font-size:11px;color:var(--t3);margin-top:7px">Shipped ${fmtD(k.shippedAt)}</div>`:""}
+    </div>`;
+  }).join("");
+
+  const deliveredCards=delivered.map(({p,k,i})=>{
+    const ccKey=`cc_${p.id}_${i}`;
+    const ccCopied=S.copied===ccKey;
+    return`<div class="pc" style="padding:13px 14px;margin-bottom:8px">
+      ${kHead({p,k,i})}
+      <div style="font-size:12px;font-weight:600;background:var(--greenbg);color:var(--greent);padding:8px 12px;border-radius:9px;margin-bottom:10px">
+        🎉 Delivered${k.deliveredAt?" on "+fmtD(k.deliveredAt):""}! Post in the Confirmed Trade Thread to complete the swap.
+      </div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap">
+        <button class="btn btn-sm${ccCopied?" btn-gn":" btn-pu"}" onclick="copyConfirmComment('${p.id}',${i})">${ccCopied?"✓ Copied!":"📋 Copy Confirm Comment"}</button>
+        <button class="btn btn-sec btn-sm" onclick="markConfirmedTrade('${p.id}',${i})">🤝 Mark Confirmed</button>
+      </div>
+      <div style="font-size:11px;color:var(--t3);margin-top:7px;line-height:1.5">Post in the <a href="https://www.reddit.com/r/Knife_Swap/search/?q=Confirmed+Trade+Thread&restrict_sr=1&sort=new&type=link" target="_blank" rel="noopener" style="color:var(--blue);font-weight:600;text-decoration:none">Confirmed Trade Thread ↗</a> · buyer replies "Confirmed" to complete</div>
+    </div>`;
+  }).join("");
+
+  const confirmedCards=confirmed.map(({p,k,i})=>`<div class="pc" style="padding:11px 14px;margin-bottom:8px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:20px">🤝</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700;color:var(--t2)">${esc(k.brand)} ${esc(k.model)}</div>
+        <div style="font-size:12px;color:var(--t3)">${k.soldTo?"u/"+esc(k.soldTo)+" · ":""}${knifePrice(k)}${k.confirmedAt?" · Confirmed "+fmtD(k.confirmedAt):""}</div>
+      </div>
+      <span style="font-size:11px;font-weight:600;color:var(--greent);background:var(--greenbg);padding:3px 9px;border-radius:20px;white-space:nowrap;flex-shrink:0">✓ Confirmed</span>
+    </div>
+  </div>`).join("");
+
+  const section=(title,cards,count)=>count?`
+    <div style="margin-bottom:24px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <span class="sec-lbl" style="margin:0">${title}</span>
+        <span style="font-size:11px;font-weight:600;color:var(--t4);background:rgba(0,0,0,.07);padding:1px 8px;border-radius:10px">${count}</span>
+      </div>
+      ${cards}
+    </div>`:"";
+
+  const statsBar=`<div class="stats" style="margin-bottom:16px">
+    <div class="stat"><div class="stat-n orange">${ready.length}</div><div class="stat-l">Ready to Ship</div></div>
+    <div class="stat"><div class="stat-n blue">${shipped.length}</div><div class="stat-l">In Transit</div></div>
+    <div class="stat"><div class="stat-n green">${delivered.length}</div><div class="stat-l">Delivered</div></div>
+    <div class="stat"><div class="stat-n purple">${confirmed.length}</div><div class="stat-l">Confirmed</div></div>
+  </div>`;
+
+  return hdr+`<div class="main">
+    ${statsBar}
+    ${section("📦 Ready to Ship",readyCards,ready.length)}
+    ${section("🚚 In Transit",shippedCards,shipped.length)}
+    ${section("✅ Delivered — Ready to Confirm",deliveredCards,delivered.length)}
+    ${section("🤝 Confirmed",confirmedCards,confirmed.length)}
+  </div>`;
+}
+
 function renderRoll(){
   const inv=S.inventory;
   const hdr=mainHdr();
@@ -2517,7 +2658,7 @@ window.startMove=startMove;window.cancelMove=cancelMove;window.executeMove=execu
 window.updateModelList=updateModelList;window.autoFillInput=autoFillInput;window.saveSettings=saveSettings;
 window.triggerUpload=triggerUpload;window.handleFileInput=handleFileInput;window.handleDrop=handleDrop;window.handleDragOver=handleDragOver;window.handleDragLeave=handleDragLeave;window.removeUpload=removeUpload;
 window.triggerKnifeUpload=triggerKnifeUpload;window.handleKnifeFileInput=handleKnifeFileInput;window.removeKnifeUpload=removeKnifeUpload;window.addKnifePhotoUrl=addKnifePhotoUrl;
-window.confirmSoldFlow=confirmSoldFlow;window.cancelSoldFlow=cancelSoldFlow;window.copyConfirmComment=copyConfirmComment;window.buildConfirmComment=buildConfirmComment;window.copyDibsMessage=copyDibsMessage;window.buildDibsMessage=buildDibsMessage;window.lookupZip=lookupZip;window.copyShippingAddress=copyShippingAddress;window.openPirateShip=openPirateShip;window.fmtAddress=fmtAddress;
+window.confirmSoldFlow=confirmSoldFlow;window.cancelSoldFlow=cancelSoldFlow;window.copyConfirmComment=copyConfirmComment;window.buildConfirmComment=buildConfirmComment;window.copyDibsMessage=copyDibsMessage;window.buildDibsMessage=buildDibsMessage;window.lookupZip=lookupZip;window.copyShippingAddress=copyShippingAddress;window.openPirateShip=openPirateShip;window.fmtAddress=fmtAddress;window.markShipped=markShipped;window.markDelivered=markDelivered;window.markConfirmedTrade=markConfirmedTrade;window.kShipStatus=kShipStatus;
 window.markPending=markPending;window.markInvPending=markInvPending;
 window.sendMagicLink=sendMagicLink;window.signOut=signOut;window.deleteAccount=deleteAccount;window.migrateToSupabase=migrateToSupabase;window.skipMigrate=skipMigrate;
 window.renderTutorialModal=renderTutorialModal;window.renderAboutModal=renderAboutModal;window.renderCloudinaryModal=renderCloudinaryModal;window.renderCloudinaryStatus=renderCloudinaryStatus;
