@@ -154,6 +154,17 @@ textarea{resize:vertical;line-height:1.55}
 .ts-inline-row{display:flex;gap:8px;margin-top:4px}
 .ts-inline-input{flex:1;background:var(--card);border:.5px solid var(--b1);border-radius:7px;padding:7px 11px;font-size:12.5px;color:var(--t1);outline:none}
 .ts-inline-input:focus{border-color:var(--acc)}
+/* ─── Completion Checklist ─── */
+.cl{background:var(--card);border:.5px solid var(--b1);border-radius:var(--rs);padding:12px 14px;margin:12px 0 4px}
+.cl-hdr{font-size:10.5px;font-weight:700;color:var(--t4);letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px}
+.cl-items{display:flex;flex-direction:column;gap:5px}
+.cl-item{display:flex;align-items:flex-start;gap:7px;font-size:12.5px;color:var(--t3)}
+.cl-item.ok{color:var(--greent)}
+.cl-check{font-size:11px;width:16px;flex-shrink:0;font-weight:700;margin-top:1px}
+.cl-check.ok{color:var(--greent)}.cl-check.fail{color:var(--redt)}
+.cl-label{flex:1;line-height:1.4}
+.cl-all-good{font-size:11.5px;color:var(--greent);font-weight:600;margin-top:8px;padding-top:8px;border-top:.5px solid var(--b2)}
+.btn-gen:disabled,.btn-gen[disabled]{opacity:.4;cursor:not-allowed;pointer-events:none}
 button:disabled{opacity:.35;cursor:not-allowed}
 .pc-meta{display:flex;gap:10px;margin-bottom:11px;flex-wrap:wrap}
 .pmeta{font-size:11px;font-weight:500;color:var(--t4)}
@@ -1522,10 +1533,12 @@ function syncDraft(){
 function submitPost(){
   syncDraft();const d=S.draft;
   if(d.knives.length===0){S.err="Add at least one knife.";render();return;}
+  if((d.photos||[]).filter(Boolean).length===0){S.err="A timestamp photo is required before generating your post.";render();return;}
   if(d.payment.includes("Other")&&!d.paymentOther.trim()){S.err="Please specify your 'Other' payment method.";render();return;}
   if(d.noShip.includes("Other")&&!d.noShipOther.trim()){S.err="Please specify the 'Other' no-ship location.";render();return;}
   if(!d.rulesConfirmed){S.err="Please confirm you have read the r/Knife_Swap rules.";render();return;}
   if(d.bundleEnabled&&!String(d.bundlePrice||"").trim()){S.err="Enter a bundle price or uncheck the bundle offer.";render();return;}
+  const cl=composeChecklist(d);if(!cl.canPost){S.err="Complete all checklist items before generating.";render();return;}
   S.err="";
   const post={id:gid(),createdAt:new Date().toISOString(),variant:0,...JSON.parse(JSON.stringify(d))};
   post.postText=buildPost(post,0);
@@ -2367,12 +2380,12 @@ function kfFormHtml(){
     prPanel=`<div class="pr-panel"><div style="padding:10px 12px;font-size:12px;color:var(--t3)">Couldn't load inline — opened Reddit search in a new tab.</div></div>`;
   }
   return`<div class="kf" style="margin-top:10px"><div class="kf-hdr"><div class="kf-title">${s.kfIdx>=0?"Edit Knife":(isLock?"Add to The Roll":"Add a Knife")}</div>${badge}</div>
-    <div class="fr2" style="margin-bottom:11px"><div class="field"><label>Brand</label><input type="text" id="kf-brand" list="dl-brands" value="${esc(f.brand)}" placeholder="e.g. Spyderco" oninput="updateModelList()" onkeydown="if(event.key==='Enter'&&!event.isComposing){event.preventDefault();autoFillInput('kf-brand','dl-brands');updateModelList();}"/></div><div class="field"><label>Model</label><input type="text" id="kf-model" list="dl-models" value="${esc(f.model)}" placeholder="e.g. Para 3 LW" onkeydown="if(event.key==='Enter'&&!event.isComposing){event.preventDefault();autoFillInput('kf-model','dl-models');}"/></div></div>
-    <div class="fr2" style="margin-bottom:11px"><div class="field"><label>Steel</label><input type="text" id="kf-steel" list="dl-steels" value="${esc(f.steel)}" placeholder="e.g. M390" onkeydown="if(event.key==='Enter'&&!event.isComposing){event.preventDefault();autoFillInput('kf-steel','dl-steels');}"/></div><div class="field"><label>Condition</label><select id="kf-bladeCondition">${BLADE_COND.map(v=>`<option${f.bladeCondition===v?" selected":""}>${v}</option>`).join("")}</select></div></div>
+    <div class="fr2" style="margin-bottom:11px"><div class="field"><label>Brand</label><input type="text" id="kf-brand" list="dl-brands" value="${esc(f.brand)}" placeholder="e.g. Spyderco" oninput="updateModelList()" onblur="syncKF();render()" onkeydown="if(event.key==='Enter'&&!event.isComposing){event.preventDefault();autoFillInput('kf-brand','dl-brands');updateModelList();}"/></div><div class="field"><label>Model</label><input type="text" id="kf-model" list="dl-models" value="${esc(f.model)}" placeholder="e.g. Para 3 LW" onblur="syncKF();render()" onkeydown="if(event.key==='Enter'&&!event.isComposing){event.preventDefault();autoFillInput('kf-model','dl-models');}"/></div></div>
+    <div class="fr2" style="margin-bottom:11px"><div class="field"><label>Steel</label><input type="text" id="kf-steel" list="dl-steels" value="${esc(f.steel)}" placeholder="e.g. M390" onblur="syncKF();render()" onkeydown="if(event.key==='Enter'&&!event.isComposing){event.preventDefault();autoFillInput('kf-steel','dl-steels');}"/></div><div class="field"><label>Condition</label><select id="kf-bladeCondition">${BLADE_COND.map(v=>`<option${f.bladeCondition===v?" selected":""}>${v}</option>`).join("")}</select></div></div>
     <div class="kf-type-sel"><button class="kf-type-btn${kt==="WTS"?" on wts":""}" onclick="syncKF();S.kf.knifeType='WTS';render()">WTS - For Sale</button><button class="kf-type-btn${kt==="WTT"?" on wtt":""}" onclick="syncKF();S.kf.knifeType='WTT';render()">WTT - For Trade</button><button class="kf-type-btn${kt==="WTS/WTT"?" on wtstt":""}" onclick="syncKF();S.kf.knifeType='WTS/WTT';render()">WTS/WTT - Both</button></div>
     <div class="fr2" style="margin-bottom:13px">
-      ${kt!=="WTT"?`<div class="field"><label>Sale Price / SV ($)</label><input type="number" id="kf-price" value="${esc(f.price)}" placeholder="175" min="0"/></div>`:`<div></div>`}
-      ${kt!=="WTS"?`<div class="field"><label>Trade Value / TV ($)</label><input type="number" id="kf-tradeValue" value="${esc(f.tradeValue||"")}" placeholder="175" min="0"/></div>`:`<div class="field" style="display:flex;align-items:flex-end;padding-bottom:10px"><label class="cblk"><input type="checkbox" ${f.obo?"checked":""} onchange="S.kf.obo=this.checked"/> OBO</label></div>`}
+      ${kt!=="WTT"?`<div class="field"><label>Sale Price / SV ($)</label><input type="number" id="kf-price" value="${esc(f.price)}" placeholder="175" min="0" onblur="syncKF();render()"/></div>`:`<div></div>`}
+      ${kt!=="WTS"?`<div class="field"><label>Trade Value / TV ($)</label><input type="number" id="kf-tradeValue" value="${esc(f.tradeValue||"")}" placeholder="175" min="0" onblur="syncKF();render()"/></div>`:`<div class="field" style="display:flex;align-items:flex-end;padding-bottom:10px"><label class="cblk"><input type="checkbox" ${f.obo?"checked":""} onchange="S.kf.obo=this.checked"/> OBO</label></div>`}
     </div>
     ${kt==="WTS"?"":`<div style="margin-bottom:11px;margin-top:-6px"><label class="cblk"><input type="checkbox" ${f.obo?"checked":""} onchange="S.kf.obo=this.checked"/> OBO on prices</label></div>`}
     <div class="field" style="margin-bottom:11px">
@@ -2394,8 +2407,9 @@ function kfFormHtml(){
         ${s.kfUploads.map((u,ui)=>{const isImg=u.url&&/\.(jpg|jpeg|png|gif|webp|avif)(\?|$)/i.test(u.url);return`<div style="display:flex;align-items:center;gap:5px;font-size:11px;padding:4px 8px;background:var(--bg);border:.5px solid var(--b2);border-radius:6px;max-width:220px">${isImg?`<img class="up-thumb" style="width:26px;height:26px" src="${esc(u.url)}" alt="" loading="lazy"/>`:""}${u.uploading?`<span style="color:var(--t4)">uploading...</span>`:u.error?`<span style="color:var(--redt);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(u.error)}</span>`:`<a href="${esc(u.url)}" target="_blank" style="color:var(--blue);text-decoration:none;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(u.name)}</a>`}${u.url&&!u.uploading?`<button class="up-reorder" onclick="reorderKnifeUpload(${ui},-1)" ${ui===0?"disabled":""}>↑</button><button class="up-reorder" onclick="reorderKnifeUpload(${ui},1)" ${ui===s.kfUploads.length-1?"disabled":""}>↓</button>`:""}${!u.uploading?`<button onclick="removeKnifeUpload('${u.uid}')" style="background:none;border:none;color:var(--t4);cursor:pointer;padding:0;font-size:12px;line-height:1">&times;</button>`:""}</div>`;}).join("")}
       </div>
     </div>
+    ${kfChecklist(f)}
     ${s.err?`<div class="err">${esc(s.err)}</div>`:""}
-    <div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-pri" onclick="saveKF()">Done - ${s.kfIdx>=0?"Update":"Add"} Knife</button><button class="btn btn-sec" onclick="closeKF()">Cancel</button></div>
+    <div style="display:flex;gap:8px;margin-top:10px"><button class="btn btn-pri" onclick="saveKF()">Done - ${s.kfIdx>=0?"Update":"Add"} Knife</button><button class="btn btn-sec" onclick="closeKF()">Cancel</button></div>
   </div>`;
 }
 
@@ -2773,6 +2787,46 @@ function renderSold(){
   return hdr+`<div class="main">${stats}${completedSection}${historySection}</div>`;
 }
 
+/// ─── CHECKLISTS ───────────────────────────────────────────────
+function kfChecklist(f){
+  const kt=f.knifeType||"WTS";
+  const items=[
+    {ok:!!(f.brand&&f.brand.trim()),label:"Brand / Make"},
+    {ok:!!(f.model&&f.model.trim()),label:"Model"},
+    {ok:!!(f.steel&&f.steel.trim()),label:"Steel type"},
+  ];
+  if(kt==="WTS"||kt==="WTS/WTT") items.push({ok:!!(f.price&&parseFloat(f.price)>0),label:"Asking price (SV)"});
+  if(kt==="WTT"||kt==="WTS/WTT") items.push({ok:!!(f.tradeValue&&parseFloat(f.tradeValue)>0),label:"Trade value (TV)"});
+  items.push({ok:(f.photos||[]).filter(Boolean).length>0,label:"Knife photos"});
+  const allOk=items.every(i=>i.ok);
+  const rows=items.map(it=>`<div class="cl-item${it.ok?" ok":""}"><span class="cl-check ${it.ok?"ok":"fail"}">${it.ok?"✓":"○"}</span><span class="cl-label">${it.label}</span></div>`).join("");
+  return`<div class="cl"><div class="cl-hdr">Knife checklist</div><div class="cl-items">${rows}</div>${allOk?`<div class="cl-all-good">✓ Knife ready to add</div>`:""}</div>`;
+}
+
+function composeChecklist(d){
+  const knifeProblems=[];
+  d.knives.forEach((k,i)=>{
+    const kt=k.knifeType||"WTS";
+    const n=d.knives.length>1?`Knife ${i+1}`:"Knife";
+    if(!k.brand?.trim()||!k.model?.trim()) knifeProblems.push(`${n}: missing brand/model`);
+    if(!k.steel?.trim()) knifeProblems.push(`${n}: missing steel`);
+    if((kt==="WTS"||kt==="WTS/WTT")&&!(parseFloat(k.price)>0)) knifeProblems.push(`${n}: missing asking price`);
+    if((kt==="WTT"||kt==="WTS/WTT")&&!(parseFloat(k.tradeValue)>0)) knifeProblems.push(`${n}: missing trade value`);
+    if(!(k.photos||[]).filter(Boolean).length) knifeProblems.push(`${n}: no photos`);
+  });
+  const items=[
+    {ok:d.knives.length>0,label:"At least one knife added"},
+    {ok:knifeProblems.length===0,label:knifeProblems.length===0?"All knife details complete":knifeProblems[0]+(knifeProblems.length>1?` (+${knifeProblems.length-1} more)`:"")},
+    {ok:(d.photos||[]).filter(Boolean).length>0,label:"Timestamp photo linked"},
+    {ok:d.payment.length>0,label:"Payment method selected"},
+    {ok:!!d.rulesConfirmed,label:"r/Knife_Swap rules confirmed"},
+  ];
+  const allOk=items.every(i=>i.ok);
+  const rows=items.map(it=>`<div class="cl-item${it.ok?" ok":""}"><span class="cl-check ${it.ok?"ok":"fail"}">${it.ok?"✓":"✗"}</span><span class="cl-label">${it.label}</span></div>`).join("");
+  const html=`<div class="cl"><div class="cl-hdr">Post checklist — all required to generate</div><div class="cl-items">${rows}</div>${allOk?`<div class="cl-all-good">✓ Ready to generate your post</div>`:""}</div>`;
+  return{html,canPost:allOk};
+}
+
 // ─── RENDER: COMPOSE ─────────────────────────────────────────
 function renderCompose(){
   const s=S;const d=s.draft;
@@ -2850,8 +2904,7 @@ function renderCompose(){
     ${d.postType.includes("WTT")?`<div class="field" style="margin-bottom:12px"><label>Trade Interests <span style="font-weight:400;color:var(--t4);font-size:11px">— what are you looking for?</span></label><input type="text" id="d-tradeInterests" value="${esc(d.tradeInterests||"")}" placeholder="Spyderco Para 3, Benchmade Bugout, CRK Sebenza..." oninput="syncDraft()"/><div class="field-hint">Will appear in the generated post under "Trade Interests:"</div></div>`:`<input type="hidden" id="d-tradeInterests" value="${esc(d.tradeInterests||"")}"/>`}
     ${d.knives.length>1?`<div class="bundle-box" style="margin-bottom:14px"><div class="bundle-box-top"><label class="cblk"><input type="checkbox" ${d.bundleEnabled?"checked":""} onchange="syncDraft();S.draft.bundleEnabled=this.checked;render()"/> Bundle pricing</label><span style="font-size:11px;color:var(--t3)">Offer one price for the entire lot</span></div>${d.bundleEnabled?`<div class="field" style="margin-top:8px"><label>Bundle price ($)</label><input type="number" id="d-bundlePrice" min="0" value="${esc(d.bundlePrice||"")}" placeholder="e.g. 350" oninput="syncDraft()"/></div>`:""}</div>`:""}
     <label class="cblk"><input type="checkbox" ${d.rulesConfirmed?"checked":""} onchange="S.draft.rulesConfirmed=this.checked;render()"/> I have read all r/Knife_Swap rules</label>
-    ${s.err&&d.knives.length>0?`<div class="err">${esc(s.err)}</div>`:""}
-    <div class="gen-row"><button class="btn-gen" onclick="syncDraft();submitPost()">Generate Post</button><button class="btn btn-sec" onclick="cancelCompose()">Cancel</button></div>
+    ${(()=>{const cl=composeChecklist(d);return cl.html+(s.err&&d.knives.length>0?`<div class="err">${esc(s.err)}</div>`:"")+`<div class="gen-row"><button class="btn-gen"${cl.canPost?"":" disabled"} onclick="syncDraft();submitPost()">Generate Post</button><button class="btn btn-sec" onclick="cancelCompose()">Cancel</button></div>`;})()}
   </div>`:"";
   const hdr=`<div class="hdr"><div class="hdr-logo" onclick="S.view='list';render()"><div class="hdr-ico"><span class="hdr-ico-lbl">KS</span></div><div><div class="hdr-title">New Listing</div><div class="hdr-sub">${d.knives.length===0?"Add knives below":d.knives.length===1?"1 knife":d.knives.length+" knives"}</div></div></div><div class="hdr-r"><button class="btn-hdr-ghost" onclick="cancelCompose()">Cancel</button></div></div>`;
   return`<div class="app">${hdr}<div class="cmp-main"><div class="sec-lbl">Knives</div>${knivesList}${addBtns}${kfHtml}${detHtml}</div></div>`;
