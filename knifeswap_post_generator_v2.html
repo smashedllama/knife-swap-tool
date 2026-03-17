@@ -1072,7 +1072,7 @@ async function doFetchPriceResearch(forceRefresh){
     // Use Reddit's new search endpoint (sort=new gets most recent listings first)
     const url="https://www.reddit.com/r/Knife_Swap/search.json?q="+encodeURIComponent(searchQ)+"&sort=new&restrict_sr=on&limit="+limit+"&t=all";
     try{
-      const res=await fetch(url,{headers:{"Accept":"application/json"},signal:ctrl.signal});
+      const res=await fetch(url,{signal:ctrl.signal});
       if(!res.ok)throw new Error("HTTP "+res.status);
       return (await res.json()).data?.children||[];
     }finally{clearTimeout(tid);}
@@ -1175,8 +1175,7 @@ async function doFetchPriceResearch(forceRefresh){
     // Cache successful results for 2 hours
     if(posts.length)try{localStorage.setItem(cacheKey,JSON.stringify({ts:Date.now(),data:S.priceResearch}));}catch(e){}
   }catch(e){
-    S.priceResearch={status:"fallback",results:[],query:qBase};
-    window.open("https://www.reddit.com/r/Knife_Swap/search/?q="+encodeURIComponent(qSearch)+"&sort=new&restrict_sr=1","_blank","noopener");
+    S.priceResearch={status:"fallback",results:[],query:qBase,fallbackUrl:"https://www.reddit.com/r/Knife_Swap/search/?q="+encodeURIComponent(qSearch)+"&sort=new&restrict_sr=1"};
   }
   render();
 }
@@ -1831,6 +1830,10 @@ function render(){
   updateModelList();
   // Tour spotlight: fixed-position ring overlay so overflow:hidden on parents never clips it
   const oldRing=document.getElementById('__tour_ring__');if(oldRing)oldRing.remove();
+  // Cancel token: increment on every render so stale setTimeout callbacks from previous
+  // steps bail out and never draw a ghost ring on top of the current step's ring.
+  if(!window._ringEpoch)window._ringEpoch=0;
+  const myEpoch=++window._ringEpoch;
   if(S.tour!=null){
     const step=TOUR_STEPS[S.tour];
     if(step&&step.target){
@@ -1839,6 +1842,7 @@ function render(){
         // Longer delay when knife form just opened (has a .44s unfurl animation)
         const delay=step.kfOpen?520:250;
         setTimeout(()=>{
+          if(window._ringEpoch!==myEpoch)return; // stale — a newer render already ran
           const el2=document.querySelector(step.target);
           if(!el2)return;
           // Instant scroll is synchronous — measure right after, no nested timeout needed
@@ -2483,7 +2487,7 @@ function kfFormHtml(){
     const filterToggle=`<button onclick="S.priceFilter=S.priceFilter==='sold'?'all':'sold';render()" style="font-size:10.5px;font-weight:600;padding:2px 9px;border-radius:20px;border:.5px solid var(--b2);background:${showAll?"var(--bluebg)":"var(--bg)"};color:${showAll?"var(--bluet)":"var(--t3)"};cursor:pointer;white-space:nowrap">${showAll?"All listings":"Sold only"}</button>`;
     prPanel=`<div class="pr-panel"><div class="pr-panel-hdr"><span>${hdrLabel} ${cacheAgo}</span><div style="display:flex;gap:6px;align-items:center">${filterToggle}<button onclick="syncKF();doFetchPriceResearch(true)" style="background:none;border:none;cursor:pointer;color:var(--t4);font-size:11px;padding:0;white-space:nowrap" title="Force fresh search">🔄</button><button onclick="clearPriceResearch()" style="background:none;border:none;cursor:pointer;color:var(--t4);font-size:13px;padding:0">&#x2715;</button></div></div>${soldSection}${activeSection}${noResults}</div>`;
   }else if(pr.status==="fallback"){
-    prPanel=`<div class="pr-panel"><div style="padding:10px 12px;font-size:12px;color:var(--t3)">Couldn't load inline — opened Reddit search in a new tab.</div></div>`;
+    prPanel=`<div class="pr-panel"><div style="padding:10px 12px;font-size:12px;color:var(--t3);display:flex;align-items:center;gap:8px">⚠️ Couldn't load inline. <a href="${esc(pr.fallbackUrl||"https://www.reddit.com/r/Knife_Swap/search")}" target="_blank" rel="noopener" style="color:var(--blue);font-weight:600;text-decoration:none">Search Reddit manually →</a></div></div>`;
   }
   return`<div class="kf" style="margin-top:10px"><div class="kf-hdr"><div class="kf-title">${s.kfIdx>=0?"Edit Knife":(isLock?"Add to The Roll":"Add a Knife")}</div>${badge}</div>
     <div class="fr2" style="margin-bottom:11px"><div class="field"><label>Brand</label><input type="text" id="kf-brand" list="dl-brands" value="${esc(f.brand)}" placeholder="e.g. Spyderco" oninput="updateModelList()" onblur="syncKF();render()" onkeydown="if(event.key==='Enter'&&!event.isComposing){event.preventDefault();autoFillInput('kf-brand','dl-brands');updateModelList();}"/></div><div class="field"><label>Model</label><input type="text" id="kf-model" list="dl-models" value="${esc(f.model)}" placeholder="e.g. Para 3 LW" onblur="syncKF();render()" onkeydown="if(event.key==='Enter'&&!event.isComposing){event.preventDefault();autoFillInput('kf-model','dl-models');}"/></div></div>
@@ -2927,8 +2931,8 @@ const TOUR_STEPS=[
    nav:s=>{s.view='roll';s.modal=null;_tourOpenKnife(s);}},
 
   {icon:"📝",title:"Your Generated Listing",
-   body:"Here's the demo listing with all 3 knives already loaded. Expand it to see the auto-generated post text. Four templates available — Detailed, Compact, Minimal, and Table. Hit Switch to cycle between them anytime.",
-   target:'.pc',
+   body:"Here's the auto-generated Reddit post — every knife, price, payment method, and shipping note filled in automatically. Four templates available: Detailed, Compact, Minimal, and Table. Hit Switch to cycle between them anytime.",
+   target:'.post-box',
    nav:s=>{s.view='list';s.expanded=TOUR_DEMO_ID;s.kfOpen=false;s.modal=null;}},
 
   {icon:"🛡️",title:"Auto Rule Checker",
@@ -2937,8 +2941,8 @@ const TOUR_STEPS=[
    nav:s=>{s.view='list';s.expanded=TOUR_DEMO_ID;s.kfOpen=false;s.modal=null;}},
 
   {icon:"📸",title:"Timestamp — Required Before Posting",
-   body:"Every post needs a timestamp photo: your knives with your username + today's date handwritten. No timestamp = no post. Paste the URL right here in the input field to unlock the listing instantly.",
-   target:'.ts-gate',
+   body:"Every r/Knife_Swap post must include a timestamp photo: your knives with your username and today's date handwritten on paper. The demo already has one linked — that's what made the Timestamp tag go green. Without it, the tag turns red and the post is locked.",
+   target:'.rule-tags',
    nav:s=>{s.view='list';s.expanded=TOUR_DEMO_ID;s.kfOpen=false;s.modal=null;}},
 
   {icon:"🚀",title:"Copy Post & Pre-flight Check",
@@ -2980,6 +2984,8 @@ function startTour(){
     bugoutId=S.inventory.find(k=>k._tourDemo&&k.model.includes("Bugout"))?.id||'__td_bugout__';
     sebaId=S.inventory.find(k=>k._tourDemo&&k.model.includes("Sebenza"))?.id||'__td_seba__';
   }
+  // Demo timestamp — a real imgur image so the post text is visible (not blocked by gate)
+  const DEMO_TS_URL="https://i.imgur.com/demo_timestamp.jpg";
   // Inject demo listing (if not already there)
   const hasDemoPost=S.posts.some(p=>p.id===TOUR_DEMO_ID);
   if(!hasDemoPost){
@@ -3005,7 +3011,7 @@ function startTour(){
       knives:[demoPm2K,demoBugoutK,demoSebaK],
       payment:["PayPal G&S","Venmo"],
       paymentOther:"",noShip:[],noShipOther:"",
-      repost:false,photos:[],  // no timestamp — to show the warning + inline input
+      repost:false,photos:[DEMO_TS_URL],  // demo timestamp so post text is visible
       notes:"Demo listing — created by the interactive tour",
       rulesConfirmed:false,bundleEnabled:false,bundlePrice:"",
       tradeInterests:"Hinderer XM-18, Microtech Ultratech",
@@ -3013,6 +3019,26 @@ function startTour(){
     };
     demoPost.postText=buildPost(demoPost,0);
     S.posts=[demoPost,...S.posts];
+  }
+  // Always patch existing demo post to ensure correct state on every tour start
+  const existingDemo=S.posts.find(p=>p.id===TOUR_DEMO_ID);
+  if(existingDemo){
+    // Ensure timestamp URL present so post text renders (not blocked by gate)
+    if(!existingDemo.photos.includes(DEMO_TS_URL)){
+      existingDemo.photos=[DEMO_TS_URL,...existingDemo.photos.filter(u=>u!==DEMO_TS_URL)];
+      existingDemo.postText=buildPost(existingDemo,existingDemo.variant||0);
+    }
+    // Ensure Bugout is sold for shipping step
+    const bugoutK=existingDemo.knives.find(k=>k.inventoryId===bugoutId||k.brand==="Benchmade");
+    if(bugoutK&&!bugoutK.sold){
+      const now3=new Date().toISOString();
+      Object.assign(bugoutK,{sold:true,soldAt:now3,soldTo:"ExampleBuyer99",
+        shippingAddress:{name:"Alex Johnson",line1:"456 Oak Ave",line2:"Apt 3B",city:"Austin",state:"TX",zip:"78701"},
+        trackingNumber:null,trackingCarrier:"USPS"});
+    }
+    // Sync Bugout inventory status
+    const bugoutInv2=S.inventory.find(k=>k.id===bugoutId||(k._tourDemo&&k.model.includes("Bugout")));
+    if(bugoutInv2&&bugoutInv2.status!=="sold")bugoutInv2.status="sold";
   }
   saveInv();save();
   S.tour=0;
