@@ -1938,20 +1938,18 @@ function addTimestampInline(pid){
 async function copyFromPreflight(pid){
   const p=S.posts.find(x=>x.id===pid);if(!p)return;
   try{await navigator.clipboard.writeText(p.postText||"");}catch(e){}
-  localStorage.setItem("ks-rules-confirmed","1");
-  S.copied=pid;S.modal=null;S.preflight=null;render();
+  S.copied=pid;S.modal=null;S.preflight=null;S.rulesConfirmed=false;render();
   setTimeout(()=>{if(S.copied===pid){S.copied=null;render();}},2000);
 }
 async function openRedditFromPreflight(pid){
-  localStorage.setItem("ks-rules-confirmed","1");
-  S.modal=null;S.preflight=null;render();
+  S.modal=null;S.preflight=null;S.rulesConfirmed=false;render();
   await openRedditPost(pid);
 }
 function renderPreflightModal(){
   const pid=S.preflight;if(!pid)return"";
   const p=S.posts.find(x=>x.id===pid);if(!p)return"";
   const rules=checkPostRules(pid);
-  const rulesConfirmed=localStorage.getItem("ks-rules-confirmed")==="1";
+  const rulesConfirmed=!!S.rulesConfirmed;
   // All failures are hard — timestamp is required
   const hardFails=rules.filter(r=>!r.ok);
   const canPost=hardFails.length===0&&rulesConfirmed;
@@ -1984,7 +1982,7 @@ function renderPreflightModal(){
       ${checkRows}
       <div style="padding:12px 0 4px">
         <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer">
-          <input type="checkbox" ${rulesConfirmed?"checked":""} onchange="localStorage.setItem('ks-rules-confirmed',this.checked?'1':'0');render()" style="width:16px;height:16px;margin-top:2px;flex-shrink:0;cursor:pointer"/>
+          <input type="checkbox" ${rulesConfirmed?"checked":""} onchange="S.rulesConfirmed=this.checked;render()" style="width:16px;height:16px;margin-top:2px;flex-shrink:0;cursor:pointer"/>
           <span style="font-size:13px;color:var(--t1);line-height:1.5">I've read the <a href="https://www.reddit.com/r/Knife_Swap/wiki/rules" target="_blank" rel="noopener" style="color:var(--blue);font-weight:600">r/Knife_Swap rules</a> and my post follows them</span>
         </label>
       </div>
@@ -2317,7 +2315,7 @@ function renderTutorialModal(){
        <li>✅ Shipping info is mentioned</li>
      </ul>
      You also confirm you've read the r/Knife_Swap rules. Nothing copies until everything checks out. If the timestamp is missing you can paste it right in the modal.`)}
-     ${tip("Rules checkbox","Once you confirm the rules checkbox, it stays checked across all future posts. You only need to do it once.")}`},
+     ${tip("Rules checkbox","You must check the rules confirmation box on every post. It resets each time so you are always confirming your post follows the subreddit rules.")}`},
     // 9 — Dibs message
     {phase:"Selling",icon:"💬",title:"When Someone Yolos",
      body:`When a buyer calls dibs or yolos, hit ${chip("📬 Payment Info")} on that knife row. It copies a complete payment message to your clipboard, ready to paste into Reddit DMs.
