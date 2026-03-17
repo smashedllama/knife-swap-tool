@@ -1508,9 +1508,10 @@ function buildConfirmComment(pid,ki){
   const type=p.postType||"[WTS]";
   const kStr=`${k.brand} ${k.model}${k.steel?" ("+k.steel+")":""}`;
   const buyer=k.soldTo?`u/${k.soldTo}`:"u/[add buyer username]";
-  if(type==="[WTT]"){const tv=k.tradeValue?` (TV: $${k.tradeValue})`:"";return`Traded ${kStr}${tv} with ${buyer}. Smooth transaction, highly recommend!`;}
+  const seller=SETTINGS.username?`u/${SETTINGS.username}`:"u/[your username]";
+  if(type==="[WTT]"){const tv=k.tradeValue?` (TV: $${k.tradeValue})`:"";return`u/ksbot traded ${seller} and ${buyer}\n\nTraded ${kStr}${tv} with ${buyer}. Smooth transaction, highly recommend!`;}
   const price=k.price?` for $${k.price}`:"";
-  return`Sold ${kStr}${price} to ${buyer}. Smooth transaction, highly recommend!`;
+  return`u/ksbot sold ${seller} and ${buyer}\n\nSold ${kStr}${price} to ${buyer}. Smooth transaction, highly recommend!`;
 }
 async function copyConfirmComment(pid,ki){
   const txt=buildConfirmComment(pid,ki);if(!txt)return;
