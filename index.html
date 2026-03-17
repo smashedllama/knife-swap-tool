@@ -393,6 +393,15 @@ button:disabled{opacity:.35;cursor:not-allowed}
 .bundle-box{background:var(--bg);border:.5px solid var(--b1);border-radius:var(--rs);padding:12px 14px;margin-bottom:14px}
 .bundle-box-top{display:flex;align-items:center;gap:10px}
 .sold-flow{background:var(--greenbg);border-top:.5px solid rgba(52,199,89,.25);padding:12px 14px 13px;animation:sfIn .15s ease}
+.addr-form{margin-top:11px;padding-top:11px;border-top:.5px solid rgba(52,199,89,.25);display:flex;flex-direction:column;gap:7px}
+.addr-form input{font-size:13px;padding:7px 10px;border:.5px solid var(--b2);border-radius:8px;outline:none;background:var(--surf);color:var(--t1);font-family:var(--font);transition:border-color var(--tr)}
+.addr-form input:focus{border-color:var(--blue)}
+.addr-form input.ok{border-color:rgba(52,199,89,.7)}
+.addr-row{display:flex;gap:7px}
+.addr-row input{flex:1}
+.addr-block{padding:10px 14px 11px;background:var(--bluebg);border-top:.5px solid rgba(0,113,227,.12)}
+.addr-text{font-size:12px;color:var(--t2);line-height:1.55;white-space:pre-wrap}
+.addr-acts{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
 /* TITLE PREVIEW */
 .title-prev{font-size:12px;color:var(--t2);background:var(--bg);border:.5px solid var(--b1);border-radius:6px;padding:8px 10px;margin-top:6px;line-height:1.5;word-break:break-word;font-family:var(--mono)}
 .title-prev .t-text{color:var(--t1)}
@@ -545,6 +554,8 @@ button:disabled{opacity:.35;cursor:not-allowed}
   .det{background:var(--card);border-color:rgba(255,255,255,.08)}
   /* Sold flow */
   .sold-flow{background:rgba(48,209,88,.1)}
+  .addr-form input{background:rgba(255,255,255,.07)}
+  .addr-block{background:rgba(10,132,255,.12)}
   /* Auth modal specific */
   .auth-field input{background:#3A3A3C;border-color:rgba(255,255,255,.1)}
   .auth-field input:focus{background:#3A3A3C}
@@ -726,8 +737,8 @@ async function saveSettings(){
 }
 
 // ─── STATE ────────────────────────────────────────────────────
-const EK=()=>({brand:"",model:"",steel:"",price:"",obo:false,knifeType:"WTS",tradeValue:"",sharpened:"No",usedCut:"No",carried:"No",bladeCondition:"Factory edge, carried",owners:"1",centering:"Perfect",lockup:"Solid",lockupNotes:"",issues:["None"],accessories:["None"],notes:"",inventoryId:null,prevPrice:"",photos:[],pending:false,priceHistory:[],comps:[],shippingClass:"Priority"});
-const EI=()=>({id:gid(),brand:"",model:"",steel:"",price:"",obo:false,knifeType:"WTS",tradeValue:"",sharpened:"No",usedCut:"No",carried:"No",bladeCondition:"Factory edge, carried",owners:"1",centering:"Perfect",lockup:"Solid",lockupNotes:"",issues:["None"],accessories:["None"],notes:"",status:"available",addedAt:new Date().toISOString(),soldAt:null,photos:[],pending:false,priceHistory:[],comps:[],shippingClass:"Priority"});
+const EK=()=>({brand:"",model:"",steel:"",price:"",obo:false,knifeType:"WTS",tradeValue:"",sharpened:"No",usedCut:"No",carried:"No",bladeCondition:"Factory edge, carried",owners:"1",centering:"Perfect",lockup:"Solid",lockupNotes:"",issues:["None"],accessories:["None"],notes:"",inventoryId:null,prevPrice:"",photos:[],pending:false,priceHistory:[],comps:[],shippingClass:"Priority",shippingAddress:null});
+const EI=()=>({id:gid(),brand:"",model:"",steel:"",price:"",obo:false,knifeType:"WTS",tradeValue:"",sharpened:"No",usedCut:"No",carried:"No",bladeCondition:"Factory edge, carried",owners:"1",centering:"Perfect",lockup:"Solid",lockupNotes:"",issues:["None"],accessories:["None"],notes:"",status:"available",addedAt:new Date().toISOString(),soldAt:null,photos:[],pending:false,priceHistory:[],comps:[],shippingClass:"Priority",shippingAddress:null});
 const ED=()=>({postType:"[WTS]",knives:[],payment:[...SETTINGS.payment],paymentOther:"",noShip:[...SETTINGS.noShip],noShipOther:"",repost:false,photos:[],notes:"",rulesConfirmed:false,bundleEnabled:false,bundlePrice:"",tradeInterests:SETTINGS.tradeInterests||"",shippingCarrier:SETTINGS.shippingCarrier||"USPS"});
 let S={posts:[],inventory:[],loaded:false,view:"list",expanded:null,copied:null,draft:ED(),kfOpen:false,kfIdx:-1,kf:EK(),kfMode:"draft",adv:false,err:"",saveNotice:false,lockerFilter:"all",lockerPicker:false,movingKnife:null,uploadFiles:[],kfUploads:[],priceResearch:{status:"idle",results:[],query:""},modal:null,authStatus:"guest",authEmail:"",showMigrate:false,soldFlow:null,delFlowEmail:null,authLoading:true,mdPreview:new Set(),undoStack:[],undoToast:null,_undoTid:null,flairToast:null,_flairTid:null,rollSort:"added",tutStep:0,aboutTab:"about",feedbackTab:"bug"};
 
@@ -1493,12 +1504,58 @@ function markSold(pid,ki){
   }
   S.soldFlow={pid,ki};render();
 }
+async function lookupZip(zip){
+  if(!/^\d{5}$/.test(zip))return;
+  const zipEl=document.getElementById("ship-zip");
+  try{
+    const r=await fetch(`https://api.zippopotam.us/us/${zip}`);
+    if(!r.ok){if(zipEl)zipEl.classList.remove("ok");return;}
+    const d=await r.json();
+    const place=d.places?.[0];if(!place)return;
+    const cityEl=document.getElementById("ship-city");
+    const stateEl=document.getElementById("ship-state");
+    if(cityEl){cityEl.value=place["place name"];cityEl.classList.add("ok");}
+    if(stateEl){stateEl.value=place["state abbreviation"];stateEl.classList.add("ok");}
+    if(zipEl)zipEl.classList.add("ok");
+  }catch(e){if(zipEl)zipEl.classList.remove("ok");}
+}
+function fmtAddress(a,multiline=false){
+  if(!a)return"";
+  const street=[a.line1,a.line2].filter(Boolean).join(", ");
+  if(multiline)return[a.name,street,`${a.city}, ${a.state} ${a.zip}`].filter(Boolean).join("\n");
+  return[a.name,street,`${a.city} ${a.state} ${a.zip}`].filter(Boolean).join(", ");
+}
+async function copyShippingAddress(pid,ki){
+  const p=S.posts.find(x=>x.id===pid);
+  const k=p?.knives[ki];if(!k?.shippingAddress)return;
+  try{await navigator.clipboard.writeText(fmtAddress(k.shippingAddress,true));}catch(e){}
+  S.copied=`addr_${pid}_${ki}`;render();
+  setTimeout(()=>{if(S.copied===`addr_${pid}_${ki}`){S.copied=null;render();}},2000);
+}
+function openPirateShip(pid,ki){
+  const p=S.posts.find(x=>x.id===pid);
+  const k=p?.knives[ki];
+  if(k?.shippingAddress){
+    try{navigator.clipboard.writeText(fmtAddress(k.shippingAddress,true));}catch(e){}
+  }
+  window.open("https://ship.pirateship.com/create","_blank","noopener");
+}
 function confirmSoldFlow(){
   const sf=S.soldFlow;if(!sf)return;
   pushUndo("Knife marked sold");
   const raw=(document.getElementById("sold-to-input")?.value||"").trim();
   const buyer=raw.replace(/^@/,"").replace(/^\/?u\//i,"");
-  up(s=>{const p=s.posts.find(x=>x.id===sf.pid);if(!p)return;const k=p.knives[sf.ki];k.sold=true;k.soldAt=new Date().toISOString();k.soldTo=buyer||null;k.pending=false;if(k.inventoryId){const inv=s.inventory.find(x=>x.id===k.inventoryId);if(inv)inv.status="sold";}p.postText=buildPost(p);});
+  const g=id=>document.getElementById(id);
+  const addr={
+    name:(g("ship-name")?.value||"").trim(),
+    line1:(g("ship-line1")?.value||"").trim(),
+    line2:(g("ship-line2")?.value||"").trim(),
+    city:(g("ship-city")?.value||"").trim(),
+    state:(g("ship-state")?.value||"").trim().toUpperCase(),
+    zip:(g("ship-zip")?.value||"").trim()
+  };
+  const hasAddr=addr.name&&addr.line1&&addr.city&&addr.state&&addr.zip;
+  up(s=>{const p=s.posts.find(x=>x.id===sf.pid);if(!p)return;const k=p.knives[sf.ki];k.sold=true;k.soldAt=new Date().toISOString();k.soldTo=buyer||null;k.shippingAddress=hasAddr?addr:null;k.pending=false;if(k.inventoryId){const inv=s.inventory.find(x=>x.id===k.inventoryId);if(inv)inv.status="sold";}p.postText=buildPost(p);});
   saveInv();S.soldFlow=null;render();
 }
 function cancelSoldFlow(){S.soldFlow=null;render();}
@@ -2132,10 +2189,31 @@ function renderList(){
         const dibsKey=`dibs_${p.id}_${i}`;
         const dibsCopied=s.copied===dibsKey;
         const soldToMeta=k.sold&&k.soldTo?` · Buyer: u/${esc(k.soldTo)}`:"";
-        const sfHtml=isSF?`<div class="sold-flow"><div style="font-size:12px;font-weight:700;color:var(--greent);margin-bottom:9px">Who bought it?</div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><input id="sold-to-input" type="text" placeholder="Buyer's Reddit username (optional)" style="flex:1;min-width:160px;font-size:13px;padding:7px 10px;border:.5px solid var(--b2);border-radius:8px;outline:none"/><button class="btn btn-gn btn-sm" onclick="confirmSoldFlow()">Confirm Sold</button><button class="btn btn-sec btn-sm" onclick="cancelSoldFlow()">Cancel</button></div><div style="font-size:11px;color:var(--greent);opacity:.8;margin-top:8px;line-height:1.5">Add their username to generate a confirmation comment for the <a href="https://www.reddit.com/r/Knife_Swap/search/?q=Confirmed+Trade+Thread&restrict_sr=1&sort=new&type=link" target="_blank" rel="noopener" style="color:inherit;font-weight:700;text-decoration:underline">Confirmed Trade Thread</a></div></div>`:"";
+        const sfHtml=isSF?`<div class="sold-flow">
+<div style="font-size:12px;font-weight:700;color:var(--greent);margin-bottom:9px">Who bought it?</div>
+<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+  <input id="sold-to-input" type="text" placeholder="Buyer's Reddit username (optional)" style="flex:1;min-width:160px;font-size:13px;padding:7px 10px;border:.5px solid var(--b2);border-radius:8px;outline:none;background:var(--surf);color:var(--t1);font-family:var(--font)"/>
+  <button class="btn btn-gn btn-sm" onclick="confirmSoldFlow()">Confirm Sold</button>
+  <button class="btn btn-sec btn-sm" onclick="cancelSoldFlow()">Cancel</button>
+</div>
+<div class="addr-form">
+  <div style="font-size:11px;font-weight:700;color:var(--greent);margin-bottom:1px">📦 Shipping Address <span style="font-weight:400;opacity:.7">(optional — saved for PirateShip)</span></div>
+  <input id="ship-name" class="addr-form" type="text" placeholder="Full name" autocomplete="name"/>
+  <input id="ship-line1" class="addr-form" type="text" placeholder="Street address" autocomplete="address-line1"/>
+  <input id="ship-line2" class="addr-form" type="text" placeholder="Apt, suite, unit (optional)" autocomplete="address-line2"/>
+  <div class="addr-row">
+    <input id="ship-zip" class="addr-form" type="text" inputmode="numeric" maxlength="5" placeholder="ZIP" style="max-width:80px;flex:none" autocomplete="postal-code" oninput="if(this.value.length===5)lookupZip(this.value)"/>
+    <input id="ship-city" class="addr-form" type="text" placeholder="City" autocomplete="address-level2"/>
+    <input id="ship-state" class="addr-form" type="text" maxlength="2" placeholder="ST" style="max-width:52px;flex:none;text-transform:uppercase" autocomplete="address-level1"/>
+  </div>
+</div>
+<div style="font-size:11px;color:var(--greent);opacity:.8;margin-top:8px;line-height:1.5">Add their username to generate a confirmation comment for the <a href="https://www.reddit.com/r/Knife_Swap/search/?q=Confirmed+Trade+Thread&restrict_sr=1&sort=new&type=link" target="_blank" rel="noopener" style="color:inherit;font-weight:700;text-decoration:underline">Confirmed Trade Thread</a></div>
+</div>`:"";
         const kDot=k.sold?"🔴":k.pending?"🟡":"🟢";
         const kRowClass=`krow${k.sold?" sold":k.pending?" pending-row":""}${isMoving?" moving":""}`;
-        return`<div class="${kRowClass}"><div class="krow-info"><div class="krow-name${k.sold?" s":""}">${kDot} ${esc(k.brand)} ${esc(k.model)}${k.pending&&!k.sold?` <span class="pending-tag">PENDING</span>`:""}${kPhotoCount?` <span class="photo-tag">📷 ${kPhotoCount}</span>`:""}</div><div class="krow-meta">${esc(k.steel||"N/A")} · ${esc(k.bladeCondition)}${k.sold&&k.soldAt?" · Sold "+fmtD(k.soldAt):""}${soldToMeta}</div></div><span class="krow-price${k.sold?" s":""}">${knifePrice(k)}</span>${k.sold?`<span class="sold-chip">Sold</span><button class="btn btn-sm${ccCopied?" btn-gn":" btn-pu"}" onclick="copyConfirmComment('${p.id}',${i})">${ccCopied?"Copied!":"Confirm Comment"}</button><button class="btn btn-sm btn-sec" onclick="markSold('${p.id}',${i})">Relist</button>`:`<button class="btn btn-sm${dibsCopied?" btn-gn":" btn-pu"}" onclick="copyDibsMessage('${p.id}',${i})" title="Copy payment confirmation message">${dibsCopied?"Copied!":"📬 Payment Info"}</button><button class="btn btn-sm${k.pending?" btn-am":" btn-sec"}" onclick="markPending('${p.id}',${i})">${k.pending?"🟡 Pending":"🟡 Pending?"}</button><button class="btn btn-sm btn-gn" onclick="markSold('${p.id}',${i})">🟢→🔴 Sold</button>`}${!k.sold&&s.posts.length>1?`<button class="btn btn-sm btn-pu" onclick="startMove('${p.id}',${i})">Transfer</button>`:""}</div>${sfHtml}${picker}`;
+        const addrCopied=s.copied===`addr_${p.id}_${i}`;
+        const addrHtml=k.sold&&k.shippingAddress?`<div class="addr-block"><div class="addr-text">${esc(fmtAddress(k.shippingAddress,true))}</div><div class="addr-acts"><button class="btn btn-sm${addrCopied?" btn-gn":" btn-sec"}" onclick="copyShippingAddress('${p.id}',${i})">${addrCopied?"Copied!":"📋 Copy Address"}</button><button class="btn btn-sm btn-pu" onclick="openPirateShip('${p.id}',${i})">🚢 Ship on PirateShip</button></div></div>`:"";
+        return`<div class="${kRowClass}"><div class="krow-info"><div class="krow-name${k.sold?" s":""}">${kDot} ${esc(k.brand)} ${esc(k.model)}${k.pending&&!k.sold?` <span class="pending-tag">PENDING</span>`:""}${kPhotoCount?` <span class="photo-tag">📷 ${kPhotoCount}</span>`:""}</div><div class="krow-meta">${esc(k.steel||"N/A")} · ${esc(k.bladeCondition)}${k.sold&&k.soldAt?" · Sold "+fmtD(k.soldAt):""}${soldToMeta}</div></div><span class="krow-price${k.sold?" s":""}">${knifePrice(k)}</span>${k.sold?`<span class="sold-chip">Sold</span><button class="btn btn-sm${ccCopied?" btn-gn":" btn-pu"}" onclick="copyConfirmComment('${p.id}',${i})">${ccCopied?"Copied!":"Confirm Comment"}</button><button class="btn btn-sm btn-sec" onclick="markSold('${p.id}',${i})">Relist</button>`:`<button class="btn btn-sm${dibsCopied?" btn-gn":" btn-pu"}" onclick="copyDibsMessage('${p.id}',${i})" title="Copy payment confirmation message">${dibsCopied?"Copied!":"📬 Payment Info"}</button><button class="btn btn-sm${k.pending?" btn-am":" btn-sec"}" onclick="markPending('${p.id}',${i})">${k.pending?"🟡 Pending":"🟡 Pending?"}</button><button class="btn btn-sm btn-gn" onclick="markSold('${p.id}',${i})">🟢→🔴 Sold</button>`}${!k.sold&&s.posts.length>1?`<button class="btn btn-sm btn-pu" onclick="startMove('${p.id}',${i})">Transfer</button>`:""}</div>${addrHtml}${sfHtml}${picker}`;
       }).join("");
       const da2=daysAgo(p.createdAt);
       const repostSection=pA>0?`<div class="repost-track">
@@ -2248,7 +2326,9 @@ function renderSold(){
       const kRows=p.knives.map((k,i)=>{
         const ccKey="cc_"+p.id+"_"+i;
         const ccCopied=S.copied===ccKey;
-        return`<div class="krow sold"><div class="krow-info"><div class="krow-name s">${esc(k.brand)} ${esc(k.model)}</div><div class="krow-meta">${esc(k.steel||"N/A")} · ${esc(k.bladeCondition)}${k.soldAt?" · Sold "+fmtD(k.soldAt):""}${k.soldTo?" · Buyer: u/"+esc(k.soldTo):""}</div></div><span class="krow-price s">${knifePrice(k)}</span><span class="sold-chip">Sold</span><button class="btn btn-sm${ccCopied?" btn-gn":" btn-pu"}" onclick="copyConfirmComment('${p.id}',${i})">${ccCopied?"Copied!":"Confirm Comment"}</button></div>`;
+        const addrCopiedS=S.copied===`addr_${p.id}_${i}`;
+        const addrHtmlS=k.shippingAddress?`<div class="addr-block"><div class="addr-text">${esc(fmtAddress(k.shippingAddress,true))}</div><div class="addr-acts"><button class="btn btn-sm${addrCopiedS?" btn-gn":" btn-sec"}" onclick="copyShippingAddress('${p.id}',${i})">${addrCopiedS?"Copied!":"📋 Copy Address"}</button><button class="btn btn-sm btn-pu" onclick="openPirateShip('${p.id}',${i})">🚢 Ship on PirateShip</button></div></div>`:"";
+        return`<div class="krow sold"><div class="krow-info"><div class="krow-name s">${esc(k.brand)} ${esc(k.model)}</div><div class="krow-meta">${esc(k.steel||"N/A")} · ${esc(k.bladeCondition)}${k.soldAt?" · Sold "+fmtD(k.soldAt):""}${k.soldTo?" · Buyer: u/"+esc(k.soldTo):""}</div></div><span class="krow-price s">${knifePrice(k)}</span><span class="sold-chip">Sold</span><button class="btn btn-sm${ccCopied?" btn-gn":" btn-pu"}" onclick="copyConfirmComment('${p.id}',${i})">${ccCopied?"Copied!":"Confirm Comment"}</button></div>${addrHtmlS}`;
       }).join("");
       const bt=p.postType.includes("WTT")?"wtt":"wts";
       return`<div class="pc" style="padding:0;overflow:hidden;margin-bottom:12px">
@@ -2437,7 +2517,7 @@ window.startMove=startMove;window.cancelMove=cancelMove;window.executeMove=execu
 window.updateModelList=updateModelList;window.autoFillInput=autoFillInput;window.saveSettings=saveSettings;
 window.triggerUpload=triggerUpload;window.handleFileInput=handleFileInput;window.handleDrop=handleDrop;window.handleDragOver=handleDragOver;window.handleDragLeave=handleDragLeave;window.removeUpload=removeUpload;
 window.triggerKnifeUpload=triggerKnifeUpload;window.handleKnifeFileInput=handleKnifeFileInput;window.removeKnifeUpload=removeKnifeUpload;window.addKnifePhotoUrl=addKnifePhotoUrl;
-window.confirmSoldFlow=confirmSoldFlow;window.cancelSoldFlow=cancelSoldFlow;window.copyConfirmComment=copyConfirmComment;window.buildConfirmComment=buildConfirmComment;window.copyDibsMessage=copyDibsMessage;window.buildDibsMessage=buildDibsMessage;
+window.confirmSoldFlow=confirmSoldFlow;window.cancelSoldFlow=cancelSoldFlow;window.copyConfirmComment=copyConfirmComment;window.buildConfirmComment=buildConfirmComment;window.copyDibsMessage=copyDibsMessage;window.buildDibsMessage=buildDibsMessage;window.lookupZip=lookupZip;window.copyShippingAddress=copyShippingAddress;window.openPirateShip=openPirateShip;window.fmtAddress=fmtAddress;
 window.markPending=markPending;window.markInvPending=markInvPending;
 window.sendMagicLink=sendMagicLink;window.signOut=signOut;window.deleteAccount=deleteAccount;window.migrateToSupabase=migrateToSupabase;window.skipMigrate=skipMigrate;
 window.renderTutorialModal=renderTutorialModal;window.renderAboutModal=renderAboutModal;window.renderCloudinaryModal=renderCloudinaryModal;window.renderCloudinaryStatus=renderCloudinaryStatus;
