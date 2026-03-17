@@ -960,6 +960,8 @@ async function sendMagicLink(email){
   }catch(e){S.err=e.message||"Failed to send link.";render();}
 }
 async function signOut(){
+  try{localStorage.removeItem("ks_v4");localStorage.removeItem("ks_inv_v1");localStorage.removeItem("ks_settings");}catch(e){}
+  S.posts=[];S.inventory=[];
   if(_sb)await _sb.auth.signOut();
   currentUser=null;S.authStatus="guest";S.authEmail="";S.showMigrate=false;render();
 }
