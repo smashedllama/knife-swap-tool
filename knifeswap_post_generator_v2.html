@@ -740,7 +740,7 @@ async function saveSettings(){
 const EK=()=>({brand:"",model:"",steel:"",price:"",obo:false,knifeType:"WTS",tradeValue:"",sharpened:"No",usedCut:"No",carried:"No",bladeCondition:"Factory edge, carried",owners:"1",centering:"Perfect",lockup:"Solid",lockupNotes:"",issues:["None"],accessories:["None"],notes:"",inventoryId:null,prevPrice:"",photos:[],pending:false,priceHistory:[],comps:[],shippingClass:"Priority",shippingAddress:null,trackingNumber:null,trackingCarrier:"USPS",shippedAt:null,deliveredAt:null,confirmedAt:null});
 const EI=()=>({id:gid(),brand:"",model:"",steel:"",price:"",obo:false,knifeType:"WTS",tradeValue:"",sharpened:"No",usedCut:"No",carried:"No",bladeCondition:"Factory edge, carried",owners:"1",centering:"Perfect",lockup:"Solid",lockupNotes:"",issues:["None"],accessories:["None"],notes:"",status:"available",addedAt:new Date().toISOString(),soldAt:null,photos:[],pending:false,priceHistory:[],comps:[],shippingClass:"Priority",shippingAddress:null,trackingNumber:null,trackingCarrier:"USPS",shippedAt:null,deliveredAt:null,confirmedAt:null});
 const ED=()=>({postType:"[WTS]",knives:[],payment:[...SETTINGS.payment],paymentOther:"",noShip:[...SETTINGS.noShip],noShipOther:"",repost:false,photos:[],notes:"",rulesConfirmed:false,bundleEnabled:false,bundlePrice:"",tradeInterests:SETTINGS.tradeInterests||"",shippingCarrier:SETTINGS.shippingCarrier||"USPS"});
-let S={posts:[],inventory:[],loaded:false,view:"list",expanded:null,copied:null,draft:ED(),kfOpen:false,kfIdx:-1,kf:EK(),kfMode:"draft",adv:false,err:"",saveNotice:false,lockerFilter:"all",lockerPicker:false,movingKnife:null,uploadFiles:[],kfUploads:[],priceResearch:{status:"idle",results:[],query:""},modal:null,authStatus:"guest",authEmail:"",showMigrate:false,soldFlow:null,delFlowEmail:null,authLoading:true,mdPreview:new Set(),undoStack:[],undoToast:null,_undoTid:null,flairToast:null,_flairTid:null,rollSort:"added",tutStep:0,aboutTab:"about",feedbackTab:"bug"};
+let S={posts:[],inventory:[],loaded:false,view:"list",expanded:null,copied:null,draft:ED(),kfOpen:false,kfIdx:-1,kf:EK(),kfMode:"draft",adv:false,err:"",saveNotice:false,lockerFilter:"all",lockerPicker:false,movingKnife:null,uploadFiles:[],kfUploads:[],priceResearch:{status:"idle",results:[],query:""},modal:null,authStatus:"guest",authEmail:"",showMigrate:false,soldFlow:null,delFlowEmail:null,authLoading:true,mdPreview:new Set(),undoStack:[],undoToast:null,_undoTid:null,flairToast:null,_flairTid:null,rollSort:"added",tutStep:0,aboutTab:"about",feedbackTab:"bug",trackingFlow:null};
 
 // ─── STORAGE ──────────────────────────────────────────────────
 async function load(){
@@ -961,23 +961,31 @@ async function doFetchPriceResearch(forceRefresh){
 
   // Significant model words (>3 chars) — used for client-side relevance checks
   const modelWords=(f.model||"").split(/\s+/).filter(w=>w.length>3);
-  // Anchor = first significant model word; used for quoted Reddit query
-  const anchorWord=modelWords[0]||f.model||"";
+  // Build model name variations: "Para 3" → also try "Para3", "Para-3"
+  const modelCompact=(f.model||"").replace(/\s+/g,"");
+  const modelHyphen=(f.model||"").replace(/\s+/g,"-");
   const brandLow=(f.brand||"").toLowerCase();
+  // Anchor = first significant model word; if none, use full model
+  const anchorWord=modelWords[0]||f.model||"";
 
+  // Primary query: brand + quoted anchor word (most specific)
   const qSearchBase=anchorWord?(f.brand?`${f.brand} "${anchorWord}"`:`"${anchorWord}"`):qBase;
   const qSearch=f.steel?`${qSearchBase} ${f.steel}`:qSearchBase;
   const qSearchBroad=qSearchBase;
+  // Variation query: use compact model name (e.g. "Para3") as fallback
+  const qVariant=f.brand&&modelCompact!==f.model?`${f.brand} ${modelCompact}`:null;
+
   S.priceResearch={status:"loading",results:[],query:qBase};render();
 
-  // Check 30-min localStorage cache before hitting Reddit (skip if force-refresh)
+  // Check 2-hour localStorage cache (prices don't move fast)
   const cacheKey=("ks_pr_"+(qBase+"_"+(f.steel||"")).replace(/\s+/g,"_").toLowerCase());
-  if(!forceRefresh){try{const c=JSON.parse(localStorage.getItem(cacheKey)||"null");if(c&&Date.now()-c.ts<30*60*1000){S.priceResearch=c.data;render();return;}}catch(e){}}
+  if(!forceRefresh){try{const c=JSON.parse(localStorage.getItem(cacheKey)||"null");if(c&&Date.now()-c.ts<120*60*1000){S.priceResearch=c.data;render();return;}}catch(e){}}
 
   const fetchQ=async(searchQ,limit)=>{
     const ctrl=new AbortController();
-    const tid=setTimeout(()=>ctrl.abort(),10000);
-    const url="https://www.reddit.com/r/Knife_Swap/search.json?q="+encodeURIComponent(searchQ)+"&sort=new&restrict_sr=on&limit="+limit;
+    const tid=setTimeout(()=>ctrl.abort(),12000);
+    // Use Reddit's new search endpoint (sort=new gets most recent listings first)
+    const url="https://www.reddit.com/r/Knife_Swap/search.json?q="+encodeURIComponent(searchQ)+"&sort=new&restrict_sr=on&limit="+limit+"&t=all";
     try{
       const res=await fetch(url,{headers:{"Accept":"application/json"},signal:ctrl.signal});
       if(!res.ok)throw new Error("HTTP "+res.status);
@@ -986,10 +994,16 @@ async function doFetchPriceResearch(forceRefresh){
   };
 
   // Score how well a post matches the target knife (higher = more relevant)
-  const relevanceScore=(fullLow)=>{
+  const relevanceScore=(fullLow,tl)=>{
     let score=0;
     modelWords.forEach(w=>{if(fullLow.includes(w.toLowerCase()))score+=2;});
-    if(brandLow.length>2&&fullLow.includes(brandLow))score+=1;
+    // Compact/hyphen variant match adds partial credit
+    if(modelCompact&&modelCompact!==f.model&&fullLow.includes(modelCompact.toLowerCase()))score+=1;
+    if(modelHyphen&&modelHyphen!==f.model&&fullLow.includes(modelHyphen.toLowerCase()))score+=1;
+    if(brandLow.length>2&&fullLow.includes(brandLow))score+=2;
+    // Boost: title match is stronger signal than body match
+    if(tl&&brandLow.length>2&&tl.includes(brandLow))score+=2;
+    if(tl&&anchorWord&&tl.includes(anchorWord.toLowerCase()))score+=3;
     const _stVars=steelVariants(f.steel);if(_stVars.length&&_stVars.some(v=>fullLow.includes(v)))score+=3;
     return score;
   };
@@ -999,65 +1013,81 @@ async function doFetchPriceResearch(forceRefresh){
     const tl=d.title.toLowerCase();
     const flair=(d.link_flair_text||"").trim();
     const flairLow=flair.toLowerCase();
-    // Filter: WTB posts are not price comps
     const isWTB=tl.includes("[wtb]")||tl.includes("(wtb)")||/\bwtb\b/.test(flairLow)||tl.includes("want to buy");
-    const isSold=tl.includes("[sold]")||tl.includes("(sold)")||/\bsold\b/.test(flairLow);
-    const isWTT=flair.includes("WTT")||(tl.includes("[wtt]")&&!tl.includes("[wts]"));
+    // Detect sold via flair OR [SOLD] in title — flair is more reliable
+    const isSold=flairLow.includes("sold")||tl.includes("[sold]")||tl.includes("(sold)")||tl.includes("[s]");
+    const isWTT=flairLow.includes("wtt")||(tl.includes("[wtt]")&&!tl.includes("[wts]"));
     const fullText=d.title+" "+(d.selftext||"");
     const fullLow=fullText.toLowerCase();
-    // Strict model check: ALL significant model words must appear
+    // Strict model check: ALL significant model words must appear (or compact variant)
     const allModelWordsMatch=modelWords.length>0
-      ?modelWords.every(w=>fullLow.includes(w.toLowerCase()))
+      ?modelWords.every(w=>fullLow.includes(w.toLowerCase()))||fullLow.includes(modelCompact.toLowerCase())
       :true;
-    // Brand check: brand must appear (if 3+ chars)
     const brandMatch=brandLow.length>2?fullLow.includes(brandLow):true;
     const isRelevant=!isWTB&&allModelWordsMatch&&brandMatch;
-    // Soft relevance: at least the anchor word appears (used as fallback tier)
     const mentionsAnchor=anchorWord?fullLow.includes(anchorWord.toLowerCase()):true;
     const stVars=steelVariants(f.steel);
     const steelMatch=stVars.length>0?stVars.some(v=>fullLow.includes(v)):false;
-    const score=relevanceScore(fullLow);
+    const score=relevanceScore(fullLow,tl);
     const prices=extractKnifePrices(fullText,qBase);
+    // Age bucket: prefer listings from last 6 months for sold comps
+    const ageMs=Date.now()-(d.created_utc*1000);
+    const isRecent=ageMs<180*24*60*60*1000;
     return{title:d.title,url:"https://reddit.com"+d.permalink,author:d.author,
       date:new Date(d.created_utc*1000).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}),
-      prices,isSold,isWTT,isWTB,flair,steelMatch,isRelevant,mentionsAnchor,score};
+      prices,isSold,isWTT,isWTB,flair,steelMatch,isRelevant,mentionsAnchor,score,isRecent};
   };
 
   const dedupe=(arr,seen=new Set())=>arr.filter(p=>{if(seen.has(p.url))return false;seen.add(p.url);return true;});
-  const byScore=(a,b)=>b.score-a.score||(Number(b.steelMatch)-Number(a.steelMatch));
+  // Sort: score desc, then recent sold first, then recency
+  const byScore=(a,b)=>b.score-a.score||(Number(b.steelMatch)-Number(a.steelMatch))||(Number(b.isRecent)-Number(a.isRecent));
 
   try{
     let posts=[];
     let searchedWithSteel=false;
+
     if(f.steel){
-      // Pass 1: quoted anchor + steel (fetch 25 to survive strict filtering)
-      const steelChildren=await fetchQ(qSearch,25);
+      // Pass 1: quoted anchor + steel — fetch 100 for best coverage
+      const steelChildren=await fetchQ(qSearch,100);
       const steelPosts=steelChildren.map(parsePost).filter(p=>p.isRelevant);
       steelPosts.sort(byScore);
       if(steelPosts.length>=3){
         posts=steelPosts;
         searchedWithSteel=true;
       }else{
-        // Pass 2: quoted anchor only — merge, steel matches first
-        const broadChildren=await fetchQ(qSearchBroad,25);
+        // Pass 2: broad anchor — merge with steel results, steel matches float up
+        const broadChildren=await fetchQ(qSearchBroad,100);
         const broadPosts=broadChildren.map(parsePost).filter(p=>p.isRelevant);
         const merged=dedupe([...steelPosts,...broadPosts]);
         merged.sort(byScore);
         posts=merged;
       }
     }else{
-      const children=await fetchQ(qSearchBroad,25);
+      const children=await fetchQ(qSearchBroad,100);
       posts=children.map(parsePost).filter(p=>p.isRelevant);
       posts.sort(byScore);
     }
-    // Graceful fallback: if strict filter wiped everything, loosen to anchor-only check
+
+    // Variant query: if still thin, try compact model name (e.g. "Para3")
+    if(posts.length<3&&qVariant){
+      try{
+        const variantChildren=await fetchQ(qVariant,50);
+        const variantPosts=variantChildren.map(parsePost).filter(p=>p.isRelevant);
+        const merged=dedupe([...posts,...variantPosts]);
+        merged.sort(byScore);
+        posts=merged;
+      }catch(e){}
+    }
+
+    // Graceful fallback: loosen to anchor-only check
     if(!posts.length){
-      const fallbackChildren=await fetchQ(qSearchBroad,25);
+      const fallbackChildren=await fetchQ(qSearchBroad,100);
       posts=fallbackChildren.map(parsePost).filter(p=>!p.isWTB&&p.mentionsAnchor);
       posts.sort(byScore);
     }
+
     S.priceResearch={status:posts.length?"done":"empty",results:posts,query:qBase,querySteel:f.steel?qSearch:null,searchedWithSteel};
-    // Cache successful results for 30 min — avoids hammering Reddit API
+    // Cache successful results for 2 hours
     if(posts.length)try{localStorage.setItem(cacheKey,JSON.stringify({ts:Date.now(),data:S.priceResearch}));}catch(e){}
   }catch(e){
     S.priceResearch={status:"fallback",results:[],query:qBase};
@@ -2270,6 +2300,16 @@ function trackingUrl(carrier,num){
   if(carrier==="DHL")return`https://www.dhl.com/us-en/home/tracking.html?tracking-id=${n}`;
   return null;
 }
+function startTracking(pid,ki){S.trackingFlow={pid,ki};render();}
+function cancelTracking(){S.trackingFlow=null;render();}
+function saveTracking(pid,ki){
+  const trk=(document.getElementById(`st-trk-${pid}-${ki}`)?.value||"").trim();
+  const carr=document.getElementById(`st-carr-${pid}-${ki}`)?.value||"USPS";
+  if(!trk){alert("Please enter a tracking number.");return;}
+  pushUndo("Tracking added");
+  up(s=>{const p=s.posts.find(x=>x.id===pid);if(!p)return;const k=p.knives[ki];k.trackingNumber=trk;k.trackingCarrier=carr;k.shippedAt=k.shippedAt||new Date().toISOString();});
+  saveInv();S.trackingFlow=null;render();
+}
 async function copyTrackingLink(pid,ki){
   const p=S.posts.find(x=>x.id===pid);
   const k=p?.knives[ki];if(!k)return;
@@ -2325,9 +2365,11 @@ function renderShipping(){
 
   const CARRIERS=["USPS","UPS","FedEx","DHL","Other"];
 
-  const readyCards=ready.map(({p,k,i})=>`<div class="pc" style="padding:13px 14px;margin-bottom:8px">
+  const readyCards=ready.map(({p,k,i})=>{
+    const ccKeyR=`cc_${p.id}_${i}`;const ccCopiedR=S.copied===ccKeyR;
+    return`<div class="pc" style="padding:13px 14px;margin-bottom:8px">
     ${kHead({p,k,i})}
-    <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
+    <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
       <select id="carr-${p.id}-${i}" style="font-size:13px;padding:6px 9px;border:.5px solid var(--b2);border-radius:8px;background:var(--surf);color:var(--t1);font-family:var(--font)">
         ${CARRIERS.map(c=>`<option${(k.trackingCarrier||"USPS")===c?" selected":""}>${c}</option>`).join("")}
       </select>
@@ -2335,9 +2377,14 @@ function renderShipping(){
       <button class="btn btn-pri btn-sm" onclick="markShipped('${p.id}',${i})">📬 Mark Shipped</button>
       ${k.shippingAddress?`<button class="btn btn-pu btn-sm" onclick="openPirateShip('${p.id}',${i})">🚢 PirateShip</button>`:""}
     </div>
-  </div>`).join("");
+    <div style="border-top:.5px solid var(--b2);padding-top:8px;margin-top:2px">
+      <button class="btn btn-sm${ccCopiedR?" btn-gn":" btn-sec"}" onclick="copyConfirmComment('${p.id}',${i})">${ccCopiedR?"✓ Copied!":"📋 Confirm Comment"}</button>
+      <span style="font-size:11px;color:var(--t3);margin-left:6px">For after delivery — post in the Confirmed Trade Thread</span>
+    </div>
+  </div>`;}).join("");
 
   const shippedCards=shipped.map(({p,k,i})=>{
+    const ccKeyT=`cc_${p.id}_${i}`;const ccCopiedT=S.copied===ccKeyT;
     const url=trackingUrl(k.trackingCarrier||"USPS",k.trackingNumber);
     const urlCopied=S.copied===`trkurl_${p.id}_${i}`;
     return`<div class="pc" style="padding:13px 14px;margin-bottom:8px">
@@ -2352,6 +2399,10 @@ function renderShipping(){
         <span style="font-size:11px;color:var(--t3);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(url)}</span>
       </div>`:""}
       ${k.shippedAt?`<div style="font-size:11px;color:var(--t3);margin-top:7px">Shipped ${fmtD(k.shippedAt)}</div>`:""}
+      <div style="border-top:.5px solid var(--b2);padding-top:8px;margin-top:8px">
+        <button class="btn btn-sm${ccCopiedT?" btn-gn":" btn-sec"}" onclick="copyConfirmComment('${p.id}',${i})">${ccCopiedT?"✓ Copied!":"📋 Confirm Comment"}</button>
+        <span style="font-size:11px;color:var(--t3);margin-left:6px">Ready for after delivery</span>
+      </div>
     </div>`;
   }).join("");
 
@@ -2483,7 +2534,14 @@ function renderSold(){
         const ccCopied=S.copied===ccKey;
         const addrCopiedS=S.copied===`addr_${p.id}_${i}`;
         const addrHtmlS=k.shippingAddress?`<div class="addr-block"><div class="addr-text">${esc(fmtAddress(k.shippingAddress,true))}</div><div class="addr-acts"><button class="btn btn-sm${addrCopiedS?" btn-gn":" btn-sec"}" onclick="copyShippingAddress('${p.id}',${i})">${addrCopiedS?"Copied!":"📋 Copy Address"}</button><button class="btn btn-sm btn-pu" onclick="openPirateShip('${p.id}',${i})">🚢 Ship on PirateShip</button></div></div>`:"";
-        return`<div class="krow sold"><div class="krow-info"><div class="krow-name s">${esc(k.brand)} ${esc(k.model)}</div><div class="krow-meta">${esc(k.steel||"N/A")} · ${esc(k.bladeCondition)}${k.soldAt?" · Sold "+fmtD(k.soldAt):""}${k.soldTo?" · Buyer: u/"+esc(k.soldTo):""}</div></div><span class="krow-price s">${knifePrice(k)}</span><span class="sold-chip">Sold</span><button class="btn btn-sm${ccCopied?" btn-gn":" btn-pu"}" onclick="copyConfirmComment('${p.id}',${i})">${ccCopied?"Copied!":"Confirm Comment"}</button></div>${addrHtmlS}`;
+        const isTrackingFlow=S.trackingFlow?.pid===p.id&&S.trackingFlow?.ki===i;
+        const tUrl=k.trackingNumber?trackingUrl(k.trackingCarrier||"USPS",k.trackingNumber):null;
+        const urlCopiedS=S.copied===`trkurl_${p.id}_${i}`;
+        const trkInfoHtml=k.trackingNumber&&!isTrackingFlow?`<div class="addr-block" style="background:var(--bluebg);border-top:.5px solid rgba(0,113,227,.12)"><div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:6px"><span style="font-size:12px;font-weight:600;background:rgba(0,113,227,.12);color:var(--bluet);padding:3px 9px;border-radius:20px;font-family:monospace">${esc(k.trackingCarrier||"USPS")} · ${esc(k.trackingNumber)}</span>${tUrl?`<a href="${tUrl}" target="_blank" rel="noopener" class="btn btn-sec btn-sm" style="text-decoration:none">🔗 Track</a>`:""}<button class="btn btn-sec btn-sm" onclick="startTracking('${p.id}',${i})">✏️ Edit</button></div>${tUrl?`<button class="btn btn-sm${urlCopiedS?" btn-gn":" btn-sec"}" onclick="copyTrackingLink('${p.id}',${i})">${urlCopiedS?"✓ Copied!":"📋 Copy Link for Buyer"}</button>`:""}</div>`:"";
+        const CARRIERS=["USPS","UPS","FedEx","DHL","Other"];
+        const trkFlowHtml=isTrackingFlow?`<div class="sold-flow" style="background:var(--bluebg);border-top:.5px solid rgba(0,113,227,.15)"><div style="font-size:12px;font-weight:700;color:var(--bluet);margin-bottom:9px">📦 Shipping Info</div><div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap"><select id="st-carr-${p.id}-${i}" style="font-size:13px;padding:6px 9px;border:.5px solid var(--b2);border-radius:8px;background:var(--surf);color:var(--t1);font-family:var(--font)">${CARRIERS.map(c=>`<option${(k.trackingCarrier||"USPS")===c?" selected":""}>${c}</option>`).join("")}</select><input id="st-trk-${p.id}-${i}" type="text" placeholder="Tracking number" value="${esc(k.trackingNumber||"")}" style="flex:1;min-width:150px;font-size:13px;padding:6px 10px;border:.5px solid var(--b2);border-radius:8px;background:var(--surf);color:var(--t1);font-family:var(--font)"/><button class="btn btn-pri btn-sm" onclick="saveTracking('${p.id}',${i})">Save</button><button class="btn btn-sec btn-sm" onclick="cancelTracking()">Cancel</button></div></div>`:"";
+        const addTrkBtn=!k.trackingNumber&&!isTrackingFlow?`<button class="btn btn-sec btn-sm" onclick="startTracking('${p.id}',${i})">📦 Add Tracking</button>`:"";
+        return`<div class="krow sold"><div class="krow-info"><div class="krow-name s">${esc(k.brand)} ${esc(k.model)}</div><div class="krow-meta">${esc(k.steel||"N/A")} · ${esc(k.bladeCondition)}${k.soldAt?" · Sold "+fmtD(k.soldAt):""}${k.soldTo?" · Buyer: u/"+esc(k.soldTo):""}</div></div><span class="krow-price s">${knifePrice(k)}</span><span class="sold-chip">Sold</span>${addTrkBtn}<button class="btn btn-sm${ccCopied?" btn-gn":" btn-pu"}" onclick="copyConfirmComment('${p.id}',${i})">${ccCopied?"Copied!":"Confirm Comment"}</button></div>${addrHtmlS}${trkInfoHtml}${trkFlowHtml}`;
       }).join("");
       const bt=p.postType.includes("WTT")?"wtt":"wts";
       return`<div class="pc" style="padding:0;overflow:hidden;margin-bottom:12px">
@@ -2672,7 +2730,7 @@ window.startMove=startMove;window.cancelMove=cancelMove;window.executeMove=execu
 window.updateModelList=updateModelList;window.autoFillInput=autoFillInput;window.saveSettings=saveSettings;
 window.triggerUpload=triggerUpload;window.handleFileInput=handleFileInput;window.handleDrop=handleDrop;window.handleDragOver=handleDragOver;window.handleDragLeave=handleDragLeave;window.removeUpload=removeUpload;
 window.triggerKnifeUpload=triggerKnifeUpload;window.handleKnifeFileInput=handleKnifeFileInput;window.removeKnifeUpload=removeKnifeUpload;window.addKnifePhotoUrl=addKnifePhotoUrl;
-window.confirmSoldFlow=confirmSoldFlow;window.cancelSoldFlow=cancelSoldFlow;window.copyConfirmComment=copyConfirmComment;window.buildConfirmComment=buildConfirmComment;window.copyDibsMessage=copyDibsMessage;window.buildDibsMessage=buildDibsMessage;window.lookupZip=lookupZip;window.copyShippingAddress=copyShippingAddress;window.openPirateShip=openPirateShip;window.fmtAddress=fmtAddress;window.markShipped=markShipped;window.markDelivered=markDelivered;window.markConfirmedTrade=markConfirmedTrade;window.kShipStatus=kShipStatus;window.copyTrackingLink=copyTrackingLink;
+window.confirmSoldFlow=confirmSoldFlow;window.cancelSoldFlow=cancelSoldFlow;window.copyConfirmComment=copyConfirmComment;window.buildConfirmComment=buildConfirmComment;window.copyDibsMessage=copyDibsMessage;window.buildDibsMessage=buildDibsMessage;window.lookupZip=lookupZip;window.copyShippingAddress=copyShippingAddress;window.openPirateShip=openPirateShip;window.fmtAddress=fmtAddress;window.markShipped=markShipped;window.markDelivered=markDelivered;window.markConfirmedTrade=markConfirmedTrade;window.kShipStatus=kShipStatus;window.copyTrackingLink=copyTrackingLink;window.startTracking=startTracking;window.cancelTracking=cancelTracking;window.saveTracking=saveTracking;
 window.markPending=markPending;window.markInvPending=markInvPending;
 window.sendMagicLink=sendMagicLink;window.signOut=signOut;window.deleteAccount=deleteAccount;window.migrateToSupabase=migrateToSupabase;window.skipMigrate=skipMigrate;
 window.renderTutorialModal=renderTutorialModal;window.renderAboutModal=renderAboutModal;window.renderCloudinaryModal=renderCloudinaryModal;window.renderCloudinaryStatus=renderCloudinaryStatus;
