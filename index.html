@@ -3251,7 +3251,7 @@ function renderRoll(){
   const fil=S.lockerFilter;
   const filtered=fil==="all"?knifeInv:fil==="pending"?knifeInv.filter(k=>k.pending&&k.status!=="sold"):knifeInv.filter(k=>k.status===fil);
   const rollValue=knifeInv.filter(k=>k.status!=="sold").reduce((s,k)=>s+parseFloat(k.price||0),0);
-  const stats=`<div class="stats"><div class="stat"><div class="stat-n green">${av}</div><div class="stat-l">Available</div></div><div class="stat"><div class="stat-n orange">${li}</div><div class="stat-l">Listed</div></div>${pe>0?`<div class="stat"><div class="stat-n orange">${pe}</div><div class="stat-l">Pending</div></div>`:""}<div class="stat"><div class="stat-n" style="color:var(--t3)">${so}</div><div class="stat-l">Sold</div></div>${rollValue>0?`<div class="stat"><div class="stat-n purple">$${Math.round(rollValue).toLocaleString()}</div><div class="stat-l">Value</div></div>`:""}<div class="stats-acts"><button class="btn btn-sec btn-sm" onclick="exportRollCSV()" title="Export to CSV" style="color:var(--t4);border-color:var(--b2)">↓ CSV</button><div style="display:flex;gap:5px"><button class="btn btn-sec btn-sm" onclick="openNI(-1)">+ Gear</button><button class="btn btn-pri btn-sm" onclick="openKF(-1,'locker')">+ Knife</button></div></div></div>`;
+  const stats=`<div class="stats"><div class="stat"><div class="stat-n green">${av}</div><div class="stat-l">Available</div></div><div class="stat"><div class="stat-n orange">${li}</div><div class="stat-l">Listed</div></div>${pe>0?`<div class="stat"><div class="stat-n orange">${pe}</div><div class="stat-l">Pending</div></div>`:""}<div class="stat"><div class="stat-n" style="color:var(--t3)">${so}</div><div class="stat-l">Sold</div></div>${rollValue>0?`<div class="stat"><div class="stat-n purple">$${Math.round(rollValue).toLocaleString()}</div><div class="stat-l">Value</div></div>`:""}<div class="stats-acts"><div style="display:flex;flex-direction:column;gap:5px"><button class="btn btn-sec btn-sm" style="white-space:nowrap;justify-content:center" onclick="openKF(-1,'locker')">+ Add Knife</button><button class="btn btn-sec btn-sm" style="white-space:nowrap;justify-content:center" onclick="openNI(-1)">+ Add Gear</button></div></div></div>`;
   // Sort the filtered array
   const srt=S.rollSort||"added";
   const sortedFiltered=[...filtered].sort((a,b)=>{
@@ -3297,7 +3297,8 @@ function renderRoll(){
         <div class="lk-acts">${item.status!=="sold"?`<button class="btn btn-sm btn-gn" onclick="markNISold(${realIdx})">🔴 Sold</button>`:`<button class="btn btn-sm btn-sec" onclick="markNISold(${realIdx})">Relist</button>`}<button class="btn btn-sm btn-sec" onclick="openNI(${realIdx})">Edit</button><button class="btn btn-sm btn-rd" onclick="removeNI(${realIdx})">Remove</button></div>
       </div>`;
     }).join("");
-    const emptyNI=!niItems.length&&!S.niOpen?`<div style="text-align:center;padding:20px 16px;color:var(--t4);font-size:13px;border:1px dashed rgba(128,128,128,.2);border-radius:var(--rs)">Watches, sunglasses, flashlights, bags &amp; more.<br/><button class="btn btn-sec btn-sm" onclick="openNI(-1)" style="margin-top:10px">+ Add Your First Item</button></div>`:"";
+    const emptyNI=!niItems.length&&!S.niOpen?`<div style="padding:16px;color:var(--t4);font-size:13px;border:1px dashed rgba(128,128,128,.2);border-radius:var(--rs)">Watches, sunglasses, flashlights, bags &amp; more. Use <strong style="color:var(--t3)">+ Add Gear</strong> above to add items.</div>`:"";
+
     return`<div class="ni-section">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <div class="sec-lbl" style="margin:0">Gear &amp; Extras</div>
@@ -3765,6 +3766,7 @@ function renderSettings(){
   <div class="settings-section-lbl">The Roll</div>
   <div class="sgroup">
     <div class="srow"><div><div class="srow-lbl">Knife Roll Animation</div><div class="srow-sub">Play an unrolling animation when viewing The Roll</div></div><div class="srow-ctrl"><button class="roll-anim-btn${sv.rollAnim?' on':''}" onclick="SETTINGS.rollAnim=!SETTINGS.rollAnim;saveSettings();render()">${sv.rollAnim?'On':'Off'}</button></div></div>
+    <div class="srow"><div><div class="srow-lbl">Export Roll to CSV</div><div class="srow-sub">Download your full knife inventory as a spreadsheet</div></div><div class="srow-ctrl"><button class="btn btn-sec btn-sm" onclick="exportRollCSV()">↓ Export CSV</button></div></div>
   </div>
   <div class="settings-section-lbl">Cloud Sync</div>
   <div class="sgroup">
