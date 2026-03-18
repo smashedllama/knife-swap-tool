@@ -1757,7 +1757,7 @@ function openNI(idx){
 function closeNI(){S.niOpen=false;S.ni=null;S.niIdx=-1;S.err="";render();}
 function saveNI(){
   const f=S.ni;
-  if(!f.description.trim()){S.err="Add a description for this item.";render();return;}
+  if(!f.description.trim()){S.err="Enter the item name.";render();return;}
   if(f.saleType!=="WTT"&&!String(f.price||"").trim()){S.err="Enter a price or switch to Trade Only.";render();return;}
   S.err="";
   if(S.niIdx===-1){if(!f.id)f.id=gid();S.inventory.push(JSON.parse(JSON.stringify(f)));}
@@ -1775,11 +1775,11 @@ function renderNIForm(){
     (f.saleType!=="WTS"?`<div class="field" style="flex:1;min-width:120px"><label>Trade Value ($)</label><input type="number" min="0" value="${esc(String(f.tradeValue||""))}" placeholder="e.g. 150" oninput="S.ni.tradeValue=this.value"/></div>`:"");
   return`<div class="kf" style="margin-top:10px"><div class="kf-hdr"><div class="kf-title">${S.niIdx===-1?"Add Item":"Edit Item"}</div></div>
     <div class="field" style="margin-bottom:10px"><label>Category</label><div class="chips" style="margin-top:4px">${catChips}</div></div>
-    <div class="field" style="margin-bottom:10px"><label>Description</label><input type="text" value="${esc(f.description)}" placeholder="e.g. Seiko SKX007, great condition" oninput="S.ni.description=this.value"/></div>
+    <div class="field" style="margin-bottom:10px"><label>Item</label><input type="text" value="${esc(f.description)}" placeholder="e.g. Seiko SKX007" oninput="S.ni.description=this.value"/></div>
     <div class="field" style="margin-bottom:10px"><label>Condition</label><div class="chips" style="margin-top:4px">${condChips}</div></div>
     <div class="kf-type-sel" style="margin-bottom:10px">${stChips}</div>
     <div class="fr2" style="margin-bottom:10px">${priceFields}</div>
-    <div class="field" style="margin-bottom:10px"><label>Notes <span style="font-weight:400;color:var(--t4);font-size:11px">(optional)</span></label><input type="text" value="${esc(f.notes||"")}" placeholder="Any extra details..." oninput="S.ni.notes=this.value"/></div>
+    <div class="field" style="margin-bottom:10px"><label>Details <span style="font-weight:400;color:var(--t4);font-size:11px">(optional)</span></label><input type="text" value="${esc(f.notes||"")}" placeholder="e.g. black dial, box and papers included" oninput="S.ni.notes=this.value"/></div>
     ${S.err?`<div class="err">${esc(S.err)}</div>`:""}
     <div style="display:flex;gap:8px;margin-top:10px"><button class="btn btn-pri" onclick="saveNI()">Done - ${S.niIdx===-1?"Add":"Update"} Item</button><button class="btn btn-sec" onclick="closeNI()">Cancel</button></div>
   </div>`;
@@ -3502,7 +3502,7 @@ function startTour(){
       {...EI(),id:pm2Id,brand:"Spyderco",model:"Para Military 2",steel:"S30V",price:"145",knifeType:"WTS",bladeCondition:"Factory edge, carried",carried:"Yes",usedCut:"No",sharpened:"No",status:"available",createdAt:now,photos:["https://i.imgur.com/demo_pm2.jpg"],_tourDemo:true},
       {...EI(),id:bugoutId,brand:"Benchmade",model:"Bugout 535",steel:"S30V",price:"110",knifeType:"WTS",bladeCondition:"Factory edge, carried",carried:"Yes",usedCut:"No",sharpened:"No",status:"available",createdAt:now,photos:["https://i.imgur.com/demo_bugout.jpg"],_tourDemo:true},
       {...EI(),id:sebaId,brand:"Chris Reeve Knives",model:"Sebenza 31 Large",steel:"MagnaCut",price:"395",knifeType:"WTS/WTT",tradeValue:"395",bladeCondition:"Mint / uncarried",carried:"No",usedCut:"No",sharpened:"No",status:"available",createdAt:now,photos:["https://i.imgur.com/demo_seba.jpg"],_tourDemo:true},
-      {...ENI(),id:watchId,itemCategory:"watch",description:"Casio G-Shock DW5600 - black colorway, lightly worn, keeps perfect time.",condition:"Good",price:"45",saleType:"WTS",status:"available",addedAt:now,_tourDemo:true},
+      {...ENI(),id:watchId,itemCategory:"watch",description:"Casio G-Shock DW5600",condition:"Good",price:"45",saleType:"WTS",status:"available",addedAt:now,notes:"Black colorway, lightly worn, keeps perfect time.",_tourDemo:true},
     ];
     S.inventory=[...demos,...S.inventory];
   }else{
