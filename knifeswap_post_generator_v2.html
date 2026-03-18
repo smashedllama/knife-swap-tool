@@ -770,6 +770,7 @@ const SUPABASE_URL = "https://yfosdanxivqbknolazws.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_Xlo2H3xYFNSDOLpTvEpiPQ_13XEITlJ";
 let _sb=null;       // supabase client instance
 let currentUser=null;
+let _sbSyncTid=null; // debounce timer for Supabase batch sync
 
 // ─── DATABASE ────────────────────────────────────────────────
 const BRANDS=["Al Mar","Amare","Arcane Design","Artisan","Bark River","Bastinelli","Benchmade","Berg Blades","Bestech","Boker","Boker Plus","Boker Tree Brand","Bradford Guardian","Buck","Byrd","Case","Chris Reeve Knives","CJRB","Civivi","Cobratec","Cold Steel","Condor Tool & Knife","CRKT","Curtiss Knives","Daggerr","Damned Designs","Demko","Drop","DPx Gear","Emerson","ESEE","Extrema Ratio","Fallkniven","Fantoni","Ferrum Forge","Fox Knives","GEC","Gerber","GiantMouse","Grimsmo","Guardian Tactical","Helle","Heretic","Hinderer","Hogue","Honey Badger","Jack Wolf","Jake Hoback","James Brand","Kansept","Ka-Bar","Kershaw","Kizer","Koenig","Laconico","Leatherman","LionSteel","Maserin","Maxace","Mcusta","Medford","Microtech","Mission Knives","MKM","Morakniv","Ocaso","Olamic Cutlery","Ontario","Opinel","Pena Knives","Petrified Fish","Piranha Knives","Pro-Tech","QSP","Quiet Carry","Real Steel","Reate","Rike Knife","Rough Ryder","RUIKE","SENCUT","Smith & Wesson","SOG","Southern Grind","Spartan Blades","Spyderco","Steel Will","Strider","Tactile Knife Co.","Todd Begg","Toor","TOPS","TRM","Twosun","Victorinox","Viper Knives","Vosteed","Wander Tactical","WE Knife","White River","Winkler","Zero Tolerance"];
@@ -854,18 +855,38 @@ let S={posts:[],inventory:[],loaded:false,view:"list",expanded:null,copied:null,
 async function load(){
   try{const r=await window.storage.get("ks_v4");if(r&&r.value)S.posts=JSON.parse(r.value);}catch(e){}
   try{const r=await window.storage.get("ks_inv_v1");if(r&&r.value)S.inventory=JSON.parse(r.value);}catch(e){}
+  // Strip stale tour demo data — it's session-only and should never outlive a page load
+  S.posts=S.posts.filter(p=>!p._tourDemo);
+  S.inventory=S.inventory.filter(k=>!k._tourDemo);
   reconcileInventory();
   S.loaded=true;render();
 }
+// Debounced Supabase batch sync — fires 1.5s after the last save call.
+// Replaces the old per-item sequential upsert loop (N round-trips → 2 round-trips).
+function _scheduleSbSync(){
+  if(!currentUser||!_sb)return;
+  if(_sbSyncTid)clearTimeout(_sbSyncTid);
+  _sbSyncTid=setTimeout(async()=>{
+    _sbSyncTid=null;
+    try{
+      const posts=S.posts.filter(p=>!p._tourDemo);
+      if(posts.length)await _sb.from("posts").upsert(posts.map(p=>({id:p.id,user_id:currentUser.id,data:p,updated_at:new Date().toISOString()})));
+      const inv=S.inventory.filter(k=>!k._tourDemo);
+      if(inv.length)await _sb.from("inventory").upsert(inv.map(k=>({id:k.id,user_id:currentUser.id,data:k,updated_at:new Date().toISOString()})));
+    }catch(e){console.warn("Supabase sync failed:",e);}
+  },1500);
+}
 async function save(){
   if(!S.loaded)return;
-  try{await window.storage.set("ks_v4",JSON.stringify(S.posts));}catch(e){}
-  if(currentUser&&_sb){for(const p of S.posts){await _sbUpsertPost(p);}}
+  // Save to localStorage immediately (tour demo items excluded so they never persist)
+  try{await window.storage.set("ks_v4",JSON.stringify(S.posts.filter(p=>!p._tourDemo)));}catch(e){}
+  _scheduleSbSync();
 }
 async function saveInv(){
   if(!S.loaded)return;
-  try{await window.storage.set("ks_inv_v1",JSON.stringify(S.inventory));}catch(e){}
-  if(currentUser&&_sb){for(const k of S.inventory){await _sbUpsertInv(k);}}
+  // Save to localStorage immediately (tour demo items excluded so they never persist)
+  try{await window.storage.set("ks_inv_v1",JSON.stringify(S.inventory.filter(k=>!k._tourDemo)));}catch(e){}
+  _scheduleSbSync();
 }
 function up(fn){fn(S);save();render();}
 function upInv(fn){fn(S);saveInv();render();}
@@ -939,9 +960,9 @@ async function _sbLoad(){
   if(!_sb||!currentUser)return;
   try{
     const {data:posts}=await _sb.from("posts").select("data").eq("user_id",currentUser.id);
-    if(posts&&posts.length)S.posts=posts.map(r=>r.data).sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));
+    if(posts&&posts.length)S.posts=posts.map(r=>r.data).filter(p=>!p._tourDemo).sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));
     const {data:inv}=await _sb.from("inventory").select("data").eq("user_id",currentUser.id);
-    if(inv&&inv.length)S.inventory=inv.map(r=>r.data);
+    if(inv&&inv.length)S.inventory=inv.map(r=>r.data).filter(k=>!k._tourDemo);
     const {data:prof}=await _sb.from("profiles").select("settings").eq("id",currentUser.id).single();
     if(prof?.settings&&Object.keys(prof.settings).length)SETTINGS={...DS(),...prof.settings};
     S.loaded=true;
@@ -2246,7 +2267,7 @@ function renderAuthModal(){
     inner=`<div style="padding:28px 24px 24px">
       <div class="auth-signed" style="margin-bottom:14px">
         <div class="auth-signed-avatar">${S.authEmail[0].toUpperCase()}</div>
-        <div class="auth-signed-info"><div class="auth-signed-email">${esc(S.authEmail)}</div><div class="auth-signed-status">✓ Syncing to cloud</div></div>
+        <div class="auth-signed-info"><div class="auth-signed-email">${esc(S.authEmail)}</div><div class="auth-signed-status">✓ Cloud sync active</div></div>
       </div>
       <p style="font-size:13px;color:var(--t3);line-height:1.6;margin-bottom:16px">Your listings, inventory, and settings sync automatically across all your devices.</p>
       <button class="btn btn-sec" style="width:100%;margin-bottom:8px" onclick="signOut()">Sign Out</button>
@@ -3798,7 +3819,7 @@ function renderSettings(){
       <div><div class="srow-lbl">Sync Status</div><div class="srow-sub">${S.authStatus==="signed_in"?`Signed in as ${esc(S.authEmail)} - data backed up to cloud`:"Not signed in"}</div></div>
       <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
         <div class="supa-indicator ${S.authStatus==="signed_in"?"on":"off"}"></div>
-        <span style="font-size:12px;color:var(--t3);white-space:nowrap">${S.authStatus==="signed_in"?"Syncing":"Local only"}</span>
+        <span style="font-size:12px;color:var(--t3);white-space:nowrap">${S.authStatus==="signed_in"?"Cloud sync on":"Local only"}</span>
       </div>
     </div>
     ${S.authStatus!=="signed_in"?`<div class="srow"><div style="font-size:12px;line-height:1.6;color:var(--redt);background:rgba(255,59,48,.07);border-radius:8px;padding:10px 12px;border:.5px solid rgba(255,59,48,.2)">⚠️ <strong>Your data is only saved in this browser.</strong> If you clear your browser cache, browsing history, or site data - or switch to a different browser or device - all your posts and inventory will be <strong>permanently lost</strong> and cannot be recovered. Sign in to back up your data to the cloud.</div></div>`:""}
