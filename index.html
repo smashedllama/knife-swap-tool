@@ -3297,12 +3297,13 @@ function renderRoll(){
         <div class="lk-acts">${item.status!=="sold"?`<button class="btn btn-sm btn-gn" onclick="markNISold(${realIdx})">🔴 Sold</button>`:`<button class="btn btn-sm btn-sec" onclick="markNISold(${realIdx})">Relist</button>`}<button class="btn btn-sm btn-sec" onclick="openNI(${realIdx})">Edit</button><button class="btn btn-sm btn-rd" onclick="removeNI(${realIdx})">Remove</button></div>
       </div>`;
     }).join("");
-    if(!niItems.length&&!S.niOpen)return"";
+    const emptyNI=!niItems.length&&!S.niOpen?`<div style="text-align:center;padding:20px 16px;color:var(--t4);font-size:13px;border:1px dashed rgba(128,128,128,.2);border-radius:var(--rs)">Watches, sunglasses, flashlights, bags &amp; more.<br/><button class="btn btn-sec btn-sm" onclick="openNI(-1)" style="margin-top:10px">+ Add Your First Item</button></div>`:"";
     return`<div class="ni-section">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <div class="sec-lbl" style="margin:0">Gear &amp; Extras</div>
-        ${!S.niOpen?`<button class="btn btn-sec btn-sm" onclick="openNI(-1)">+ Add Item</button>`:""}
+        ${!S.niOpen&&niItems.length?`<button class="btn btn-sec btn-sm" onclick="openNI(-1)">+ Add Item</button>`:""}
       </div>
+      ${emptyNI}
       ${niForm}
       ${niCards?`<div class="ni-grid">${niCards}</div>`:""}
     </div>`;
