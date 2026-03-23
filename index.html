@@ -947,7 +947,10 @@ async function load(){
   S._loadTime=performance.now()-_lt;
   // Lifetime stats — session counter, first-use date, time tracking
   try{const _bfs=JSON.parse(localStorage.getItem('bf_stats')||'{}');if(!_bfs.firstUsed)_bfs.firstUsed=new Date().toISOString();_bfs.lastUsed=new Date().toISOString();_bfs.sessions=(_bfs.sessions||0)+1;localStorage.setItem('bf_stats',JSON.stringify(_bfs));}catch(e){}
-  S.loaded=true;render();
+  S.loaded=true;
+  // Open guide view directly if ?guide param is present
+  if(new URLSearchParams(location.search).has('guide'))S.view='guide';
+  render();
 }
 // Debounced Supabase batch sync — fires 1.5s after the last save call.
 // Replaces the old per-item sequential upsert loop (N round-trips → 2 round-trips).
@@ -3152,9 +3155,10 @@ function renderTutorialModal(){
        <span style="color:var(--t3)">Steel</span><span>CPM-S30V: affects pricing</span>
        <span style="color:var(--t3)">Condition</span><span>Factory edge, carried</span>
        <span style="color:var(--t3)">SV Price</span><span>Your asking price in USD</span>
-       <span style="color:var(--t3)">Photos</span><span>Drag-and-drop or paste URL</span>
+       <span style="color:var(--t3)">Photos</span><span>4 labeled slots: Show Side, Clip Side, Centering, Other</span>
      </div>
-     <div style="margin-top:10px"><strong style="color:var(--t1)">Gear fields:</strong> Category, description, condition, sale type, price. Gear items appear in their own <strong>Gear & Extras</strong> section in the Roll and in your generated posts.</div>`)}
+     <div style="margin-top:10px;padding:8px 10px;background:var(--redbg);border-radius:8px;font-size:12px;color:var(--redt)"><strong>Show Side + Clip Side are required</strong> to add a knife to a listing. You can save a knife without photos, but it won't be listable until both shots are uploaded.</div>
+     <div style="margin-top:8px"><strong style="color:var(--t1)">Gear fields:</strong> Category, description, condition, sale type, price. Gear items appear in their own <strong>Gear & Extras</strong> section in the Roll and in your generated posts.</div>`)}
      ${tip("Price Research","After entering brand, model and steel, click Check Comps. It searches r/Knife_Swap for the 25 most recent sold listings of that exact model so you can price accurately.")}`},
     // 6 - Creating a listing
     {phase:"Listings",icon:"📝",title:"Creating a Post",
@@ -3187,6 +3191,7 @@ function renderTutorialModal(){
      <ul style="margin:8px 0 0;padding-left:18px;line-height:2">
        <li>✅ Timestamp photo is linked</li>
        <li>✅ All WTS knives have a price</li>
+       <li>✅ All knives have Show Side + Clip Side photos</li>
        <li>✅ Payment method is selected</li>
        <li>✅ Post type is set (e.g. [WTS])</li>
        <li>✅ Shipping info is mentioned</li>
@@ -3328,7 +3333,7 @@ function renderGuide(){
   const warn=(txt)=>`<div style="background:var(--redbg);border:.5px solid rgba(255,59,48,.2);border-radius:10px;padding:10px 13px;margin-top:8px;font-size:12.5px;color:var(--redt);line-height:1.6"><strong>Important:</strong> ${txt}</div>`;
   const tip=(txt)=>`<div style="background:var(--orangebg);border:.5px solid rgba(255,149,0,.3);border-radius:10px;padding:10px 13px;margin-top:8px;font-size:12.5px;color:var(--oranget);line-height:1.6"><strong>Tip:</strong> ${txt}</div>`;
   const ul=(items)=>`<ul style="margin:6px 0 0;padding-left:18px;line-height:1.9">${items.map(i=>`<li>${i}</li>`).join("")}</ul>`;
-  const hdr=`<div class="hdr" style="grid-template-columns:auto 1fr auto;grid-template-rows:auto;height:52px;padding:0 12px"><button class="btn-hdr-ghost" style="display:flex;align-items:center;gap:4px;padding:7px 10px 7px 2px;font-size:14px;font-weight:500;color:var(--blue);flex-shrink:0" onclick="S.view='list';render()"><svg width="9" height="15" viewBox="0 0 9 15" fill="none" style="flex-shrink:0"><path d="M8 1L1 7.5L8 14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Listings</button><div style="text-align:center;font-size:15px;font-weight:700;color:var(--t1);align-self:center">How-To Guide</div><div style="width:72px"></div></div>`;
+  const hdr=`<div class="hdr" style="grid-template-columns:auto 1fr auto;grid-template-rows:auto;height:52px;padding:0 12px"><button class="btn-hdr-ghost" style="display:flex;align-items:center;gap:4px;padding:7px 10px 7px 2px;font-size:14px;font-weight:500;color:var(--blue);flex-shrink:0" onclick="S.view='list';render()"><svg width="9" height="15" viewBox="0 0 9 15" fill="none" style="flex-shrink:0"><path d="M8 1L1 7.5L8 14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Listings</button><div style="text-align:center;font-size:15px;font-weight:700;color:var(--t1);align-self:center">How-To Guide</div><a href="${location.origin}/bladeflow/?guide" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--blue);text-decoration:none;padding:6px 8px;border-radius:8px;background:var(--bluebg);white-space:nowrap;flex-shrink:0">${icon('external-link',13)} New Tab</a></div>`;
   return`<div class="app">${hdr}<div class="main" style="overflow-y:auto">
   <div style="max-width:680px;margin:0 auto;padding:20px 16px 60px">
     <div style="margin-bottom:24px">
@@ -3348,9 +3353,10 @@ function renderGuide(){
       <p style="font-size:13px;color:var(--t2);line-height:1.7;margin:0 0 12px">The Roll is your inventory. Add every knife or other item you want to sell here first. You only fill in the details once, then pull it into any listing with a single tap.</p>
       ${step(1,"Open The Roll tab and hit + Add Knife or + Add Gear","Use + Add Knife for knives. Use + Add Gear for anything else: watches, sunglasses, flashlights, multi-tools, bags, clothing, or other items.")}
       ${step(2,"Fill in the details","For knives: brand, model, steel, and condition. Be thorough. For gear: category, description, condition, and price.")}
-      ${step(3,"Add your own photos","Drag-and-drop or paste a direct image URL. Stock photos and manufacturer images are not allowed. Your own photos only.")}
+      ${step(3,"Add your photos","Each knife has four dedicated photo slots: <strong>Show Side</strong>, <strong>Clip Side</strong>, <strong>Centering</strong>, and <strong>Other</strong>. Drag-and-drop or paste a direct URL into each slot. Show Side and Clip Side are required before the knife can be added to a listing — the others are optional. Stock photos and manufacturer images are not allowed. Your own photos only.")}
       ${step(4,"Set type and price","WTS (selling), WTT (trading), or WTS/WTT (open to both). Enter your asking price in the SV field. For trades, also add a TV (trade value).")}
       ${tip("New to the sub? Users with 0 confirmed trades can only list one knife per post. Once you have flair you can list multiple knives in one post.")}
+      ${tool("Each knife card in The Roll shows a readiness badge: <strong style='color:var(--greent)'>✓ Ready to list</strong> if everything is complete, or <strong style='color:var(--redt)'>Incomplete: [reason]</strong> listing exactly what needs to be fixed before that knife can go in a listing.")}
     `)}
 
     ${sec("💰","Step 2: Price Your Knife","rgba(255,204,0,.2)",`
@@ -3373,7 +3379,7 @@ function renderGuide(){
 
     ${sec("📝","Step 4: Build Your Listing","rgba(0,122,255,.12)",`
       ${step(1,"Go to Listings → + New Listing","")}
-      ${step(2,"Add knives from The Roll","Tap + Add from Roll and select your knife. Or add knives manually if you prefer.")}
+      ${step(2,"Add knives from The Roll","Tap + Add from Roll and select your knife. The picker shows each knife's readiness — incomplete knives display exactly what's missing (e.g. missing Show Side photo, no price) and are blocked with a Fix first badge until the issues are resolved. Or add knives manually if you prefer.")}
       ${step(3,"Add gear items from The Roll (optional)","Tap From Roll: Gear to add watches, sunglasses, or other non-knife items. They are automatically grouped into a labeled Gear & Extras section at the bottom of your post.")}
       ${step(4,"Paste your timestamp URL","Required before you can post.")}
       ${step(5,"Pick a template","Detailed includes all condition notes. Compact is a clean one-liner. Minimal is bare essentials. Table is a markdown table layout. Hit Switch to cycle between them anytime.")}
@@ -3384,7 +3390,7 @@ function renderGuide(){
 
     ${sec("🚀","Step 5: Post to r/Knife_Swap","rgba(52,199,89,.12)",`
       ${step(1,"Click Copy Post or Post to Reddit","The pre-flight check runs first. All rules must pass before the post text unlocks.")}
-      ${step(2,"Complete the pre-flight checklist","Timestamp linked, prices set, payment methods selected, rules checkbox confirmed. Fix any red items.")}
+      ${step(2,"Complete the pre-flight checklist","Timestamp linked, prices set, all knives have Show Side + Clip Side photos, payment methods selected, rules checkbox confirmed. Fix any red items.")}
       ${step(3,"On Reddit, go to r/Knife_Swap and create a new post","Paste your title and body.")}
       ${step(4,"Set your post flair","You set this yourself: WTS, WTT, WTS/WTT, or WTB. Pick the one that matches your post. This is different from your user flair (which is your trade count, set automatically by the bot).")}
       ${step(5,"Submit","Double-check title and body before hitting submit.")}
@@ -3490,7 +3496,7 @@ function renderAboutModal(){
       {q:"Do I need an account?",a:"No. The tool works completely without an account. Sign-in is only needed if you want to sync your data across multiple devices using cloud backup."},
       {q:"Where is my data stored?",a:"By default everything is stored in your browser's localStorage. If you sign in with a free account, data syncs to the cloud and is available on any device."},
       {q:"What is The Roll?",a:"The Roll is your knife inventory. Add a knife once with all its details, then pull it into any listing with one click. It tracks price history, days held, sold price, and current status."},
-      {q:"Why is the Copy button grayed out?",a:"A timestamp photo link is required before you can copy a post. Paste a direct link to your timestamp photo and the Copy button will unlock."},
+      {q:"Why is the Copy button grayed out?",a:"A timestamp photo link is required, and all knives must have at least a Show Side and Clip Side photo. Add those and the Copy button will unlock."},
       {q:"What is Cloudinary and do I need it?",a:"Cloudinary is a free image hosting service. You only need it if you want to drag-and-drop upload photos directly from the tool. You can skip it entirely and paste direct image URLs instead."},
       {q:"Will Imgur links work?",a:"Yes, but only direct image links in the format i.imgur.com/xxx.jpg. Album page URLs (imgur.com/a/xxx) will not work as photo links in posts."},
       {q:"How does the price drop checker work?",a:"r/Knife_Swap requires either a 10% price reduction or a $25 reduction to repost within 7 days. After 7 days you can repost at the same price. The tool checks these rules automatically and shows the minimum valid repost price. Hit the Repost button on any listing to generate a new post with the drop already applied."},
