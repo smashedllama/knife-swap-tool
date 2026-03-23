@@ -849,7 +849,7 @@ const NI_CATS=["watch","sunglasses","flashlight","multi-tool","bag","clothing","
 const NI_ICONS={watch:"⌚",sunglasses:"🕶️",flashlight:"🔦","multi-tool":"🔧","bag":"🎒",clothing:"👕",other:"📦"};
 const NI_LABELS={watch:"Watch",sunglasses:"Sunglasses",flashlight:"Flashlight","multi-tool":"Multi-tool",bag:"Bag / Case",clothing:"Clothing",other:"Other"};
 const ED=()=>({postType:"[WTS]",knives:[],items:[],payment:[...SETTINGS.payment],paymentOther:"",noShip:[...SETTINGS.noShip],noShipOther:"",repost:false,photos:[],notes:"",rulesConfirmed:false,bundleEnabled:false,bundlePrice:"",bundles:[],groupAddons:false,tradeInterests:SETTINGS.tradeInterests||"",shippingCarrier:SETTINGS.shippingCarrier||"USPS"});
-let S={posts:[],inventory:[],loaded:false,view:"list",expanded:null,copied:null,draft:ED(),kfOpen:false,kfIdx:-1,kf:EK(),kfMode:"draft",adv:false,err:"",saveNotice:false,lockerFilter:"all",lockerPicker:false,movingKnife:null,uploadFiles:[],kfUploads:[],priceResearch:{status:"idle",results:[],query:""},modal:null,authStatus:"guest",authEmail:"",showMigrate:false,soldFlow:null,delFlowEmail:null,authLoading:true,mdPreview:new Set(),undoStack:[],undoToast:null,_undoTid:null,flairToast:null,_flairTid:null,rollSort:"added",tutStep:0,aboutTab:"about",feedbackTab:"bug",trackingFlow:null,preflight:null,priceFilter:"sold",tour:null,bundlePicker:null,niOpen:false,ni:null,niIdx:-1,gearPicker:false,_skipRollAnim:false,rollKnivesOpen:true,rollGearOpen:true,emailChangeOpen:false,emailChangeNotice:false,accountDeleted:false};
+let S={posts:[],inventory:[],loaded:false,view:"list",expanded:null,copied:null,draft:ED(),kfOpen:false,kfIdx:-1,kf:EK(),kfMode:"draft",adv:false,err:"",saveNotice:false,lockerFilter:"all",lockerPicker:false,movingKnife:null,uploadFiles:[],kfUploads:[],priceResearch:{status:"idle",results:[],query:""},modal:null,authStatus:"guest",authEmail:"",showMigrate:false,soldFlow:null,delFlowEmail:null,authLoading:true,mdPreview:new Set(),undoStack:[],undoToast:null,_undoTid:null,flairToast:null,_flairTid:null,rollSort:"added",tutStep:0,aboutTab:"about",feedbackTab:"bug",trackingFlow:null,preflight:null,priceFilter:"sold",tour:null,bundlePicker:null,niOpen:false,ni:null,niIdx:-1,gearPicker:false,_skipRollAnim:false,rollKnivesOpen:true,rollGearOpen:true,emailChangeOpen:false,emailChangeNotice:false,accountDeleted:false,migrateConfirm:null};
 
 // ─── STORAGE ──────────────────────────────────────────────────
 async function load(){
@@ -962,8 +962,9 @@ async function _sbLoad(){
     // Check profile first — catches soft-deleted accounts before loading any data
     const {data:prof}=await _sb.from("profiles").select("settings,deleted_at,purge_at").eq("id",currentUser.id).single();
     if(prof?.deleted_at){
-      // Account is in purgatory — don't load data, show deleted screen
+      // Account is in purgatory — wipe everything and show deleted screen
       S.accountDeleted=true;S.loaded=true;
+      S.posts=[];S.inventory=[];
       try{localStorage.removeItem("ks_v4");localStorage.removeItem("ks_inv_v1");}catch(e){}
       return;
     }
@@ -1047,12 +1048,23 @@ async function deleteAccount(){
 }
 async function migrateToSupabase(){
   if(!_sb||!currentUser)return;
-  for(const p of S.posts)await _sbUpsertPost(p);
-  for(const k of S.inventory)await _sbUpsertInv(k);
-  await _sbSaveSettings();
-  S.showMigrate=false;render();
+  try{
+    const now=new Date().toISOString();
+    const posts=S.posts.filter(p=>!p._tourDemo);
+    if(posts.length)await _sb.from("posts").upsert(posts.map(p=>({id:p.id,user_id:currentUser.id,data:p,updated_at:now})));
+    const inv=S.inventory.filter(k=>!k._tourDemo);
+    if(inv.length)await _sb.from("inventory").upsert(inv.map(k=>({id:k.id,user_id:currentUser.id,data:k,updated_at:now})));
+    await _sbSaveSettings();
+  }catch(e){console.warn("Migration failed:",e);}
+  S.showMigrate=false;S.migrateConfirm=null;render();
 }
-function skipMigrate(){S.showMigrate=false;_sbLoad().then(render);}
+async function discardLocalData(){
+  S.posts=[];S.inventory=[];
+  try{localStorage.removeItem("ks_v4");localStorage.removeItem("ks_inv_v1");}catch(e){}
+  S.showMigrate=false;S.migrateConfirm=null;
+  await _sbLoad();render();
+}
+function skipMigrate(){S.showMigrate=false;S.migrateConfirm=null;_sbLoad().then(render);}
 
 // ─── POST BUILDER ─────────────────────────────────────────────
 // Auto-detect post type from knife types
@@ -2091,6 +2103,47 @@ function autoFillInput(inputId,datalistId){
 }
 
 // ─── RENDER HELPERS ───────────────────────────────────────────
+function renderMigrateBanner(){
+  const pCount=S.posts.filter(p=>!p._tourDemo).length;
+  const kCount=S.inventory.filter(k=>!isNI(k)&&!k._tourDemo).length;
+  const gCount=S.inventory.filter(k=>isNI(k)&&!k._tourDemo).length;
+  const itemSummary=[pCount?`${pCount} post${pCount!==1?"s":""}`:null,kCount?`${kCount} knife${kCount!==1?"es":""}`:null,gCount?`${gCount} gear item${gCount!==1?"s":""}`:null].filter(Boolean).join(", ");
+  if(S.migrateConfirm==="sync"){
+    return`<div style="position:fixed;top:60px;left:0;right:0;z-index:50;background:#0A3D62;border-bottom:1px solid rgba(0,113,227,.4);padding:14px 18px 16px;box-shadow:0 4px 20px rgba(0,0,0,.35)">
+      <div style="max-width:600px;margin:0 auto">
+        <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:4px">Sync ${itemSummary} to your account?</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.7);line-height:1.55;margin-bottom:12px">Your local data will be merged with your account and available on every device. This cannot be undone — any conflicting cloud data will be overwritten.</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button onclick="migrateToSupabase()" style="background:#0071E3;color:#fff;border:none;border-radius:980px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">✓ Yes, sync my data</button>
+          <button onclick="S.migrateConfirm=null;render()" style="background:rgba(255,255,255,.12);color:#fff;border:none;border-radius:980px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">← Back</button>
+        </div>
+      </div>
+    </div>`;
+  }
+  if(S.migrateConfirm==="discard"){
+    return`<div style="position:fixed;top:60px;left:0;right:0;z-index:50;background:#3A0A0A;border-bottom:1px solid rgba(255,59,48,.35);padding:14px 18px 16px;box-shadow:0 4px 20px rgba(0,0,0,.35)">
+      <div style="max-width:600px;margin:0 auto">
+        <div style="font-size:13px;font-weight:700;color:#FF3B30;margin-bottom:4px">⚠️ Permanently delete ${itemSummary}?</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.7);line-height:1.55;margin-bottom:12px">This local data will be gone the moment you confirm. It is <strong style="color:#fff">not</strong> in your account and there is no way to recover it. Your account data will be loaded instead.</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button onclick="discardLocalData()" style="background:#FF3B30;color:#fff;border:none;border-radius:980px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">✓ Yes, delete it — I understand</button>
+          <button onclick="S.migrateConfirm=null;render()" style="background:rgba(255,255,255,.12);color:#fff;border:none;border-radius:980px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">← Back</button>
+        </div>
+      </div>
+    </div>`;
+  }
+  // Default: initial prompt
+  return`<div style="position:fixed;top:60px;left:0;right:0;z-index:50;background:#2C2000;border-bottom:1px solid rgba(255,180,0,.3);padding:14px 18px 16px;box-shadow:0 4px 20px rgba(0,0,0,.35)">
+    <div style="max-width:600px;margin:0 auto">
+      <div style="font-size:13px;font-weight:700;color:#FFD60A;margin-bottom:4px">⚡ Unsynced local data — ${itemSummary}</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.75);line-height:1.55;margin-bottom:12px">This data exists only in this browser and is <strong style="color:#fff">not</strong> in your account yet. If you don't sync it now, it will be permanently deleted when you sign out.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="S.migrateConfirm='sync';render()" style="background:#FFD60A;color:#000;border:none;border-radius:980px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Sync to my account →</button>
+        <button onclick="S.migrateConfirm='discard';render()" style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.7);border:none;border-radius:980px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Don't sync (delete on logout)</button>
+      </div>
+    </div>
+  </div>`;
+}
 function renderDeletedAccount(){
   return`<div class="app" style="display:flex;flex-direction:column">
     <div class="hdr" style="grid-template-columns:1fr;justify-items:center">
@@ -2132,7 +2185,11 @@ function render(){
     renderList();
   const toastHtml=S.undoToast?`<div class="undo-toast">↩ ${esc(S.undoToast)} <button class="undo-toast-btn" onclick="undoLast()">Undo</button></div>`:"";
   const flairToastHtml=S.flairToast?`<div class="flair-toast">${esc(S.flairToast)}</div>`:"";
-  document.getElementById("root").innerHTML=view+(S.modal?renderModal(S.modal):"")+toastHtml+flairToastHtml+(S.tour!=null?renderTourCard():"");
+  const migrateBanner=S.showMigrate?renderMigrateBanner():"";
+  document.getElementById("root").innerHTML=view+(S.modal?renderModal(S.modal):"")+toastHtml+flairToastHtml+(S.tour!=null?renderTourCard():"")+migrateBanner;
+  // Push content down so it isn't hidden under the fixed migrate banner
+  const appEl=document.querySelector("#root .app");
+  if(appEl)appEl.style.paddingTop=S.showMigrate?"92px":"";
   S._skipRollAnim=false; // reset after DOM update so next non-chip render gets animation back
   // Animate main content when switching views
   if(S._prevView!==S.view){
@@ -3948,7 +4005,7 @@ window.triggerUpload=triggerUpload;window.handleFileInput=handleFileInput;window
 window.triggerKnifeUpload=triggerKnifeUpload;window.handleKnifeFileInput=handleKnifeFileInput;window.removeKnifeUpload=removeKnifeUpload;window.addKnifePhotoUrl=addKnifePhotoUrl;
 window.confirmSoldFlow=confirmSoldFlow;window.cancelSoldFlow=cancelSoldFlow;window.copyConfirmComment=copyConfirmComment;window.buildConfirmComment=buildConfirmComment;window.copyDibsMessage=copyDibsMessage;window.buildDibsMessage=buildDibsMessage;window.lookupZip=lookupZip;window.copyShippingAddress=copyShippingAddress;window.copyShippingName=copyShippingName;window.copyShippingAddrOnly=copyShippingAddrOnly;window.addrDisplayHtml=addrDisplayHtml;window.openPirateShip=openPirateShip;window.fmtAddress=fmtAddress;window.fmtAddrNoName=fmtAddrNoName;window.markShipped=markShipped;window.markDelivered=markDelivered;window.markConfirmedTrade=markConfirmedTrade;window.kShipStatus=kShipStatus;window.copyTrackingLink=copyTrackingLink;window.startTracking=startTracking;window.cancelTracking=cancelTracking;window.saveTracking=saveTracking;
 window.markPending=markPending;window.markInvPending=markInvPending;
-window.sendMagicLink=sendMagicLink;window.signOut=signOut;window.changeEmail=changeEmail;window.deleteAccount=deleteAccount;window.migrateToSupabase=migrateToSupabase;window.skipMigrate=skipMigrate;
+window.sendMagicLink=sendMagicLink;window.signOut=signOut;window.changeEmail=changeEmail;window.deleteAccount=deleteAccount;window.migrateToSupabase=migrateToSupabase;window.discardLocalData=discardLocalData;window.skipMigrate=skipMigrate;
 window.renderTutorialModal=renderTutorialModal;window.renderAboutModal=renderAboutModal;window.renderCloudinaryModal=renderCloudinaryModal;window.renderCloudinaryStatus=renderCloudinaryStatus;
 window.startTour=startTour;window.nextTourStep=nextTourStep;window.prevTourStep=prevTourStep;window.endTour=endTour;
 window.autoPostType=autoPostType;window.buildTitleStr=buildTitleStr;window.doFetchPriceResearch=doFetchPriceResearch;window.clearPriceResearch=clearPriceResearch;window.applyPriceFromResearch=applyPriceFromResearch;
