@@ -935,8 +935,16 @@ async function initSupabase(){
     // Resolve auth state immediately - header snaps to correct state before DB loads
     S.authLoading=false;
     render();
-    // Now load data from DB in the background
-    if(currentUser)await _sbLoad();
+    if(currentUser){
+      // Check for local data BEFORE loading from cloud — this is the primary
+      // migration detection path for magic link sign-ins (page reloads on redirect)
+      const hadLocalData=S.posts.length>0||S.inventory.length>0;
+      if(hadLocalData){
+        S.showMigrate=true;render(); // hold off on _sbLoad until user decides
+      } else {
+        await _sbLoad();render();
+      }
+    }
     _sb.auth.onAuthStateChange(async(event,session)=>{
       if(event==="SIGNED_IN"&&session){
         const wasGuest=!currentUser;
@@ -945,9 +953,13 @@ async function initSupabase(){
         S.authEmail=currentUser.email;
         S.modal=null;
         if(wasGuest&&(S.posts.length>0||S.inventory.length>0)){
+          // In-page sign-in (no redirect) with local data
           S.showMigrate=true;render();
-        } else {
+        } else if(!S.showMigrate){
+          // No local data conflict — just load from cloud
           await _sbLoad();render();
+        } else {
+          render(); // migrate banner already showing
         }
       } else if(event==="SIGNED_OUT"){
         currentUser=null;S.authStatus="guest";S.authEmail="";S.showMigrate=false;
