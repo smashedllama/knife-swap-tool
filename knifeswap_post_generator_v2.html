@@ -118,7 +118,9 @@ textarea{resize:vertical;line-height:1.55}
 
 /* STATS */
 .stats{display:flex;gap:10px;margin-bottom:20px}
-.stat{flex:1;background:var(--card);border-radius:var(--r);padding:15px 17px;border:.5px solid var(--b1);box-shadow:var(--sh)}
+.stat{flex:1;background:var(--card);border-radius:var(--r);padding:15px 17px;border:.5px solid var(--b1);box-shadow:var(--sh);transition:border-color .15s}
+.stat:hover{border-color:var(--b2)}
+.stat-n.ring{outline:2px solid currentColor;outline-offset:3px;border-radius:4px}
 .stat-n{font-size:26px;font-weight:800;letter-spacing:-.03em;line-height:1}
 .stat-n.blue{color:var(--blue)}.stat-n.green{color:var(--green)}.stat-n.orange{color:var(--orange)}.stat-n.purple{color:var(--purple)}
 .stat-l{font-size:10px;font-weight:600;color:var(--t3);margin-top:4px;text-transform:uppercase;letter-spacing:.06em}
@@ -927,7 +929,7 @@ const NI_ICONS={watch:icon("watch",14),sunglasses:icon("glasses",14),flashlight:
 const NI_LABELS={watch:"Watch",sunglasses:"Sunglasses",flashlight:"Flashlight","multi-tool":"Multi-tool",bag:"Bag / Case",clothing:"Clothing",other:"Other"};
 const SYNC_SAYINGS=["Sharpening the sync edge…","Honing your data to a razor's edge…","Applying the Scary Sharp protocol…","Stropping your listings clean…","Deburring your inventory…","Heat treating your data for maximum retention…","Running a paper test on your posts…","Putting a hair-whittling edge on your backup…","Your collection is in good hands…","Checking the grind geometry…","Buffing out the data scratches…","No false edges on this backup…","Setting the bevel on your backup…","Full flat grind on your file transfer…","Convex-grinding your cloud storage…","Making sure your data has no microbevels…"];
 const ED=()=>({postType:"[WTS]",knives:[],items:[],payment:[...SETTINGS.payment],paymentOther:"",noShip:[...SETTINGS.noShip],noShipOther:"",repost:false,photos:[],notes:"",rulesConfirmed:false,bundleEnabled:false,bundlePrice:"",bundles:[],groupAddons:false,tradeInterests:SETTINGS.tradeInterests||"",shippingCarrier:SETTINGS.shippingCarrier||"USPS"});
-let S={posts:[],inventory:[],loaded:false,view:"list",expanded:null,copied:null,draft:ED(),kfOpen:false,kfIdx:-1,kf:EK(),kfMode:"draft",adv:false,err:"",saveNotice:false,lockerFilter:"all",lockerPicker:false,movingKnife:null,uploadFiles:[],kfUploads:[],priceResearch:{status:"idle",results:[],query:""},modal:null,authStatus:"guest",authEmail:"",showMigrate:false,soldFlow:null,delFlowEmail:null,authLoading:true,mdPreview:new Set(),undoStack:[],undoToast:null,_undoTid:null,flairToast:null,_flairTid:null,rollSort:"added",tutStep:0,aboutTab:"about",feedbackTab:"bug",trackingFlow:null,preflight:null,priceFilter:"sold",tour:null,bundlePicker:null,niOpen:false,ni:null,niIdx:-1,gearPicker:false,_skipRollAnim:false,rollKnivesOpen:true,rollGearOpen:true,emailChangeOpen:false,emailChangeNotice:false,accountDeleted:false,migrateConfirm:null,syncingScreen:false,syncMsg:0,_sessionStart:Date.now(),_renderCount:0,_loadTime:null,_copyCount:0,_viewChanges:0,_lastView:""};
+let S={posts:[],inventory:[],loaded:false,view:"list",expanded:null,copied:null,draft:ED(),kfOpen:false,kfIdx:-1,kf:EK(),kfMode:"draft",adv:false,err:"",saveNotice:false,lockerFilter:"all",lockerPicker:false,movingKnife:null,uploadFiles:[],kfUploads:[],priceResearch:{status:"idle",results:[],query:""},modal:null,authStatus:"guest",authEmail:"",showMigrate:false,soldFlow:null,delFlowEmail:null,authLoading:true,mdPreview:new Set(),undoStack:[],undoToast:null,_undoTid:null,flairToast:null,_flairTid:null,rollSort:"added",soldFilter:"all",tutStep:0,aboutTab:"about",feedbackTab:"bug",trackingFlow:null,preflight:null,priceFilter:"sold",tour:null,bundlePicker:null,niOpen:false,ni:null,niIdx:-1,gearPicker:false,_skipRollAnim:false,rollKnivesOpen:true,rollGearOpen:true,emailChangeOpen:false,emailChangeNotice:false,accountDeleted:false,migrateConfirm:null,syncingScreen:false,syncMsg:0,_sessionStart:Date.now(),_renderCount:0,_loadTime:null,_copyCount:0,_viewChanges:0,_lastView:""};
 
 // ─── STORAGE ──────────────────────────────────────────────────
 async function load(){
@@ -3997,7 +3999,8 @@ function renderSold(){
   const avgPrice=pricesNum.length?Math.round(pricesNum.reduce((a,b)=>a+b,0)/pricesNum.length):null;
   const sellRate=S.inventory.length?Math.round((fromPosts.length/Math.max(S.inventory.length,1))*100):null;
   const sellStatsHtml=all.length>=2?`<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">${avgDays!==null?`<div class="sell-stat"><div class="sell-stat-n blue">${avgDays}d</div><div class="sell-stat-l">Avg days to sell</div></div>`:""}${avgPrice?`<div class="sell-stat"><div class="sell-stat-n orange">$${avgPrice}</div><div class="sell-stat-l">Avg sale price</div></div>`:""}${sellRate!==null?`<div class="sell-stat"><div class="sell-stat-n green">${sellRate}%</div><div class="sell-stat-l">Sell-through rate</div></div>`:""}${totalVal>0?`<div class="sell-stat"><div class="sell-stat-n purple">$${Math.round(totalVal)}</div><div class="sell-stat-l">Total revenue</div></div>`:""}</div>`:"";
-  const stats=`<div class="stats"><div class="stat"><div class="stat-n green">${all.length}</div><div class="stat-l">Sold</div></div><div class="stat"><div class="stat-n">${completedPosts.length}</div><div class="stat-l">Completed Posts</div></div><div class="stat"><div class="stat-n purple">${fromRoll.length}</div><div class="stat-l">From The Roll</div></div><div class="stat" style="margin-left:auto;display:flex;align-items:center"><button class="btn btn-sec btn-sm" onclick="exportSoldCSV()" title="Export sold history to CSV">↓ CSV</button></div></div>${sellStatsHtml}`;
+  const sf=S.soldFilter||"all";
+  const stats=`<div class="stats"><div class="stat" style="cursor:pointer" onclick="S.soldFilter='all';render()"><div class="stat-n green${sf==='all'?' ring':''}">${all.length}</div><div class="stat-l">All Sold</div></div><div class="stat" style="cursor:pointer" onclick="S.soldFilter='listings';render()"><div class="stat-n${sf==='listings'?' ring':''}">${completedPosts.length}</div><div class="stat-l">Completed Posts</div></div><div class="stat" style="cursor:pointer" onclick="S.soldFilter='roll';render()"><div class="stat-n purple${sf==='roll'?' ring':''}">${fromRoll.length}</div><div class="stat-l">From The Roll</div></div><div class="stat" style="margin-left:auto;display:flex;align-items:center"><button class="btn btn-sec btn-sm" onclick="exportSoldCSV()" title="Export sold history to CSV">↓ CSV</button></div></div>${sellStatsHtml}`;
   if(!all.length&&!completedPosts.length)return hdr+`<div class="main">${stats}<div class="empty"><div class="empty-ico">${icon('tag',44,'var(--t4)')}</div><div class="empty-h">No sold knives yet</div><div class="empty-p">When you mark a knife as sold in a listing or in The Roll, it will show up here.</div></div></div>`;
   // Completed listings section
   const completedSection=completedPosts.length?`<div style="margin-bottom:20px">
@@ -4028,10 +4031,17 @@ function renderSold(){
       </div>`;
     }).join("")}
   </div>`:"";
-  // Sold history (flat list - from Roll + posts combined)
-  const rollRows=fromRoll.map(k=>`<div class="krow"><div class="krow-info"><div class="krow-name">${esc(k.brand)} ${esc(k.model)}</div><div class="krow-meta">${esc(k.steel||"N/A")} · ${esc(k.bladeCondition)} · The Roll</div></div><span class="krow-price">${knifePrice(k)}</span><span class="sold-chip">Sold</span>${k.soldAt?`<span style="font-size:11px;color:var(--t3);white-space:nowrap">${fmtD(k.soldAt)}</span>`:""}</div>`).join("");
-  const historySection=rollRows?`<div class="sec-lbl">Sold from The Roll</div><div class="pc" style="padding:0;overflow:hidden">${rollRows}</div>`:"";
-  return hdr+`<div class="main">${stats}${completedSection}${historySection}</div>`;
+  // Sold history: post-sold knives NOT in a completed post + roll-only sold knives
+  const completedPostIds=new Set(completedPosts.map(p=>p.id));
+  const historyItems=[
+    ...fromPosts.filter(k=>!completedPostIds.has(k.pid)),
+    ...fromRoll
+  ].sort((a,b)=>(b.soldAt||"").localeCompare(a.soldAt||""));
+  const historyRows=historyItems.map(k=>`<div class="krow"><div class="krow-info"><div class="krow-name">${esc(k.brand)} ${esc(k.model)}</div><div class="krow-meta">${esc(k.steel||"N/A")} · ${esc(k.bladeCondition||"")} · ${k.source==="roll"?"The Roll":"Listing"}</div></div><span class="krow-price">${knifePrice(k)}</span><span class="sold-chip">Sold</span>${k.soldAt?`<span style="font-size:11px;color:var(--t3);white-space:nowrap">${fmtD(k.soldAt)}</span>`:""}</div>`).join("");
+  const historySection=historyRows?`<div class="sec-lbl">Sold History</div><div class="pc" style="padding:0;overflow:hidden">${historyRows}</div>`:"";
+  const showListings=sf==="all"||sf==="listings";
+  const showHistory=sf==="all"||sf==="roll";
+  return hdr+`<div class="main">${stats}${showListings?completedSection:""}${showHistory?historySection:""}</div>`;
 }
 
 // ─── INTERACTIVE TOUR ─────────────────────────────────────────
