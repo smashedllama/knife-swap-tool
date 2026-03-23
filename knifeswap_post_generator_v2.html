@@ -4370,23 +4370,54 @@ function renderCompose(){
         const names=b.knifeIndices.map(i=>d.knives[i]).filter(Boolean).map(k=>`${esc(k.brand)} ${esc(k.model)}`).join(" + ");
         return`<div class="sel-bundle-item"><span style="flex:1;font-weight:600;color:var(--t1)">${names}</span><span style="color:var(--greent);font-weight:700">$${esc(b.price)}</span><span style="font-size:11px;color:var(--t3)">${b.allowIndividual?"ind. ok":"bundle only"}</span><button class="btn btn-rd btn-xs" onclick="removeBundle('${b.id}')">&#x2715;</button></div>`;
       }).join("");
-      const pickerHtml=S.bundlePicker?`<div class="sel-bundle-picker">
+      const pickerHtml=(()=>{
+        if(!S.bundlePicker)return"";
+        const bp=S.bundlePicker;
+        // Prices and suggestion
+        const selPrices=bp.indices.map(i=>parseFloat(d.knives[i]?.price||0)).filter(p=>p>0);
+        const selTotal=selPrices.reduce((a,b)=>a+b,0);
+        const suggested=selPrices.length>=2?Math.round(selTotal*0.9/5)*5||Math.round(selTotal*0.9):null;
+        const savings=suggested&&selTotal>suggested?selTotal-suggested:null;
+        return`<div class="sel-bundle-picker">
         <div style="font-size:12px;font-weight:600;color:var(--t2);margin-bottom:8px">Select 2 or more knives:</div>
         ${d.knives.map((k,i)=>{
-          const inOtherBundle=pickedSet.has(i)&&!(S.bundlePicker.indices.includes(i));
-          const checked=S.bundlePicker.indices.includes(i);
+          const inOtherBundle=pickedSet.has(i)&&!(bp.indices.includes(i));
+          const checked=bp.indices.includes(i);
+          const kPrice=parseFloat(k.price||0);
+          const priceTag=kPrice>0?`<span style="font-size:11px;font-weight:600;color:${checked?"var(--greent)":"var(--t3)"}">$${kPrice}</span>`:"";
           return`<div class="sel-bundle-knife-row${inOtherBundle?" disabled":""}" style="${inOtherBundle?"opacity:.38;pointer-events:none":""}" onclick="toggleBundleKnife(${i})">
-            <input type="checkbox" ${checked?"checked":""} style="pointer-events:none" /><span>${i+1}. ${esc(k.brand)} ${esc(k.model)}</span></div>`;
+            <input type="checkbox" ${checked?"checked":""} style="pointer-events:none;flex-shrink:0"/>
+            <span style="flex:1">${i+1}. ${esc(k.brand)} ${esc(k.model)}</span>
+            ${priceTag}</div>`;
         }).join("")}
+        ${bp.indices.length>=2&&selTotal>0?`<div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding:8px 10px;background:var(--bg);border-radius:8px;border:.5px solid var(--b1)">
+          <div>
+            <div style="font-size:11px;color:var(--t3)">Combined asking</div>
+            <div style="font-size:14px;font-weight:700;color:var(--t1)">$${selTotal}</div>
+          </div>
+          ${suggested?`<div style="text-align:center">
+            <div style="font-size:10px;color:var(--t4)">suggested (~10% off)</div>
+            <div style="font-size:14px;font-weight:700;color:var(--blue)">$${suggested}</div>
+          </div>`:""}
+          ${savings?`<div style="text-align:right">
+            <div style="font-size:10px;color:var(--t4)">buyer saves</div>
+            <div style="font-size:14px;font-weight:700;color:var(--greent)">$${savings}</div>
+          </div>`:""}
+        </div>
+        ${!bp.price&&suggested?`<div style="font-size:11px;color:var(--t4);margin-top:6px;padding-left:2px">↑ Tap to use suggested price, or enter your own below</div>`:""}`:""}
         <div style="display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap">
-          <input type="number" min="0" placeholder="Bundle price ($)" style="width:140px;font-size:13px;padding:6px 10px" value="${esc(S.bundlePicker.price)}" oninput="S.bundlePicker.price=this.value"/>
-          <label class="cblk" style="font-size:12px"><input type="checkbox" ${S.bundlePicker.allowIndividual?"checked":""} onchange="S.bundlePicker.allowIndividual=this.checked;render()"/> Allow individual sales too</label>
+          <div style="position:relative">
+            <input type="number" min="0" placeholder="Bundle price ($)" style="width:160px;font-size:13px;padding:6px 10px" value="${esc(bp.price)}" oninput="S.bundlePicker.price=this.value"/>
+            ${suggested&&!bp.price?`<button onclick="S.bundlePicker.price='${suggested}';render()" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:10px;font-weight:600;color:var(--blue);background:none;border:none;cursor:pointer;padding:0;white-space:nowrap">Use $${suggested}</button>`:""}
+          </div>
+          <label class="cblk" style="font-size:12px"><input type="checkbox" ${bp.allowIndividual?"checked":""} onchange="S.bundlePicker.allowIndividual=this.checked;render()"/> Allow individual sales too</label>
         </div>
         <div style="display:flex;gap:8px;margin-top:10px">
           <button class="btn btn-pri btn-sm" onclick="confirmBundleCreate()">Create Bundle</button>
           <button class="btn btn-sec btn-sm" onclick="closeBundlePicker()">Cancel</button>
         </div>
-      </div>`:"";
+      </div>`;
+      })();
       return`<div class="sel-bundle-box" style="margin-bottom:14px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:${bundles.length||S.bundlePicker?"8px":"0"}">
           <div><div style="font-size:13px;font-weight:600;color:var(--t1)">Selective Bundles</div><div style="font-size:11px;color:var(--t3)">Group specific knives at one price</div></div>
