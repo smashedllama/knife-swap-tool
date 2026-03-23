@@ -848,8 +848,9 @@ const isNI=item=>!!item.itemCategory;
 const NI_CATS=["watch","sunglasses","flashlight","multi-tool","bag","clothing","other"];
 const NI_ICONS={watch:"⌚",sunglasses:"🕶️",flashlight:"🔦","multi-tool":"🔧","bag":"🎒",clothing:"👕",other:"📦"};
 const NI_LABELS={watch:"Watch",sunglasses:"Sunglasses",flashlight:"Flashlight","multi-tool":"Multi-tool",bag:"Bag / Case",clothing:"Clothing",other:"Other"};
+const SYNC_SAYINGS=["Sharpening the sync edge…","Honing your data to a razor's edge…","Applying the Scary Sharp protocol…","Stropping your listings clean…","Deburring your inventory…","Heat treating your data for maximum retention…","Running a paper test on your posts…","Putting a hair-whittling edge on your backup…","Your collection is in good hands…","Checking the grind geometry…","Buffing out the data scratches…","No false edges on this backup…","Setting the bevel on your backup…","Full flat grind on your file transfer…","Convex-grinding your cloud storage…","Making sure your data has no microbevels…"];
 const ED=()=>({postType:"[WTS]",knives:[],items:[],payment:[...SETTINGS.payment],paymentOther:"",noShip:[...SETTINGS.noShip],noShipOther:"",repost:false,photos:[],notes:"",rulesConfirmed:false,bundleEnabled:false,bundlePrice:"",bundles:[],groupAddons:false,tradeInterests:SETTINGS.tradeInterests||"",shippingCarrier:SETTINGS.shippingCarrier||"USPS"});
-let S={posts:[],inventory:[],loaded:false,view:"list",expanded:null,copied:null,draft:ED(),kfOpen:false,kfIdx:-1,kf:EK(),kfMode:"draft",adv:false,err:"",saveNotice:false,lockerFilter:"all",lockerPicker:false,movingKnife:null,uploadFiles:[],kfUploads:[],priceResearch:{status:"idle",results:[],query:""},modal:null,authStatus:"guest",authEmail:"",showMigrate:false,soldFlow:null,delFlowEmail:null,authLoading:true,mdPreview:new Set(),undoStack:[],undoToast:null,_undoTid:null,flairToast:null,_flairTid:null,rollSort:"added",tutStep:0,aboutTab:"about",feedbackTab:"bug",trackingFlow:null,preflight:null,priceFilter:"sold",tour:null,bundlePicker:null,niOpen:false,ni:null,niIdx:-1,gearPicker:false,_skipRollAnim:false,rollKnivesOpen:true,rollGearOpen:true,emailChangeOpen:false,emailChangeNotice:false,accountDeleted:false,migrateConfirm:null};
+let S={posts:[],inventory:[],loaded:false,view:"list",expanded:null,copied:null,draft:ED(),kfOpen:false,kfIdx:-1,kf:EK(),kfMode:"draft",adv:false,err:"",saveNotice:false,lockerFilter:"all",lockerPicker:false,movingKnife:null,uploadFiles:[],kfUploads:[],priceResearch:{status:"idle",results:[],query:""},modal:null,authStatus:"guest",authEmail:"",showMigrate:false,soldFlow:null,delFlowEmail:null,authLoading:true,mdPreview:new Set(),undoStack:[],undoToast:null,_undoTid:null,flairToast:null,_flairTid:null,rollSort:"added",tutStep:0,aboutTab:"about",feedbackTab:"bug",trackingFlow:null,preflight:null,priceFilter:"sold",tour:null,bundlePicker:null,niOpen:false,ni:null,niIdx:-1,gearPicker:false,_skipRollAnim:false,rollKnivesOpen:true,rollGearOpen:true,emailChangeOpen:false,emailChangeNotice:false,accountDeleted:false,migrateConfirm:null,syncingScreen:false,syncMsg:0};
 
 // ─── STORAGE ──────────────────────────────────────────────────
 async function load(){
@@ -939,9 +940,12 @@ async function initSupabase(){
       // Check for local data BEFORE loading from cloud — this is the primary
       // migration detection path for magic link sign-ins (page reloads on redirect)
       const hadLocalData=S.posts.length>0||S.inventory.length>0;
-      if(hadLocalData){
-        S.showMigrate=true;render(); // hold off on _sbLoad until user decides
+      const alreadySynced=(()=>{try{return localStorage.getItem("ks_synced_uid")===currentUser.id;}catch(e){return false;}})();
+      if(hadLocalData&&!alreadySynced){
+        // New data on this device not yet associated with this account — show conflict
+        S.showMigrate=true;render();
       } else {
+        // Returning user or no local data — just refresh from cloud
         await _sbLoad();render();
       }
     }
@@ -963,6 +967,7 @@ async function initSupabase(){
         }
       } else if(event==="SIGNED_OUT"){
         currentUser=null;S.authStatus="guest";S.authEmail="";S.showMigrate=false;
+        try{localStorage.removeItem("ks_synced_uid");}catch(e){}
         await load();loadSettings().then(render);
       }
     });
@@ -987,8 +992,8 @@ async function _sbLoad(){
     if(inv&&inv.length)S.inventory=inv.map(r=>r.data).filter(k=>!k._tourDemo);
     S.loaded=true;
     reconcileInventory();
-    // mirror to localStorage
-    try{localStorage.setItem("ks_v4",JSON.stringify(S.posts));localStorage.setItem("ks_inv_v1",JSON.stringify(S.inventory));localStorage.setItem("ks_settings",JSON.stringify(SETTINGS));}catch(e){}
+    // Mirror to localStorage and mark this device as synced for this user
+    try{localStorage.setItem("ks_v4",JSON.stringify(S.posts));localStorage.setItem("ks_inv_v1",JSON.stringify(S.inventory));localStorage.setItem("ks_settings",JSON.stringify(SETTINGS));localStorage.setItem("ks_synced_uid",currentUser.id);}catch(e){}
   }catch(e){console.warn("Supabase load failed:",e);S.loaded=true;}
 }
 async function _sbUpsertPost(post){
@@ -1020,7 +1025,7 @@ async function sendMagicLink(email){
   }catch(e){S.err=e.message||"Failed to send link.";render();}
 }
 async function signOut(){
-  try{localStorage.removeItem("ks_v4");localStorage.removeItem("ks_inv_v1");localStorage.removeItem("ks_settings");}catch(e){}
+  try{localStorage.removeItem("ks_v4");localStorage.removeItem("ks_inv_v1");localStorage.removeItem("ks_settings");localStorage.removeItem("ks_synced_uid");}catch(e){}
   S.posts=[];S.inventory=[];
   if(_sb)await _sb.auth.signOut();
   currentUser=null;S.authStatus="guest";S.authEmail="";S.showMigrate=false;render();
@@ -1060,6 +1065,8 @@ async function deleteAccount(){
 }
 async function migrateToSupabase(){
   if(!_sb||!currentUser)return;
+  S.syncingScreen=true;S.syncMsg=0;render();
+  const _tid=setInterval(()=>{S.syncMsg++;render();},1900);
   try{
     const now=new Date().toISOString();
     const posts=S.posts.filter(p=>!p._tourDemo);
@@ -1067,14 +1074,16 @@ async function migrateToSupabase(){
     const inv=S.inventory.filter(k=>!k._tourDemo);
     if(inv.length)await _sb.from("inventory").upsert(inv.map(k=>({id:k.id,user_id:currentUser.id,data:k,updated_at:now})));
     await _sbSaveSettings();
+    try{localStorage.setItem("ks_v4",JSON.stringify(posts));localStorage.setItem("ks_inv_v1",JSON.stringify(inv));localStorage.setItem("ks_synced_uid",currentUser.id);}catch(e){}
   }catch(e){console.warn("Migration failed:",e);}
-  S.showMigrate=false;S.migrateConfirm=null;render();
+  clearInterval(_tid);
+  S.syncingScreen=false;S.showMigrate=false;S.migrateConfirm=null;render();
 }
 async function discardLocalData(){
   S.posts=[];S.inventory=[];
   try{localStorage.removeItem("ks_v4");localStorage.removeItem("ks_inv_v1");}catch(e){}
   S.showMigrate=false;S.migrateConfirm=null;
-  await _sbLoad();render();
+  await _sbLoad();render(); // _sbLoad sets ks_synced_uid on success
 }
 function skipMigrate(){S.showMigrate=false;S.migrateConfirm=null;_sbLoad().then(render);}
 
@@ -2115,44 +2124,72 @@ function autoFillInput(inputId,datalistId){
 }
 
 // ─── RENDER HELPERS ───────────────────────────────────────────
-function renderMigrateBanner(){
-  const pCount=S.posts.filter(p=>!p._tourDemo).length;
-  const kCount=S.inventory.filter(k=>!isNI(k)&&!k._tourDemo).length;
-  const gCount=S.inventory.filter(k=>isNI(k)&&!k._tourDemo).length;
+function renderMigrateConflict(){
+  const hdr=`<div class="hdr" style="grid-template-columns:1fr;justify-items:center"><div class="hdr-logo" style="pointer-events:none"><img src="/bladeflow/icon.svg" width="44" height="44" style="flex-shrink:0" alt="BladeFlow"/><div><div class="hdr-title">BladeFlow</div><div class="hdr-sub">For r/Knife_Swap</div></div></div></div>`;
+  const posts=S.posts.filter(p=>!p._tourDemo);
+  const knives=S.inventory.filter(k=>!isNI(k)&&!k._tourDemo);
+  const gear=S.inventory.filter(k=>isNI(k)&&!k._tourDemo);
+  const pCount=posts.length,kCount=knives.length,gCount=gear.length;
   const itemSummary=[pCount?`${pCount} post${pCount!==1?"s":""}`:null,kCount?`${kCount} knife${kCount!==1?"es":""}`:null,gCount?`${gCount} gear item${gCount!==1?"s":""}`:null].filter(Boolean).join(", ");
+  // Build readable item list
+  const listItems=[
+    ...posts.slice(0,4).map(p=>`<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:.5px solid rgba(0,0,0,.06)"><span style="font-size:10px;font-weight:700;color:#8E8E93;text-transform:uppercase;min-width:36px">Post</span><span style="font-size:13px;color:#1D1D1F">${esc(p.knives&&p.knives.length?p.knives.map(k=>(k.brand||"")+" "+(k.model||"")).join(", ").trim():"Untitled post")}</span></div>`),
+    ...(posts.length>4?[`<div style="font-size:12px;color:#8E8E93;padding:4px 0">+${posts.length-4} more post${posts.length-4!==1?"s":""}…</div>`]:[]),
+    ...knives.slice(0,4).map(k=>`<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:.5px solid rgba(0,0,0,.06)"><span style="font-size:10px;font-weight:700;color:#8E8E93;text-transform:uppercase;min-width:36px">Knife</span><span style="font-size:13px;color:#1D1D1F">${esc((k.brand||"")+" "+(k.model||"")).trim()||"Unnamed knife"}</span></div>`),
+    ...(knives.length>4?[`<div style="font-size:12px;color:#8E8E93;padding:4px 0">+${knives.length-4} more knife${knives.length-4!==1?"es":""}…</div>`]:[]),
+    ...gear.slice(0,3).map(g=>`<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:.5px solid rgba(0,0,0,.06)"><span style="font-size:10px;font-weight:700;color:#8E8E93;text-transform:uppercase;min-width:36px">${esc(NI_LABELS[g.itemCategory]||"Gear")}</span><span style="font-size:13px;color:#1D1D1F">${esc(g.description||"Item")}</span></div>`),
+    ...(gear.length>3?[`<div style="font-size:12px;color:#8E8E93;padding:4px 0">+${gear.length-3} more item${gear.length-3!==1?"s":""}…</div>`]:[]),
+  ].join("");
   if(S.migrateConfirm==="sync"){
-    return`<div style="position:fixed;top:60px;left:0;right:0;z-index:50;background:#0A3D62;border-bottom:1px solid rgba(0,113,227,.4);padding:14px 18px 16px;box-shadow:0 4px 20px rgba(0,0,0,.35)">
-      <div style="max-width:600px;margin:0 auto">
-        <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:4px">Sync ${itemSummary} to your account?</div>
-        <div style="font-size:12px;color:rgba(255,255,255,.7);line-height:1.55;margin-bottom:12px">Your local data will be merged with your account and available on every device. This cannot be undone — any conflicting cloud data will be overwritten.</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button onclick="migrateToSupabase()" style="background:#0071E3;color:#fff;border:none;border-radius:980px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">✓ Yes, sync my data</button>
-          <button onclick="S.migrateConfirm=null;render()" style="background:rgba(255,255,255,.12);color:#fff;border:none;border-radius:980px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">← Back</button>
-        </div>
+    return`<div class="app" style="display:flex;flex-direction:column">${hdr}<div style="flex:1;overflow-y:auto;padding:24px 20px 40px"><div style="max-width:480px;margin:0 auto">
+      <div style="font-size:22px;font-weight:700;color:var(--t1);letter-spacing:-.03em;margin-bottom:8px">Add to your account?</div>
+      <div style="font-size:14px;color:var(--t3);line-height:1.6;margin-bottom:20px">This will merge <strong style="color:var(--t1)">${itemSummary}</strong> from this browser into your account. They'll be available on all your devices. Any items with matching IDs in the cloud will be overwritten by the local version.</div>
+      <div style="background:rgba(0,113,227,.07);border:.5px solid rgba(0,113,227,.2);border-radius:10px;padding:11px 14px;margin-bottom:24px"><div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:2px">This cannot be undone.</div><div style="font-size:12px;color:var(--t3);line-height:1.5">Once synced, this browser's copy becomes the authoritative version for these items.</div></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button onclick="migrateToSupabase()" style="background:var(--blue);color:#fff;border:none;border-radius:980px;padding:12px 24px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font)">✓ Yes, sync to my account</button>
+        <button onclick="S.migrateConfirm=null;render()" style="background:var(--bg2);color:var(--t2);border:none;border-radius:980px;padding:12px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font)">← Back</button>
       </div>
-    </div>`;
+    </div></div></div>`;
   }
   if(S.migrateConfirm==="discard"){
-    return`<div style="position:fixed;top:60px;left:0;right:0;z-index:50;background:#3A0A0A;border-bottom:1px solid rgba(255,59,48,.35);padding:14px 18px 16px;box-shadow:0 4px 20px rgba(0,0,0,.35)">
-      <div style="max-width:600px;margin:0 auto">
-        <div style="font-size:13px;font-weight:700;color:#FF3B30;margin-bottom:4px">⚠️ Permanently delete ${itemSummary}?</div>
-        <div style="font-size:12px;color:rgba(255,255,255,.7);line-height:1.55;margin-bottom:12px">This local data will be gone the moment you confirm. It is <strong style="color:#fff">not</strong> in your account and there is no way to recover it. Your account data will be loaded instead.</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button onclick="discardLocalData()" style="background:#FF3B30;color:#fff;border:none;border-radius:980px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">✓ Yes, delete it — I understand</button>
-          <button onclick="S.migrateConfirm=null;render()" style="background:rgba(255,255,255,.12);color:#fff;border:none;border-radius:980px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">← Back</button>
-        </div>
+    return`<div class="app" style="display:flex;flex-direction:column">${hdr}<div style="flex:1;overflow-y:auto;padding:24px 20px 40px"><div style="max-width:480px;margin:0 auto">
+      <div style="font-size:22px;font-weight:700;color:var(--redt);letter-spacing:-.03em;margin-bottom:8px">⚠️ Delete local data?</div>
+      <div style="font-size:14px;color:var(--t3);line-height:1.6;margin-bottom:16px">You are about to permanently delete <strong style="color:var(--redt)">${itemSummary}</strong> from this browser. This data is <strong style="color:var(--t1)">not</strong> in your account. Once deleted it cannot be recovered.</div>
+      <div style="background:var(--redbg);border:.5px solid rgba(255,59,48,.25);border-radius:10px;padding:11px 14px;margin-bottom:20px"><div style="font-size:12px;color:var(--redt);line-height:1.5;font-weight:600">There is no undo. Your account data will be loaded in its place.</div></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button onclick="discardLocalData()" style="background:var(--redt);color:#fff;border:none;border-radius:980px;padding:12px 24px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font)">✓ Yes, delete it — load my account</button>
+        <button onclick="S.migrateConfirm=null;render()" style="background:var(--bg2);color:var(--t2);border:none;border-radius:980px;padding:12px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font)">← Back</button>
       </div>
-    </div>`;
+    </div></div></div>`;
   }
-  // Default: initial prompt
-  return`<div style="position:fixed;top:60px;left:0;right:0;z-index:50;background:#2C2000;border-bottom:1px solid rgba(255,180,0,.3);padding:14px 18px 16px;box-shadow:0 4px 20px rgba(0,0,0,.35)">
-    <div style="max-width:600px;margin:0 auto">
-      <div style="font-size:13px;font-weight:700;color:#FFD60A;margin-bottom:4px">⚡ Unsynced local data — ${itemSummary}</div>
-      <div style="font-size:12px;color:rgba(255,255,255,.75);line-height:1.55;margin-bottom:12px">This data exists only in this browser and is <strong style="color:#fff">not</strong> in your account yet. If you don't sync it now, it will be permanently deleted when you sign out.</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button onclick="S.migrateConfirm='sync';render()" style="background:#FFD60A;color:#000;border:none;border-radius:980px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Sync to my account →</button>
-        <button onclick="S.migrateConfirm='discard';render()" style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.7);border:none;border-radius:980px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Don't sync (delete on logout)</button>
-      </div>
+  // Default: conflict overview
+  return`<div class="app" style="display:flex;flex-direction:column">${hdr}<div style="flex:1;overflow-y:auto;padding:24px 20px 40px"><div style="max-width:480px;margin:0 auto">
+    <div style="font-size:24px;font-weight:700;color:var(--t1);letter-spacing:-.03em;margin-bottom:6px">⚔️ Data conflict</div>
+    <div style="font-size:14px;color:var(--t3);line-height:1.65;margin-bottom:20px">This browser has <strong style="color:var(--t1)">${itemSummary}</strong> that aren't in your account. Choose what to do — either way is permanent and cannot be undone.</div>
+    <div style="background:var(--bg2);border-radius:12px;padding:14px 16px;margin-bottom:20px;max-height:280px;overflow-y:auto">${listItems}</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button onclick="S.migrateConfirm='sync';render()" style="display:flex;flex-direction:column;align-items:flex-start;background:rgba(0,113,227,.08);border:.5px solid rgba(0,113,227,.25);border-radius:12px;padding:14px 16px;cursor:pointer;font-family:var(--font);text-align:left;width:100%">
+        <span style="font-size:14px;font-weight:700;color:var(--blue)">Sync to my account →</span>
+        <span style="font-size:12px;color:var(--t3);margin-top:3px">Add these items to my account so they're available everywhere</span>
+      </button>
+      <button onclick="S.migrateConfirm='discard';render()" style="display:flex;flex-direction:column;align-items:flex-start;background:var(--redbg);border:.5px solid rgba(255,59,48,.2);border-radius:12px;padding:14px 16px;cursor:pointer;font-family:var(--font);text-align:left;width:100%">
+        <span style="font-size:14px;font-weight:700;color:var(--redt)">⚠️ Discard local data</span>
+        <span style="font-size:12px;color:var(--t3);margin-top:3px">Delete these items from this browser and load what's in my account instead</span>
+      </button>
+    </div>
+    <div style="font-size:11px;color:var(--t4);text-align:center;margin-top:16px;line-height:1.6">Both options are permanent. You will be asked to confirm before anything is deleted.</div>
+  </div></div></div>`;
+}
+function renderSyncingScreen(){
+  const saying=SYNC_SAYINGS[S.syncMsg%SYNC_SAYINGS.length];
+  return`<div class="app" style="display:flex;flex-direction:column">
+    <div class="hdr" style="grid-template-columns:1fr;justify-items:center">
+      <div class="hdr-logo" style="pointer-events:none"><img src="/bladeflow/icon.svg" width="44" height="44" style="flex-shrink:0" alt="BladeFlow"/><div><div class="hdr-title">BladeFlow</div><div class="hdr-sub">For r/Knife_Swap</div></div></div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:40px 20px;text-align:center">
+      <div style="font-size:48px;line-height:1;animation:spin 1.5s linear infinite">🗡️</div>
+      <div style="font-size:15px;font-weight:600;color:var(--t1);letter-spacing:-.01em">${esc(saying)}</div>
+      <div style="font-size:12px;color:var(--t4)">Syncing your data — please don't close this tab</div>
     </div>
   </div>`;
 }
@@ -2187,6 +2224,8 @@ function render(){
   const dls=document.getElementById("dl-steels");
   if(dls&&!dls.childElementCount)dls.innerHTML=STEELS.map(s=>`<option value="${esc(s)}">`).join("");
   const view=!S.loaded?renderLoading():
+    S.syncingScreen?renderSyncingScreen():
+    S.showMigrate?renderMigrateConflict():
     S.accountDeleted?renderDeletedAccount():
     S.view==="settings"?renderSettings():
     S.view==="shipping"?renderShipping():
@@ -2197,11 +2236,7 @@ function render(){
     renderList();
   const toastHtml=S.undoToast?`<div class="undo-toast">↩ ${esc(S.undoToast)} <button class="undo-toast-btn" onclick="undoLast()">Undo</button></div>`:"";
   const flairToastHtml=S.flairToast?`<div class="flair-toast">${esc(S.flairToast)}</div>`:"";
-  const migrateBanner=S.showMigrate?renderMigrateBanner():"";
-  document.getElementById("root").innerHTML=view+(S.modal?renderModal(S.modal):"")+toastHtml+flairToastHtml+(S.tour!=null?renderTourCard():"")+migrateBanner;
-  // Push content down so it isn't hidden under the fixed migrate banner
-  const appEl=document.querySelector("#root .app");
-  if(appEl)appEl.style.paddingTop=S.showMigrate?"92px":"";
+  document.getElementById("root").innerHTML=view+(S.modal&&!S.syncingScreen&&!S.showMigrate?renderModal(S.modal):"")+toastHtml+flairToastHtml+(S.tour!=null?renderTourCard():"");
   S._skipRollAnim=false; // reset after DOM update so next non-chip render gets animation back
   // Animate main content when switching views
   if(S._prevView!==S.view){
