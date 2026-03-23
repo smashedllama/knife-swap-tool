@@ -849,7 +849,7 @@ const NI_CATS=["watch","sunglasses","flashlight","multi-tool","bag","clothing","
 const NI_ICONS={watch:"⌚",sunglasses:"🕶️",flashlight:"🔦","multi-tool":"🔧","bag":"🎒",clothing:"👕",other:"📦"};
 const NI_LABELS={watch:"Watch",sunglasses:"Sunglasses",flashlight:"Flashlight","multi-tool":"Multi-tool",bag:"Bag / Case",clothing:"Clothing",other:"Other"};
 const ED=()=>({postType:"[WTS]",knives:[],items:[],payment:[...SETTINGS.payment],paymentOther:"",noShip:[...SETTINGS.noShip],noShipOther:"",repost:false,photos:[],notes:"",rulesConfirmed:false,bundleEnabled:false,bundlePrice:"",bundles:[],groupAddons:false,tradeInterests:SETTINGS.tradeInterests||"",shippingCarrier:SETTINGS.shippingCarrier||"USPS"});
-let S={posts:[],inventory:[],loaded:false,view:"list",expanded:null,copied:null,draft:ED(),kfOpen:false,kfIdx:-1,kf:EK(),kfMode:"draft",adv:false,err:"",saveNotice:false,lockerFilter:"all",lockerPicker:false,movingKnife:null,uploadFiles:[],kfUploads:[],priceResearch:{status:"idle",results:[],query:""},modal:null,authStatus:"guest",authEmail:"",showMigrate:false,soldFlow:null,delFlowEmail:null,authLoading:true,mdPreview:new Set(),undoStack:[],undoToast:null,_undoTid:null,flairToast:null,_flairTid:null,rollSort:"added",tutStep:0,aboutTab:"about",feedbackTab:"bug",trackingFlow:null,preflight:null,priceFilter:"sold",tour:null,bundlePicker:null,niOpen:false,ni:null,niIdx:-1,gearPicker:false,_skipRollAnim:false,rollKnivesOpen:true,rollGearOpen:true,emailChangeOpen:false,emailChangeNotice:false};
+let S={posts:[],inventory:[],loaded:false,view:"list",expanded:null,copied:null,draft:ED(),kfOpen:false,kfIdx:-1,kf:EK(),kfMode:"draft",adv:false,err:"",saveNotice:false,lockerFilter:"all",lockerPicker:false,movingKnife:null,uploadFiles:[],kfUploads:[],priceResearch:{status:"idle",results:[],query:""},modal:null,authStatus:"guest",authEmail:"",showMigrate:false,soldFlow:null,delFlowEmail:null,authLoading:true,mdPreview:new Set(),undoStack:[],undoToast:null,_undoTid:null,flairToast:null,_flairTid:null,rollSort:"added",tutStep:0,aboutTab:"about",feedbackTab:"bug",trackingFlow:null,preflight:null,priceFilter:"sold",tour:null,bundlePicker:null,niOpen:false,ni:null,niIdx:-1,gearPicker:false,_skipRollAnim:false,rollKnivesOpen:true,rollGearOpen:true,emailChangeOpen:false,emailChangeNotice:false,accountDeleted:false};
 
 // ─── STORAGE ──────────────────────────────────────────────────
 async function load(){
@@ -959,12 +959,19 @@ async function initSupabase(){
 async function _sbLoad(){
   if(!_sb||!currentUser)return;
   try{
+    // Check profile first — catches soft-deleted accounts before loading any data
+    const {data:prof}=await _sb.from("profiles").select("settings,deleted_at,purge_at").eq("id",currentUser.id).single();
+    if(prof?.deleted_at){
+      // Account is in purgatory — don't load data, show deleted screen
+      S.accountDeleted=true;S.loaded=true;
+      try{localStorage.removeItem("ks_v4");localStorage.removeItem("ks_inv_v1");}catch(e){}
+      return;
+    }
+    if(prof?.settings&&Object.keys(prof.settings).length)SETTINGS={...DS(),...prof.settings};
     const {data:posts}=await _sb.from("posts").select("data").eq("user_id",currentUser.id);
     if(posts&&posts.length)S.posts=posts.map(r=>r.data).filter(p=>!p._tourDemo).sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));
     const {data:inv}=await _sb.from("inventory").select("data").eq("user_id",currentUser.id);
     if(inv&&inv.length)S.inventory=inv.map(r=>r.data).filter(k=>!k._tourDemo);
-    const {data:prof}=await _sb.from("profiles").select("settings").eq("id",currentUser.id).single();
-    if(prof?.settings&&Object.keys(prof.settings).length)SETTINGS={...DS(),...prof.settings};
     S.loaded=true;
     reconcileInventory();
     // mirror to localStorage
@@ -1024,21 +1031,19 @@ async function deleteAccount(){
   if(typed!==S.authEmail.toLowerCase()){S.err="Email does not match. Please type your exact email address.";render();return;}
   S.err="";render();
   try{
-    // Wipe all user data from Supabase
-    await _sb.from("posts").delete().eq("user_id",currentUser.id);
-    await _sb.from("inventory").delete().eq("user_id",currentUser.id);
-    await _sb.from("profiles").delete().eq("id",currentUser.id);
-    // Attempt full auth user deletion via RPC if available (optional DB function)
-    try{await _sb.rpc("delete_user");}catch(e){}
-    // Sign out and wipe local state
+    // Soft-delete: stamp deleted_at + purge_at, leave data in DB for 30-day recovery window
+    const now=new Date().toISOString();
+    const purgeAt=new Date(Date.now()+30*24*60*60*1000).toISOString();
+    await _sb.from("profiles").upsert({id:currentUser.id,deleted_at:now,purge_at:purgeAt});
+    // Sign out and clear local state only — DB rows preserved for admin recovery
     await _sb.auth.signOut();
     S.posts=[];S.inventory=[];S.delFlowEmail=null;S.modal=null;
     try{localStorage.removeItem("ks_v4");localStorage.removeItem("ks_inv_v1");localStorage.removeItem("ks_settings");}catch(e){}
     currentUser=null;S.authStatus="guest";S.authEmail="";
-    S.err="Your account data has been permanently deleted.";
-  }catch(e){S.err="Deletion failed: "+e.message;}
+    S.err="Your account has been scheduled for deletion. Data will be purged in 30 days.";
+  }catch(e){S.err="Request failed: "+e.message;}
   render();
-  setTimeout(()=>{S.err="";render();},5000);
+  setTimeout(()=>{S.err="";render();},7000);
 }
 async function migrateToSupabase(){
   if(!_sb||!currentUser)return;
@@ -2086,6 +2091,19 @@ function autoFillInput(inputId,datalistId){
 }
 
 // ─── RENDER HELPERS ───────────────────────────────────────────
+function renderDeletedAccount(){
+  return`<div class="app" style="display:flex;flex-direction:column">
+    <div class="hdr" style="grid-template-columns:1fr;justify-items:center">
+      <div class="hdr-logo" style="pointer-events:none"><img src="/bladeflow/icon.svg" width="44" height="44" style="flex-shrink:0" alt="BladeFlow"/><div><div class="hdr-title">BladeFlow</div><div class="hdr-sub">For r/Knife_Swap</div></div></div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:40px 24px;text-align:center">
+      <div style="font-size:40px;line-height:1">🗑️</div>
+      <div style="font-size:18px;font-weight:700;color:var(--t1);letter-spacing:-.02em">Account scheduled for deletion</div>
+      <div style="font-size:13px;color:var(--t3);line-height:1.65;max-width:300px">Your data is held for 30 days. If you deleted by mistake, reply to your deletion confirmation email or reach out to the developer to recover your account.</div>
+      <button class="btn btn-sec" style="margin-top:8px" onclick="signOut()">Sign Out</button>
+    </div>
+  </div>`;
+}
 function renderLoading(){
   const msg=S.authStatus==="signed_in"?"Syncing from cloud\u2026":"Loading\u2026";
   return`<div class="app" style="display:flex;flex-direction:column">
@@ -2104,6 +2122,7 @@ function render(){
   const dls=document.getElementById("dl-steels");
   if(dls&&!dls.childElementCount)dls.innerHTML=STEELS.map(s=>`<option value="${esc(s)}">`).join("");
   const view=!S.loaded?renderLoading():
+    S.accountDeleted?renderDeletedAccount():
     S.view==="settings"?renderSettings():
     S.view==="shipping"?renderShipping():
     S.view==="compose"?renderCompose():
