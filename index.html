@@ -864,8 +864,8 @@ const BM={"Spyderco":["Amalgam","Ambitious","Ark","Assist","Burch Folder","Caly 
 const STEELS=["10Cr15CoMoV","14C28N","154CM","1075","1084","1095","420HC","440A","440B","440C","52100","5160","7Cr13MoV","7Cr17MoV","80CrV2","8Cr13MoV","8Cr14MoV","9Cr18MoV","A2","AEB-L","AR-RPM9","AUS-8","AUS-10","BD1","BD1N","Bohler M390","Bohler N695","CPM 154","CPM-20CV","CPM-3V","CPM-4V","CPM CruWear","CPM M4","CPM Rex 121","CPM Rex 45","CPM S30V","CPM S35VN","CPM S45VN","CPM S90V","CPM S110V","CPM Z-Wear","CTS-204P","CTS-40CP","CTS-B75P","CTS-XHP","Cowry X","D2","Elmax","GIN-1","H1","HAP40","HAP72","K390","L6","LC200N","MagnaCut","Maxamet","N680","N690","Nitro-V","Niolox","O1","R2/SG2","RWL-34","S7","Sandvik 12C27","Sleipner","SRS-13","SRS-15","Super Blue","Vanax","VG-1","VG-10","VG-MAX","W2","White #2","X50CrMoV15","ZDP-189","Other"];
 const PAYS=["PayPal G&S","PayPal F&F","Venmo","Zelle","Cash App","Apple Pay","Other"];
 const NO_SHIP=["California","New York","New Jersey","Illinois","Massachusetts","Hawaii","Alaska","Puerto Rico","International","Other"];
-const ISSUES=["Light scratches","Deep scratches","Snail trails","Blade stain","Handle marks","Tip damage","Blade play","Lock stick","Lock slip","Ano wear","Detent issues","None"];
-const ACC=["Original box","Certificate/papers","Carrying pouch","Kydex sheath","Sheath","Pocket clip","Adjustment tool","Spare scales","Extra hardware","Extra screws","Blade oil","Lanyard","Polishing cloth","None"];
+const ISSUES=["Light scratches","Deep scratches","Snail trails","Blade stain","Handle marks","Tip damage","Blade play","Lock stick","Lock slip","Lock rock","Ano wear","Detent issues","Detent lash","Other","None"];
+const ACC=["Original box","Certificate/papers","Carrying pouch","Kydex sheath","Sheath","Pocket clip","Adjustment tool","Spare scales","Extra hardware","Extra screws","Blade oil","Lanyard","Polishing cloth","Other","None"];
 const BLADE_COND=["New in box","Mint / uncarried","Factory edge, uncarried","Factory edge, carried","Lightly used","Field sharpened","Reprofiled","Dull","Needs sharpening"];
 const TMPL=["Detailed","Compact","Minimal","Table"];
 
@@ -888,8 +888,8 @@ async function saveSettings(){
 }
 
 // ─── STATE ────────────────────────────────────────────────────
-const EK=()=>({brand:"",model:"",steel:"",price:"",soldPrice:"",obo:false,knifeType:"WTS",tradeValue:"",sharpened:"No",usedCut:"No",carried:"No",bladeCondition:"Factory edge, carried",owners:"1",centering:"Perfect",lockup:"Solid",lockupNotes:"",issues:["None"],accessories:["None"],notes:"",inventoryId:null,prevPrice:"",photos:[],pending:false,priceHistory:[],comps:[],shippingClass:"Priority",shippingAddress:null,trackingNumber:null,trackingCarrier:"USPS",shippedAt:null,deliveredAt:null,confirmedAt:null,addonEnabled:false,addonPrice:"",soldElsewhere:false,soldElsewhereTrackShip:false,withdrawn:false});
-const EI=()=>({id:gid(),brand:"",model:"",steel:"",price:"",obo:false,knifeType:"WTS",tradeValue:"",sharpened:"No",usedCut:"No",carried:"No",bladeCondition:"Factory edge, carried",owners:"1",centering:"Perfect",lockup:"Solid",lockupNotes:"",issues:["None"],accessories:["None"],notes:"",status:"available",addedAt:new Date().toISOString(),soldAt:null,photos:[],pending:false,priceHistory:[],comps:[],shippingClass:"Priority",shippingAddress:null,trackingNumber:null,trackingCarrier:"USPS",shippedAt:null,deliveredAt:null,confirmedAt:null,addonEnabled:false,addonPrice:""});
+const EK=()=>({brand:"",model:"",steel:"",price:"",soldPrice:"",obo:false,knifeType:"WTS",tradeValue:"",sharpened:"No",usedCut:"No",carried:"No",bladeCondition:"Factory edge, carried",owners:"1",centering:"Perfect",lockup:"Solid",lockupNotes:"",issues:["None"],issuesOther:"",accessories:["None"],accessoriesOther:"",notes:"",inventoryId:null,prevPrice:"",photos:[],pending:false,priceHistory:[],comps:[],shippingClass:"Priority",shippingAddress:null,trackingNumber:null,trackingCarrier:"USPS",shippedAt:null,deliveredAt:null,confirmedAt:null,addonEnabled:false,addonPrice:"",soldElsewhere:false,soldElsewhereTrackShip:false,withdrawn:false});
+const EI=()=>({id:gid(),brand:"",model:"",steel:"",price:"",obo:false,knifeType:"WTS",tradeValue:"",sharpened:"No",usedCut:"No",carried:"No",bladeCondition:"Factory edge, carried",owners:"1",centering:"Perfect",lockup:"Solid",lockupNotes:"",issues:["None"],issuesOther:"",accessories:["None"],accessoriesOther:"",notes:"",status:"available",addedAt:new Date().toISOString(),soldAt:null,photos:[],pending:false,priceHistory:[],comps:[],shippingClass:"Priority",shippingAddress:null,trackingNumber:null,trackingCarrier:"USPS",shippedAt:null,deliveredAt:null,confirmedAt:null,addonEnabled:false,addonPrice:""});
 const ENI=()=>({id:gid(),itemCategory:"other",description:"",condition:"Excellent",price:"",tradeValue:"",saleType:"WTS",photos:[],notes:"",status:"available",addedAt:new Date().toISOString(),soldAt:null});
 const isNI=item=>!!item.itemCategory;
 const ICONS={
@@ -1451,8 +1451,8 @@ function knifeDetails(k){
     centering:k.centering||"",
     lockup:k.lockup||"",
     lockupNotes:k.lockupNotes||"",
-    issues:(k.issues||[]).filter(x=>x&&x!=="None").join(", ")||"None",
-    accessories:(k.accessories||[]).filter(x=>x&&x!=="None").join(", ")||"None",
+    issues:((k.issues||[]).filter(x=>x&&x!=="None").map(x=>x==="Other"&&k.issuesOther?k.issuesOther:x).join(", "))||"None",
+    accessories:((k.accessories||[]).filter(x=>x&&x!=="None").map(x=>x==="Other"&&k.accessoriesOther?k.accessoriesOther:x).join(", "))||"None",
     notes:k.notes||""
   };
 }
@@ -1506,8 +1506,8 @@ function buildAddonsSection(addonKnives,carrier,v){
   if(!addonKnives.length)return"";
   if(v===0){
     const blocks=addonKnives.map(k=>{
-      const iss=k.issues.filter(x=>x!=="None").join(", ")||"None";
-      const ac=k.accessories.filter(x=>x!=="None").join(", ")||"None";
+      const iss=k.issues.filter(x=>x!=="None").map(x=>x==="Other"&&k.issuesOther?k.issuesOther:x).join(", ")||"None";
+      const ac=k.accessories.filter(x=>x!=="None").map(x=>x==="Other"&&k.accessoriesOther?k.accessoriesOther:x).join(", ")||"None";
       const pl=knifePrice(k,{addonMode:true});
       const hdr=`**${k.brand} ${k.model}** | **${pl}**`;
       const sc=k.shippingClass||"Priority";
@@ -1551,7 +1551,7 @@ function computeDataNerd(){
   const inv=S.inventory;
   const allKnives=inv.filter(k=>!isNI(k));
   const allGear=inv.filter(isNI);
-  const allLK=S.posts.flatMap(p=>p.knives);
+  const allLK=S.posts.flatMap(p=>p.knives||[]);
   const soldLK=allLK.filter(k=>k.sold||k.soldElsewhere);
   const activeLK=allLK.filter(k=>!k.sold&&!k.soldElsewhere&&!k.withdrawn);
   const pendingLK=allLK.filter(k=>k.pending&&!k.sold&&!k.soldElsewhere);
@@ -1600,7 +1600,7 @@ function computeDataNerd(){
   const delivK=allLK.filter(k=>k.deliveredAt&&k.shippedAt&&new Date(k.deliveredAt)>new Date(k.shippedAt));
   const avgDeliv=delivK.length?delivK.reduce((s,k)=>s+(new Date(k.deliveredAt)-new Date(k.shippedAt))/864e5,0)/delivK.length:null;
   const carrierCnt={};
-  S.posts.forEach(p=>{const c=p.shippingCarrier||"USPS";const n=p.knives.filter(k=>k.sold||k.soldElsewhere).length;if(n>0)carrierCnt[c]=(carrierCnt[c]||0)+n;});
+  S.posts.forEach(p=>{const c=p.shippingCarrier||"USPS";const n=(p.knives||[]).filter(k=>k.sold||k.soldElsewhere).length;if(n>0)carrierCnt[c]=(carrierCnt[c]||0)+n;});
   const scCnt={};allLK.filter(k=>k.sold||k.soldElsewhere).forEach(k=>{const sc=k.shippingClass||"Priority";scCnt[sc]=(scCnt[sc]||0)+1;});
   // Monthly sales (last 12 months)
   const now=new Date();
@@ -1710,7 +1710,7 @@ function computeDataNerd(){
     avgShip,fastestShip,fastestShipK,avgDeliv,carrierCnt,scCnt,
     mKeys,mSales,mRev,
     totalPosts:S.posts.length,fmts,
-    avgKPP:S.posts.length?S.posts.reduce((s,p)=>s+p.knives.length,0)/S.posts.length:0,
+    avgKPP:S.posts.length?S.posts.reduce((s,p)=>s+(p.knives?.length||0),0)/S.posts.length:0,
     postsWithPhotos:S.posts.filter(p=>(p.photos||[]).length>0).length,
     ktCnt,
     sitting30,sitting60,sitting90,avgRollAge,oldestRollK,oldestRollDays,
@@ -1730,7 +1730,8 @@ function computeDataNerd(){
   };
 }
 function renderDataNerdModal(){
-  const d=computeDataNerd();
+  let d;try{d=computeDataNerd();}catch(e){return`<div class="modal-overlay" onclick="S.modal=null;render()"><div class="modal" onclick="event.stopPropagation()" style="max-width:560px"><div class="modal-hdr"><div class="modal-title">📊 Data for Data Nerds</div><button class="modal-close" onclick="S.modal=null;render()">&#x2715;</button></div><div class="modal-body" style="padding:20px;color:var(--redt);font-size:13px"><strong>Error loading analytics:</strong><br>${esc(e.message)}</div></div></div>`;}
+
   const f=(n,dec=0)=>n==null?"—":Number(n).toFixed(dec).replace(/\B(?=(\d{3})+(?!\d))/g,",");
   const fUSD=n=>n==null?"—":"$"+f(n,0);
   const fPct=n=>n==null?"—":f(n,1)+"%";
@@ -1918,8 +1919,8 @@ function buildPost(post,v){
     const addonKnives=post.knives.filter(k=>isAddonGrouped(k));
     const blocks=mainKnives.map((k)=>{
       const i=post.knives.indexOf(k);
-      const iss=k.issues.filter(x=>x!=="None").join(", ")||"None";
-      const ac=k.accessories.filter(x=>x!=="None").join(", ")||"None";
+      const iss=k.issues.filter(x=>x!=="None").map(x=>x==="Other"&&k.issuesOther?k.issuesOther:x).join(", ")||"None";
+      const ac=k.accessories.filter(x=>x!=="None").map(x=>x==="Other"&&k.accessoriesOther?k.accessoriesOther:x).join(", ")||"None";
       const inlineAddon=k.addonEnabled&&!post.groupAddons&&k.addonPrice?` | Add-on: $${k.addonPrice}`:"";
       const pl=knifePrice(k)+inlineAddon;
       const kphotos=(k.photos||[]).filter(Boolean);
@@ -1962,8 +1963,8 @@ function buildPost(post,v){
     const addonKnives1=post.knives.filter(k=>isAddonGrouped1(k));
     const lines=mainKnives1.map((k)=>{
       const i=post.knives.indexOf(k);
-      const iss=k.issues.filter(x=>x!=="None").join(", ")||"None";
-      const ac=k.accessories.filter(x=>x!=="None").join(", ")||"None";
+      const iss=k.issues.filter(x=>x!=="None").map(x=>x==="Other"&&k.issuesOther?k.issuesOther:x).join(", ")||"None";
+      const ac=k.accessories.filter(x=>x!=="None").map(x=>x==="Other"&&k.accessoriesOther?k.accessoriesOther:x).join(", ")||"None";
       const kphotos=(k.photos||[]).filter(Boolean);
       const nameLinked=kphotos.length?`[${k.brand} ${k.model}](${buildPostGalleryUrl(post,i)||galleryUrl(k)})`:(`${k.brand} ${k.model}`);
       const statusLabel=k.soldElsewhere?(k.soldPrice?` [SOLD ELSEWHERE @ $${k.soldPrice}]`:" [SOLD ELSEWHERE]"):k.withdrawn?" [WITHDRAWN]":k.sold?(k.soldPrice?` [SOLD @ $${k.soldPrice}]`:" [SOLD]"):k.pending?" [PENDING]":"";
@@ -2020,9 +2021,9 @@ function buildPost(post,v){
       else if(u)parts.push("Carried and used to cut");
       if(k.sharpened==="Yes")parts.push("Resharpened");
       if(k.bladeCondition&&k.bladeCondition!=="Factory edge, carried")parts.push(k.bladeCondition);
-      const iss=(k.issues||[]).filter(x=>x&&x!=="None");
+      const iss=(k.issues||[]).filter(x=>x&&x!=="None").map(x=>x==="Other"&&k.issuesOther?k.issuesOther:x);
       if(iss.length)parts.push(iss.join(", "));
-      const acc=(k.accessories||[]).filter(x=>x&&x!=="None");
+      const acc=(k.accessories||[]).filter(x=>x&&x!=="None").map(x=>x==="Other"&&k.accessoriesOther?k.accessoriesOther:x);
       if(acc.length)parts.push("Includes: "+acc.join(", "));
       if(k.notes)parts.push(k.notes);
       return`| ${nameCell} | ${priceCell} | ${parts.join(". ")}${parts.length?".":""} |`;
@@ -2174,7 +2175,7 @@ function openKF(idx,mode){
 function closeKF(){S.kfOpen=false;S.kfIdx=-1;S.err="";S.kfUploads=[];S.priceResearch={status:"idle",results:[],query:""};render();}
 function syncKF(){
   const g=id=>document.getElementById(id);const f=S.kf;
-  ["brand","model","steel","price","tradeValue","lockupNotes","notes","addonPrice"].forEach(k=>{const e=g("kf-"+k);if(e)f[k]=e.value});
+  ["brand","model","steel","price","tradeValue","lockupNotes","notes","addonPrice","issuesOther","accessoriesOther"].forEach(k=>{const e=g("kf-"+k);if(e)f[k]=e.value});
   ["bladeCondition","owners","centering","lockup"].forEach(k=>{const e=g("kf-"+k);if(e)f[k]=e.value});
 }
 function saveKF(){
@@ -2852,7 +2853,7 @@ function renderModal(type){
   if(type==="cloudinary")return renderCloudinaryModal();
   if(type==="feedback")return renderFeedbackModal();
   if(type==="preflight")return renderPreflightModal();
-  if(type==="datanerds")return renderDataNerdModal();
+  if(type==="datanerds"){try{return renderDataNerdModal();}catch(e){return`<div class="modal-overlay" onclick="S.modal=null;render()"><div class="modal" onclick="event.stopPropagation()" style="max-width:480px"><div class="modal-hdr"><div class="modal-title">📊 Data for Data Nerds</div><button class="modal-close" onclick="S.modal=null;render()">&#x2715;</button></div><div class="modal-body" style="padding:20px;font-size:13px"><span style="color:var(--redt)"><strong>Error:</strong> ${esc(e.message)}</span><br><br><span style="font-size:11px;color:var(--t4)">${esc(e.stack?.slice(0,300)||"")}</span></div></div></div>`;}}
   if(type==="knifedetail")return renderKnifeDetailModal();
   if(type!=="rules")return"";
   const rules=[
@@ -3512,7 +3513,7 @@ function mainHdr(){
 }
 function kfFormHtml(){
   const s=S;const f=s.kf;const isLock=s.kfMode==="locker";
-  const advHtml=`<div class="adv-box"><div class="fr2" style="margin-bottom:11px"><div class="field"><label>Owners</label><select id="kf-owners">${["1","2","3","4+"].map(v=>`<option${f.owners===v?" selected":""}>${v}</option>`).join("")}</select></div><div class="field"><label>Centering</label><select id="kf-centering">${["Perfect","Favoring show side","Favoring clip side","Off-center"].map(v=>`<option${f.centering===v?" selected":""}>${v}</option>`).join("")}</select></div></div><div class="fr2" style="margin-bottom:11px"><div class="field"><label>Lockup</label><select id="kf-lockup">${["Solid","Early","Mid","Late","Slight play","Lock stick","Other (describe)"].map(v=>`<option${f.lockup===v?" selected":""}>${v}</option>`).join("")}</select></div>${f.lockup==="Other (describe)"?`<div class="field"><label>Describe</label><input type="text" id="kf-lockupNotes" value="${esc(f.lockupNotes)}" placeholder="Describe..."/></div>`:`<div></div>`}</div><div class="fr2" style="margin-bottom:11px"><div class="field"><label>Issues</label><div class="chips" style="margin-top:4px">${ISSUES.map(v=>`<button class="chip sm mul${f.issues.includes(v)?" on":""}" onclick="syncKF();S.kf.issues=tmx(S.kf.issues,'${v}','None');render()">${v}</button>`).join("")}</div></div><div class="field"><label>Accessories</label><div class="chips" style="margin-top:4px">${ACC.map(v=>`<button class="chip sm mul${f.accessories.includes(v)?" on":""}" onclick="syncKF();S.kf.accessories=tmx(S.kf.accessories,'${v}','None');render()">${v}</button>`).join("")}</div></div></div><div class="field"><label>Notes</label><input type="text" id="kf-notes" value="${esc(f.notes)}" placeholder="Upgraded hardware, extra scales..."/></div></div>`;
+  const advHtml=`<div class="adv-box"><div class="fr2" style="margin-bottom:11px"><div class="field"><label>Owners</label><select id="kf-owners">${["1","2","3","4+"].map(v=>`<option${f.owners===v?" selected":""}>${v}</option>`).join("")}</select></div><div class="field"><label>Centering</label><select id="kf-centering">${["Perfect","Favoring show side","Favoring clip side","Off-center"].map(v=>`<option${f.centering===v?" selected":""}>${v}</option>`).join("")}</select></div></div><div class="fr2" style="margin-bottom:11px"><div class="field"><label>Lockup</label><select id="kf-lockup">${["Solid","Early","Mid","Late","Slight play","Lock stick","Other (describe)"].map(v=>`<option${f.lockup===v?" selected":""}>${v}</option>`).join("")}</select></div>${f.lockup==="Other (describe)"?`<div class="field"><label>Describe</label><input type="text" id="kf-lockupNotes" value="${esc(f.lockupNotes)}" placeholder="Describe..."/></div>`:`<div></div>`}</div><div class="fr2" style="margin-bottom:11px"><div class="field"><label>Issues</label><div class="chips" style="margin-top:4px">${ISSUES.map(v=>`<button class="chip sm mul${f.issues.includes(v)?" on":""}" onclick="syncKF();S.kf.issues=tmx(S.kf.issues,'${v}','None');render()">${v}</button>`).join("")}</div>${f.issues.includes("Other")?`<input type="text" id="kf-issuesOther" value="${esc(f.issuesOther)}" placeholder="Describe issue(s)…" style="margin-top:6px;width:100%" oninput="S.kf.issuesOther=this.value"/>`:`<input type="hidden" id="kf-issuesOther" value=""/>`}</div><div class="field"><label>Accessories</label><div class="chips" style="margin-top:4px">${ACC.map(v=>`<button class="chip sm mul${f.accessories.includes(v)?" on":""}" onclick="syncKF();S.kf.accessories=tmx(S.kf.accessories,'${v}','None');render()">${v}</button>`).join("")}</div>${f.accessories.includes("Other")?`<input type="text" id="kf-accessoriesOther" value="${esc(f.accessoriesOther)}" placeholder="Describe accessory(s)…" style="margin-top:6px;width:100%" oninput="S.kf.accessoriesOther=this.value"/>`:`<input type="hidden" id="kf-accessoriesOther" value=""/>`}</div></div><div class="field"><label>Notes</label><input type="text" id="kf-notes" value="${esc(f.notes)}" placeholder="Upgraded hardware, extra scales..."/></div></div>`;
   const kt=f.knifeType||"WTS";
   const badge=isLock?`<span class="kf-badge lk">The Roll</span>`:`<span class="kf-badge dr">${s.kfIdx>=0?"Knife #"+(s.kfIdx+1):"New"}</span>`;
   // Price research panel
