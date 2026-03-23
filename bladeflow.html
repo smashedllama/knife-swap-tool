@@ -1626,7 +1626,7 @@ function computeDataNerd(){
   const delivered=allLK.filter(k=>k.deliveredAt&&!k.confirmed).length;
   const confirmed=allLK.filter(k=>k.confirmed).length;
   const uniqueBuyers=new Set(allLK.filter(k=>k.buyerUsername).map(k=>k.buyerUsername.toLowerCase())).size;
-  const uniqueAddresses=new Set(allLK.filter(k=>k.shippingAddress).map(k=>k.shippingAddress.toLowerCase().trim())).size;
+  const uniqueAddresses=new Set(allLK.filter(k=>k.shippingAddress).map(k=>JSON.stringify(k.shippingAddress).toLowerCase().trim())).size;
   // Pricing intelligence
   const soldWithBothPrices=soldLK.filter(k=>parseFloat(k.price||0)>0&&parseFloat(k.soldPrice||0)>0);
   const soldAtAsking=soldWithBothPrices.length?soldWithBothPrices.filter(k=>parseFloat(k.soldPrice)>=parseFloat(k.price)).length/soldWithBothPrices.length*100:null;
