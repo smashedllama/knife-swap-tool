@@ -926,7 +926,7 @@ const NI_ICONS={watch:icon("watch",14),sunglasses:icon("glasses",14),flashlight:
 const NI_LABELS={watch:"Watch",sunglasses:"Sunglasses",flashlight:"Flashlight","multi-tool":"Multi-tool",bag:"Bag / Case",clothing:"Clothing",other:"Other"};
 const SYNC_SAYINGS=["Sharpening the sync edge…","Honing your data to a razor's edge…","Applying the Scary Sharp protocol…","Stropping your listings clean…","Deburring your inventory…","Heat treating your data for maximum retention…","Running a paper test on your posts…","Putting a hair-whittling edge on your backup…","Your collection is in good hands…","Checking the grind geometry…","Buffing out the data scratches…","No false edges on this backup…","Setting the bevel on your backup…","Full flat grind on your file transfer…","Convex-grinding your cloud storage…","Making sure your data has no microbevels…"];
 const ED=()=>({postType:"[WTS]",knives:[],items:[],payment:[...SETTINGS.payment],paymentOther:"",noShip:[...SETTINGS.noShip],noShipOther:"",repost:false,photos:[],notes:"",rulesConfirmed:false,bundleEnabled:false,bundlePrice:"",bundles:[],groupAddons:false,tradeInterests:SETTINGS.tradeInterests||"",shippingCarrier:SETTINGS.shippingCarrier||"USPS"});
-let S={posts:[],inventory:[],loaded:false,view:"list",expanded:null,copied:null,draft:ED(),kfOpen:false,kfIdx:-1,kf:EK(),kfMode:"draft",adv:false,err:"",saveNotice:false,lockerFilter:"all",lockerPicker:false,movingKnife:null,uploadFiles:[],kfUploads:[],priceResearch:{status:"idle",results:[],query:""},modal:null,authStatus:"guest",authEmail:"",showMigrate:false,soldFlow:null,delFlowEmail:null,authLoading:true,mdPreview:new Set(),undoStack:[],undoToast:null,_undoTid:null,flairToast:null,_flairTid:null,rollSort:"added",tutStep:0,aboutTab:"about",feedbackTab:"bug",trackingFlow:null,preflight:null,priceFilter:"sold",tour:null,bundlePicker:null,niOpen:false,ni:null,niIdx:-1,gearPicker:false,_skipRollAnim:false,rollKnivesOpen:true,rollGearOpen:true,emailChangeOpen:false,emailChangeNotice:false,accountDeleted:false,migrateConfirm:null,syncingScreen:false,syncMsg:0,_sessionStart:Date.now(),_renderCount:0,_loadTime:null};
+let S={posts:[],inventory:[],loaded:false,view:"list",expanded:null,copied:null,draft:ED(),kfOpen:false,kfIdx:-1,kf:EK(),kfMode:"draft",adv:false,err:"",saveNotice:false,lockerFilter:"all",lockerPicker:false,movingKnife:null,uploadFiles:[],kfUploads:[],priceResearch:{status:"idle",results:[],query:""},modal:null,authStatus:"guest",authEmail:"",showMigrate:false,soldFlow:null,delFlowEmail:null,authLoading:true,mdPreview:new Set(),undoStack:[],undoToast:null,_undoTid:null,flairToast:null,_flairTid:null,rollSort:"added",tutStep:0,aboutTab:"about",feedbackTab:"bug",trackingFlow:null,preflight:null,priceFilter:"sold",tour:null,bundlePicker:null,niOpen:false,ni:null,niIdx:-1,gearPicker:false,_skipRollAnim:false,rollKnivesOpen:true,rollGearOpen:true,emailChangeOpen:false,emailChangeNotice:false,accountDeleted:false,migrateConfirm:null,syncingScreen:false,syncMsg:0,_sessionStart:Date.now(),_renderCount:0,_loadTime:null,_copyCount:0,_viewChanges:0,_lastView:""};
 
 // ─── STORAGE ──────────────────────────────────────────────────
 async function load(){
@@ -938,6 +938,8 @@ async function load(){
   S.inventory=S.inventory.filter(k=>!k._tourDemo);
   reconcileInventory();
   S._loadTime=performance.now()-_lt;
+  // Lifetime stats — session counter, first-use date, time tracking
+  try{const _bfs=JSON.parse(localStorage.getItem('bf_stats')||'{}');if(!_bfs.firstUsed)_bfs.firstUsed=new Date().toISOString();_bfs.lastUsed=new Date().toISOString();_bfs.sessions=(_bfs.sessions||0)+1;localStorage.setItem('bf_stats',JSON.stringify(_bfs));}catch(e){}
   S.loaded=true;render();
 }
 // Debounced Supabase batch sync — fires 1.5s after the last save call.
@@ -1665,6 +1667,33 @@ function computeDataNerd(){
   // Unique brands/steels in DB
   const uniqueBrands=Object.keys(bCnt).length;
   const uniqueSteels=Object.keys(sCnt).length;
+  // Lifetime stats from localStorage
+  let bfStats={sessions:1,firstUsed:null,lastUsed:null,totalTimeMs:0,totalCopies:0};
+  try{Object.assign(bfStats,JSON.parse(localStorage.getItem('bf_stats')||'{}'));}catch(e){}
+  // Environment / device
+  const screenW=screen.width,screenH=screen.height;
+  const winW=window.innerWidth,winH=window.innerHeight;
+  const dpr=window.devicePixelRatio||1;
+  const isPWA=!!(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||(navigator.standalone===true);
+  const isOnline=navigator.onLine;
+  let connType=null,connDown=null,connRtt=null,connSaveData=false;
+  try{const nc=navigator.connection||navigator.mozConnection||navigator.webkitConnection;if(nc){connType=nc.effectiveType||nc.type||null;connDown=nc.downlink||null;connRtt=nc.rtt||null;connSaveData=nc.saveData||false;}}catch(e){}
+  let memUsed=null,memTotal=null,memLimit=null;
+  try{if(performance&&performance.memory){memUsed=performance.memory.usedJSHeapSize;memTotal=performance.memory.totalJSHeapSize;memLimit=performance.memory.jsHeapSizeLimit;}}catch(e){}
+  // localStorage usage
+  let lsTotal=0,lsKeys=0,lsAppKeys=0;
+  try{for(let i=0;i<localStorage.length;i++){lsKeys++;const k=localStorage.key(i);const v=localStorage.getItem(k)||"";const byteLen=(k.length+v.length)*2;lsTotal+=byteLen;if(k.startsWith('ks')||k.startsWith('bf')||k.startsWith('supabase'))lsAppKeys++;}}catch(e){}
+  // Navigation timing
+  let domReady=null,pageLoad=null,ttfb=null,dnsTime=null,connectTime=null;
+  try{const nt=performance.getEntriesByType&&performance.getEntriesByType('navigation')[0];if(nt){domReady=nt.domContentLoadedEventEnd-nt.startTime;pageLoad=nt.loadEventEnd-nt.startTime;ttfb=nt.responseStart-nt.requestStart;dnsTime=nt.domainLookupEnd-nt.domainLookupStart;connectTime=nt.connectEnd-nt.connectStart;}}catch(e){}
+  // Long-form time calc
+  const totalTimeThisSession=Date.now()-(S._sessionStart||Date.now());
+  const lifetimeTimeMs=(bfStats.totalTimeMs||0)+totalTimeThisSession;
+  const daysSinceFirst=bfStats.firstUsed?Math.floor((Date.now()-new Date(bfStats.firstUsed))/864e5):null;
+  // Session copies + views
+  const sessionCopies=S._copyCount||0;
+  const sessionViews=S._viewChanges||0;
+  const totalLifetimeCopies=(bfStats.totalCopies||0);
   return{
     totalListed,totalSold:soldLK.length,soldElsewhere:seLK.length,withdrawn:wdLK.length,active:activeLK.length,pending:pendingLK.length,
     revenue,avgSold,medianSold,avgAsk,avgDiscount,sellThrough,
@@ -1685,6 +1714,12 @@ function computeDataNerd(){
     ownerDist,
     postsWithNotes,postsWithBundles,postsRepost,avgNoteLen,knivesWithNotes,knivesWithPhotos,
     postsSize,invSize,settingsSize,totalDBSize,uniqueBrands,uniqueSteels,
+    bfStats,lifetimeTimeMs,daysSinceFirst,totalLifetimeCopies,
+    screenW,screenH,winW,winH,dpr,isPWA,isOnline,connType,connDown,connRtt,connSaveData,
+    memUsed,memTotal,memLimit,
+    lsTotal,lsKeys,lsAppKeys,
+    domReady,pageLoad,ttfb,dnsTime,connectTime,
+    sessionCopies,sessionViews,
   };
 }
 function renderDataNerdModal(){
@@ -1711,6 +1746,8 @@ function renderDataNerdModal(){
   const scEntries=Object.entries(d.scCnt).sort((a,b)=>b[1]-a[1]);
   const DAY_NAMES=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
   const sessionUptime=(Date.now()-(S._sessionStart||Date.now()))/1000;
+  const fDate=iso=>{if(!iso)return"—";try{return new Date(iso).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});}catch(e){return"—";}};
+  const fDur=ms=>{if(!ms||ms<=0)return"—";const s=Math.floor(ms/1000),m=Math.floor(s/60),h=Math.floor(m/60),days=Math.floor(h/24);if(days>=1)return days+"d "+(h%24)+"h";if(h>=1)return h+"h "+(m%60)+"m";if(m>=1)return m+"m "+(s%60)+"s";return s+"s";};
   return`<div class="modal-overlay" onclick="S.modal=null;render()">
   <div class="modal" onclick="event.stopPropagation()" style="max-width:560px">
     <div class="modal-hdr"><div class="modal-title">📊 Data for Data Nerds</div><button class="modal-close" onclick="S.modal=null;render()">&#x2715;</button></div>
@@ -1795,14 +1832,45 @@ function renderDataNerdModal(){
         ${stat("Avg Transit Time",d.avgDeliv!=null?f(d.avgDeliv,1):"—","shipped → delivered")}
       </div>${carrierEntries.length?`<div style="margin-top:12px">${bars(carrierEntries,"var(--orange)")}</div>`:""}${scEntries.length?`<div style="margin-top:10px">${bars(scEntries)}</div>`:""}`)}
       ${gearEntries.length?sec("Gear Categories",bars(gearEntries)):""}
-      ${sec("App &amp; Data",`<div class="dn-grid">
-        ${stat("Session Uptime",fTime(sessionUptime),"this session")}
+      ${sec("Session Right Now",`<div class="dn-grid">
+        ${stat("Session Uptime",fTime(sessionUptime),"since page load")}
         ${stat("Renders This Session",f(S._renderCount||0),"reactive re-renders")}
-        ${stat("Data Load Time",S._loadTime!=null?f(S._loadTime,1)+" ms":"—","on app start")}
+        ${stat("Copies This Session",f(d.sessionCopies),"posts copied to clipboard")}
+        ${stat("View Changes",f(d.sessionViews),"screens navigated")}
+        ${stat("Data Load Time",S._loadTime!=null?f(S._loadTime,1)+" ms":"—","storage → app ready")}
+        ${d.memUsed!=null?stat("JS Heap Used",fBytes(d.memUsed),d.memTotal!=null?"of "+fBytes(d.memTotal)+" allocated","var(--orange)"):""}
+        ${d.memLimit!=null?stat("Heap Size Limit",fBytes(d.memLimit),"browser cap"):""}
+        ${d.domReady!=null?stat("DOM Ready",f(d.domReady,0)+" ms","DOMContentLoaded"):""}
+        ${d.pageLoad!=null?stat("Page Load",f(d.pageLoad,0)+" ms","full load event"):""}
+        ${d.ttfb!=null?stat("TTFB",f(d.ttfb,1)+" ms","time to first byte"):""}
+      </div>`)}
+      ${sec("Lifetime Usage",`<div class="dn-grid">
+        ${stat("Total Sessions",f(d.bfStats.sessions||1),"times app opened")}
+        ${stat("First Used",fDate(d.bfStats.firstUsed),"your origin story")}
+        ${stat("Days Using App",d.daysSinceFirst!=null?f(d.daysSinceFirst):"—","since first open")}
+        ${stat("Total Time in App",fDur(d.lifetimeTimeMs),"cumulative across sessions")}
+        ${stat("Avg Session Length",d.bfStats.sessions>1?fDur(d.lifetimeTimeMs/d.bfStats.sessions):"—","mean session duration")}
+        ${stat("Total Posts Copied",f(d.totalLifetimeCopies),"clipboard hits all time")}
+      </div>`)}
+      ${sec("Storage &amp; Database",`<div class="dn-grid">
         ${stat("Total Records",f(d.totalPosts+d.totalInvKnives+d.totalGear),"posts + inventory + gear")}
-        ${stat("Unique Brands",f(d.uniqueBrands),"across all listings")}
-        ${stat("Unique Steels",f(d.uniqueSteels),"across all listings")}
-      </div><div style="margin-top:12px">${bars([["Posts",d.postsSize],["Inventory",d.invSize],["Settings",d.settingsSize]].filter(([,v])=>v>0).map(([l,v])=>[l+" ("+fBytes(v)+")",v]),"var(--purple)")}</div><div style="font-size:10.5px;color:var(--t4);margin-top:8px">Total data: ${fBytes(d.totalDBSize)} stored locally${S.user?" + synced to cloud":""}</div>`)}
+        ${stat("Unique Brands",f(d.uniqueBrands),"in your listings")}
+        ${stat("Unique Steels",f(d.uniqueSteels),"in your listings")}
+        ${stat("App Data Size",fBytes(d.totalDBSize),"posts+inv+settings")}
+        ${stat("localStorage Keys",f(d.lsKeys),"total browser keys")}
+        ${stat("localStorage Used",fBytes(d.lsTotal),"~estimate, all domains")}
+      </div><div style="margin-top:12px">${bars([["Posts",d.postsSize],["Inventory",d.invSize],["Settings",d.settingsSize]].filter(([,v])=>v>0).map(([l,v])=>[l+" ("+fBytes(v)+")",v]),"var(--purple)")}</div><div style="font-size:10.5px;color:var(--t4);margin-top:8px">Total app data: ${fBytes(d.totalDBSize)}${S.user?" · synced to cloud":" · local only"}</div>`)}
+      ${sec("Browser &amp; Device",`<div class="dn-grid">
+        ${stat("Screen",d.screenW+"×"+d.screenH,"physical pixels")}
+        ${stat("Viewport",d.winW+"×"+d.winH,"CSS pixels")}
+        ${stat("Device Pixel Ratio",d.dpr+"×",d.dpr>=2?"retina / HiDPI":"standard density")}
+        ${stat("PWA Installed",d.isPWA?"Yes ✓":"No","standalone display mode")}
+        ${stat("Online Status",d.isOnline?"🟢 Online":"🔴 Offline","network reachability")}
+        ${d.connType?stat("Connection Type",d.connType.toUpperCase(),d.connDown!=null?d.connDown+" Mbps down":d.connSaveData?"Save Data on":""):""}
+        ${d.connRtt!=null?stat("Network RTT",d.connRtt+" ms","estimated round-trip"):""}
+        ${d.dnsTime!=null&&d.dnsTime>0?stat("DNS Lookup",f(d.dnsTime,1)+" ms","page navigation"):""}
+        ${d.connectTime!=null&&d.connectTime>0?stat("TCP Connect",f(d.connectTime,1)+" ms","page navigation"):""}
+      </div><div style="font-size:10.5px;color:var(--t4);margin-top:10px">${navigator.userAgent.slice(0,90)}</div>`)}
     </div>
   </div>
 </div>`;
@@ -2049,7 +2117,7 @@ function addKnifePhotoUrl(){
   render();
 }
 
-async function copyText(txt){try{await navigator.clipboard.writeText(txt);}catch(e){}}
+async function copyText(txt){try{await navigator.clipboard.writeText(txt);}catch(e){}S._copyCount=(S._copyCount||0)+1;try{const _bfs=JSON.parse(localStorage.getItem('bf_stats')||'{}');_bfs.totalCopies=(_bfs.totalCopies||0)+1;localStorage.setItem('bf_stats',JSON.stringify(_bfs));}catch(e){}}
 
 // ─── KNIFE ACTIONS ────────────────────────────────────────────
 function startCompose(){S.view="compose";S.draft=ED();S.kfOpen=false;S.kfIdx=-1;S.kf=EK();S.kfMode="draft";S.adv=false;S.err="";S.lockerPicker=false;S.gearPicker=false;S.uploadFiles=[];render();}
@@ -2604,6 +2672,7 @@ function renderLoading(){
 }
 function render(){
   S._renderCount=(S._renderCount||0)+1;
+  if(S.loaded&&S._lastView!==S.view){S._viewChanges=(S._viewChanges||0)+1;S._lastView=S.view;}
   if(S.loaded&&_loadingMsgTid){clearInterval(_loadingMsgTid);_loadingMsgTid=null;}
   const dlb=document.getElementById("dl-brands");
   if(dlb&&!dlb.childElementCount)dlb.innerHTML=BRANDS.map(b=>`<option value="${esc(b)}">`).join("");
@@ -4634,6 +4703,8 @@ if("serviceWorker" in navigator){
   });
 }
 
+// Save time-on-site to lifetime stats on tab close
+window.addEventListener('beforeunload',()=>{try{const _bfs=JSON.parse(localStorage.getItem('bf_stats')||'{}');_bfs.totalTimeMs=(_bfs.totalTimeMs||0)+(Date.now()-(S._sessionStart||Date.now()));localStorage.setItem('bf_stats',JSON.stringify(_bfs));}catch(e){}});
 render();
 (async()=>{
   await loadSettings();
