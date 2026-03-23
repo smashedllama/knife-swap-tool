@@ -2065,8 +2065,8 @@ function compressImage(file){
   });
 }
 function triggerUpload(){const el=document.getElementById("file-upload-input");if(el){el.value="";el.click();}}
-function handleFileInput(e){[...e.target.files].forEach(f=>uploadFile(f));}
-function handleDrop(e){e.preventDefault();document.querySelector(".up-zone")?.classList.remove("drag");[...e.dataTransfer.files].forEach(f=>uploadFile(f));}
+function handleFileInput(e){[...e.target.files].forEach(f=>{if(f.type.startsWith("video/")){S.uploadFiles.push({uid:gid(),name:f.name,url:null,uploading:false,error:"Videos can't be uploaded here — they'd burn through Cloudinary's bandwidth limits. Paste a direct video URL below instead (Imgur, etc)."});render();return;}uploadFile(f);});}
+function handleDrop(e){e.preventDefault();document.querySelector(".up-zone")?.classList.remove("drag");[...e.dataTransfer.files].forEach(f=>{if(f.type.startsWith("video/")){S.uploadFiles.push({uid:gid(),name:f.name,url:null,uploading:false,error:"Videos can't be uploaded here — they'd burn through Cloudinary's bandwidth limits. Paste a direct video URL below instead (Imgur, etc)."});render();return;}uploadFile(f);});}
 function handleDragOver(e){e.preventDefault();document.querySelector(".up-zone")?.classList.add("drag");}
 function handleDragLeave(){document.querySelector(".up-zone")?.classList.remove("drag");}
 
@@ -2109,7 +2109,7 @@ function removeUpload(uid){S.uploadFiles=S.uploadFiles.filter(x=>x.uid!==uid);S.
 
 // Per-knife photo uploads
 function triggerKnifeUpload(){const el=document.getElementById("kf-photo-input-hidden");if(el){el.value="";el.click();}}
-function handleKnifeFileInput(e){[...e.target.files].forEach(f=>uploadKnifePhoto(f));}
+function handleKnifeFileInput(e){[...e.target.files].forEach(f=>{if(f.type.startsWith("video/")){S.kfUploads.push({uid:gid(),name:f.name,url:null,uploading:false,error:"Videos can't be uploaded — they'd burn through Cloudinary's bandwidth limits. Paste a direct video URL below instead (Imgur, etc)."});render();return;}uploadKnifePhoto(f);});}
 async function uploadKnifePhoto(file){
   const uid=gid();
   S.kfUploads.push({uid,name:file.name,url:null,uploading:true,error:null});
@@ -3609,7 +3609,7 @@ function kfFormHtml(){
       <label>Knife Photos <span style="font-weight:400;color:var(--t4);font-size:11px">(optional; 2+ auto-open as gallery)</span></label>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
         ${activePhotoService()==="cloudinary"?`<button class="btn btn-sec btn-sm" onclick="triggerKnifeUpload()" type="button">↑ Upload</button>`:`<button class="btn btn-sm" style="opacity:.45;cursor:default;background:var(--bg);border:.5px solid var(--b2);color:var(--t4)" disabled title="Configure Cloudinary in Settings to enable uploads">↑ Upload</button>`}
-        <input type="text" id="kf-manual-url" placeholder="paste direct image URL (i.imgur.com/xxx.jpg)" style="flex:1;min-width:180px;font-size:12px;padding:6px 9px" onkeydown="if(event.key==='Enter'){event.preventDefault();addKnifePhotoUrl();}"/>
+        <input type="text" id="kf-manual-url" placeholder="paste image or video URL (i.imgur.com/xxx.jpg)" style="flex:1;min-width:180px;font-size:12px;padding:6px 9px" onkeydown="if(event.key==='Enter'){event.preventDefault();addKnifePhotoUrl();}"/>
         <button class="btn btn-sec btn-sm" onclick="addKnifePhotoUrl()" type="button">Add</button>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -4444,9 +4444,9 @@ function renderCompose(){
     <div class="field" style="margin-bottom:14px">
       <label>Photos &amp; Timestamp</label>
       <div class="ts-req" style="display:flex;gap:8px;align-items:flex-start">${icon('camera',14)} <span>Include one photo showing <strong>all knives</strong> in this post with a handwritten note: your Reddit username + full date (e.g. <em>u/yourname - March 14, 2026</em>)</span></div>
-      ${(()=>{const svc=activePhotoService();return svc==="cloudinary"?`<div class="up-zone" onclick="triggerUpload()" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave()"><div class="up-lbl">Drop photos here or click to upload</div><div class="up-sub">Uploads via Cloudinary · photos open in gallery viewer</div></div>`:`<div class="up-zone" style="cursor:default;opacity:.55;pointer-events:none"><div class="up-lbl" style="font-size:13px">Upload not configured</div><div class="up-sub">Set up Cloudinary in Settings to enable drag-and-drop uploads, or paste an Imgur URL below</div></div>`;})()}
+      ${(()=>{const svc=activePhotoService();return svc==="cloudinary"?`<div class="up-zone" onclick="triggerUpload()" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave()"><div class="up-lbl">Drop photos here or click to upload</div><div class="up-sub">Photos only · videos: paste a URL below</div></div>`:`<div class="up-zone" style="cursor:default;opacity:.55;pointer-events:none"><div class="up-lbl" style="font-size:13px">Upload not configured</div><div class="up-sub">Set up Cloudinary in Settings to enable drag-and-drop uploads, or paste an Imgur URL below</div></div>`;})()}
       ${upRows?`<div class="up-files">${upRows}</div>`:""}
-      <div style="margin-top:8px;display:flex;align-items:center;gap:6px"><div style="flex:1;height:.5px;background:rgba(0,0,0,.1)"></div><span style="font-size:11px;color:var(--t4);white-space:nowrap">or paste any image URL</span><div style="flex:1;height:.5px;background:rgba(0,0,0,.1)"></div></div>
+      <div style="margin-top:8px;display:flex;align-items:center;gap:6px"><div style="flex:1;height:.5px;background:rgba(0,0,0,.1)"></div><span style="font-size:11px;color:var(--t4);white-space:nowrap">or paste any image or video URL</span><div style="flex:1;height:.5px;background:rgba(0,0,0,.1)"></div></div>
       <input type="text" id="d-manualUrl" placeholder="https://i.imgur.com/xxx.jpg or any direct image link" style="margin-top:8px" onchange="syncDraft()"/>
       <div style="font-size:11px;color:var(--t4);margin-top:4px">Direct image links only - not album pages.</div>
       ${d.photos.length?`<div style="font-size:11px;color:var(--greent);margin-top:5px;font-weight:500">${d.photos.length} photo${d.photos.length>1?"s":""} linked</div>`:""}
