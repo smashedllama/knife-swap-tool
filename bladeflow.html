@@ -2046,6 +2046,24 @@ function buildPost(post,v){
 }
 
 // ─── UPLOAD ───────────────────────────────────────────────────
+// Compress images client-side before upload: max 1600px, JPEG 82%
+// Skips non-image files and files already under 300 KB
+function compressImage(file){
+  if(!file.type.startsWith("image/")||file.size<300000)return Promise.resolve(file);
+  return new Promise(resolve=>{
+    const img=new Image(),url=URL.createObjectURL(file);
+    img.onload=()=>{
+      URL.revokeObjectURL(url);
+      const MAX=1600;let w=img.width,h=img.height;
+      if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX;}else{w=Math.round(w*MAX/h);h=MAX;}}
+      const c=document.createElement("canvas");c.width=w;c.height=h;
+      c.getContext("2d").drawImage(img,0,0,w,h);
+      c.toBlob(b=>resolve(b||file),"image/jpeg",0.82);
+    };
+    img.onerror=()=>{URL.revokeObjectURL(url);resolve(file);};
+    img.src=url;
+  });
+}
 function triggerUpload(){const el=document.getElementById("file-upload-input");if(el){el.value="";el.click();}}
 function handleFileInput(e){[...e.target.files].forEach(f=>uploadFile(f));}
 function handleDrop(e){e.preventDefault();document.querySelector(".up-zone")?.classList.remove("drag");[...e.dataTransfer.files].forEach(f=>uploadFile(f));}
@@ -2061,7 +2079,8 @@ async function uploadToHost(file){
   if(svc==="cloudinary"){
     const cloud=(SETTINGS.cloudinaryCloud||"").trim();
     const preset=(SETTINGS.cloudinaryPreset||"").trim();
-    const fd=new FormData();fd.append("file",file);fd.append("upload_preset",preset);
+    const compressed=await compressImage(file);
+    const fd=new FormData();fd.append("file",compressed);fd.append("upload_preset",preset);
     const res=await fetch(`https://api.cloudinary.com/v1_1/${encodeURIComponent(cloud)}/image/upload`,{method:"POST",body:fd});
     if(!res.ok)throw new Error("Cloudinary error "+res.status);
     const data=await res.json();
@@ -3594,7 +3613,7 @@ function kfFormHtml(){
         <button class="btn btn-sec btn-sm" onclick="addKnifePhotoUrl()" type="button">Add</button>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        ${s.kfUploads.map((u,ui)=>{const isImg=u.url&&/\.(jpg|jpeg|png|gif|webp|avif)(\?|$)/i.test(u.url);return`<div style="display:flex;align-items:center;gap:5px;font-size:11px;padding:4px 8px;background:var(--bg);border:.5px solid var(--b2);border-radius:6px;max-width:220px">${isImg?`<img class="up-thumb" style="width:26px;height:26px" src="${esc(u.url)}" alt="" loading="lazy"/>`:""}${u.uploading?`<span style="color:var(--t4)">uploading...</span>`:u.error?`<span style="color:var(--redt);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(u.error)}</span>`:`<a href="${esc(u.url)}" target="_blank" style="color:var(--blue);text-decoration:none;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(u.name)}</a>`}${u.url&&!u.uploading?`<button class="up-reorder" onclick="reorderKnifeUpload(${ui},-1)" ${ui===0?"disabled":""}>↑</button><button class="up-reorder" onclick="reorderKnifeUpload(${ui},1)" ${ui===s.kfUploads.length-1?"disabled":""}>↓</button>`:""}${!u.uploading?`<button onclick="removeKnifeUpload('${u.uid}')" style="background:none;border:none;color:var(--t4);cursor:pointer;padding:0;font-size:12px;line-height:1">&times;</button>`:""}</div>`;}).join("")}
+        ${s.kfUploads.map((u,ui)=>{const isImg=u.url&&/\.(jpg|jpeg|png|gif|webp|avif)(\?|$)/i.test(u.url);return`<div style="display:flex;align-items:center;gap:5px;font-size:11px;padding:4px 8px;background:var(--bg);border:.5px solid var(--b2);border-radius:6px;max-width:220px">${isImg?`<img class="up-thumb" style="width:26px;height:26px" src="${esc(cdnImg(u.url,60,60,'fill'))}" alt="" loading="lazy"/>`:""}${u.uploading?`<span style="color:var(--t4)">uploading...</span>`:u.error?`<span style="color:var(--redt);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(u.error)}</span>`:`<a href="${esc(u.url)}" target="_blank" style="color:var(--blue);text-decoration:none;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(u.name)}</a>`}${u.url&&!u.uploading?`<button class="up-reorder" onclick="reorderKnifeUpload(${ui},-1)" ${ui===0?"disabled":""}>↑</button><button class="up-reorder" onclick="reorderKnifeUpload(${ui},1)" ${ui===s.kfUploads.length-1?"disabled":""}>↓</button>`:""}${!u.uploading?`<button onclick="removeKnifeUpload('${u.uid}')" style="background:none;border:none;color:var(--t4);cursor:pointer;padding:0;font-size:12px;line-height:1">&times;</button>`:""}</div>`;}).join("")}
       </div>
     </div>
     ${kfChecklist(f)}
@@ -4412,7 +4431,8 @@ function renderCompose(){
   const upFiles=s.uploadFiles;
   const upRows=upFiles.map((f,fi)=>{
     const isImg=f.url&&/\.(jpg|jpeg|png|gif|webp|avif)(\?|$)/i.test(f.url);
-    const thumb=isImg?`<img class="up-thumb" src="${esc(f.url)}" alt="" loading="lazy"/>`:"";
+    const thumb=isImg?`<img class="up-thumb" src="${esc(cdnImg(f.url,60,60,'fill'))}" alt="" loading="lazy"/>`:"";
+
     const reorder=f.url&&!f.uploading?`<button class="up-reorder" onclick="reorderUpload(${fi},-1)" title="Move up" ${fi===0?"disabled style='opacity:.3'":""}>↑</button><button class="up-reorder" onclick="reorderUpload(${fi},1)" title="Move down" ${fi===upFiles.length-1?"disabled style='opacity:.3'":""}>↓</button>`:"";
     return`<div class="up-row">${thumb}<span class="up-name">${esc(f.name)}</span>${f.uploading?`<span class="up-spin"></span><span style="font-size:11px;color:var(--t3)">Uploading...</span>`:f.error?`<span class="up-err">${esc(f.error)}</span>`:f.url?`<span class="up-url">${esc(f.url)}</span><button class="btn btn-sec btn-xs" onclick="copyText('${esc(f.url)}')">Copy</button>`:""}${reorder}${!f.uploading?`<button class="btn btn-rd btn-xs" onclick="removeUpload('${f.uid}')">&#x2715;</button>`:""}</div>`;
   }).join("");
