@@ -1773,7 +1773,7 @@ function renderDataNerdModal(){
         ${stat("Avg Price Drops",d.avgDrops!=null?f(d.avgDrops,1):"—",d.dropsCount?"from "+f(d.dropsCount)+" knives":"")}
       </div>`)}
       ${sec("Roll Health",`<div class="dn-grid">
-        ${stat("Sitting 30+ Days",f(d.sitting30),d.totalInvKnives?"of "+f(d.availKnives)+" available","var(--orange)")}
+        ${stat("Sitting 30+ Days",f(d.sitting30),d.totalInvKnives?"of "+f(d.availKnives)+" available":"","var(--orange)")}
         ${stat("Sitting 60+ Days",f(d.sitting60),"getting stale","var(--orange)")}
         ${stat("Sitting 90+ Days",f(d.sitting90),"consider a drop","var(--red,#e74c3c)")}
         ${stat("Avg Age in Roll",d.avgRollAge!=null?f(d.avgRollAge,0)+" days":"—","available knives")}
@@ -1838,7 +1838,7 @@ function renderDataNerdModal(){
         ${stat("Copies This Session",f(d.sessionCopies),"posts copied to clipboard")}
         ${stat("View Changes",f(d.sessionViews),"screens navigated")}
         ${stat("Data Load Time",S._loadTime!=null?f(S._loadTime,1)+" ms":"—","storage → app ready")}
-        ${d.memUsed!=null?stat("JS Heap Used",fBytes(d.memUsed),d.memTotal!=null?"of "+fBytes(d.memTotal)+" allocated","var(--orange)"):""}
+        ${d.memUsed!=null?stat("JS Heap Used",fBytes(d.memUsed),d.memTotal!=null?"of "+fBytes(d.memTotal)+" allocated":"","var(--orange)"):""}
         ${d.memLimit!=null?stat("Heap Size Limit",fBytes(d.memLimit),"browser cap"):""}
         ${d.domReady!=null?stat("DOM Ready",f(d.domReady,0)+" ms","DOMContentLoaded"):""}
         ${d.pageLoad!=null?stat("Page Load",f(d.pageLoad,0)+" ms","full load event"):""}
