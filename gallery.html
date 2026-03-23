@@ -747,7 +747,9 @@ function loadSection(idx, animate) {
     slide.className = 'slide';
     slide.id = `slide-${i}`;
     const img = document.createElement('img');
-    img.src = cdnImg(url, 1200, 0, 'limit');
+    const optimized = cdnImg(url, 900, 0, 'limit');
+    img.dataset.src = optimized; // deferred — loaded on demand by showSlide
+    if (i === 0) img.src = optimized; // first slide loads immediately
     img.alt = `${s.label} photo ${i + 1}`;
     img.draggable = false;
     img.addEventListener('load', () => { if (i === curSlide) document.getElementById('spinner').style.display = 'none'; });
@@ -762,7 +764,7 @@ function loadSection(idx, animate) {
     if (s.imgs.length > 1) {
       const t = document.createElement('img');
       t.className = 'thumb' + (i === 0 ? ' active' : '');
-      t.src = cdnImg(url, 120, 80, 'fill'); t.alt = `Thumb ${i + 1}`; t.draggable = false;
+      t.src = cdnImg(url, 80, 55, 'fill'); t.alt = `Thumb ${i + 1}`; t.draggable = false;
       t.addEventListener('click', () => showSlide(i));
       thumbsEl.appendChild(t);
     }
@@ -788,6 +790,13 @@ function showSlide(n, animate = true) {
   if (next) next.classList.add('active');
   if (nextThumb) { nextThumb.classList.add('active'); nextThumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); }
   const img = next?.querySelector('img');
+  // Load deferred slide on demand
+  if (img && !img.src && img.dataset.src) img.src = img.dataset.src;
+  // Prefetch adjacent slides so swipes feel instant
+  [-1, 1].forEach(d => {
+    const adj = document.getElementById(`slide-${curSlide + d}`)?.querySelector('img');
+    if (adj && !adj.src && adj.dataset.src) adj.src = adj.dataset.src;
+  });
   if (img?.complete && img?.naturalHeight) document.getElementById('spinner').style.display = 'none';
   updateArrows();
   const c = document.getElementById('counter');
