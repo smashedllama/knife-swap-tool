@@ -162,14 +162,24 @@ body{
   display:flex;align-items:center;justify-content:center;
   padding:12px;
   opacity:0;transition:opacity .22s ease;pointer-events:none;
+  touch-action:none;
 }
 .slide.active{opacity:1;pointer-events:auto}
 .slide img{
   max-width:100%;max-height:100%;
   object-fit:contain;border-radius:4px;
-  display:block;touch-action:pinch-zoom;
+  display:block;touch-action:none;
   user-select:none;-webkit-user-drag:none;
 }
+.zoom-indicator{
+  position:absolute;bottom:52px;right:12px;
+  background:rgba(0,0,0,.52);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  color:#fff;font-size:12px;font-weight:600;letter-spacing:.02em;
+  padding:4px 10px;border-radius:20px;
+  opacity:0;transition:opacity .18s;pointer-events:none;z-index:6;
+}
+.zoom-indicator.show{opacity:1}
 .spinner{
   position:absolute;width:36px;height:36px;
   border:3px solid var(--b1);
@@ -411,15 +421,13 @@ body{
 
   <!-- VIEWER AREA -->
   <div class="viewer-area">
-    <div class="viewer" id="viewer"
-      onmousedown="onDragStart(event)"
-      ontouchstart="onTouchStart(event)"
-      ontouchend="onTouchEnd(event)">
+    <div class="viewer" id="viewer">
       <div class="spinner" id="spinner"></div>
       <div id="slides"></div>
       <button class="nav-arrow prev hidden" id="nav-prev" onclick="go(-1)" aria-label="Previous">&#8249;</button>
       <button class="nav-arrow next hidden" id="nav-next" onclick="go(1)" aria-label="Next">&#8250;</button>
       <div class="counter" id="counter" style="display:none"></div>
+      <div class="zoom-indicator" id="zoom-indicator"></div>
     </div>
     <div class="thumbs hidden" id="thumbs"></div>
     <!-- DETAILS BAR -->
@@ -469,7 +477,14 @@ let curSection = 0;
 let curSlide = 0;
 let galleryUser = "";
 let detailsOpen = false;
-let dragStartX = 0, touchStartX = 0;
+let dragStartX = 0;
+// ─── ZOOM / PAN STATE ───────────────────────────────────────────
+let zoom = 1, panX = 0, panY = 0;
+const ZOOM_MIN = 1, ZOOM_MAX = 5;
+let _panning = false, _panSX = 0, _panSY = 0, _panPX = 0, _panPY = 0;
+let _pinchDist = 0;
+let _lastTap = 0, _swipeStartX = 0, _wasZoomedOnSwipeStart = false;
+let _zoomIndTimer = null;
 
 // ─── PARSE + INIT ───────────────────────────────────────────────
 function init() {
@@ -525,11 +540,19 @@ function init() {
   document.addEventListener('keydown', e => {
     if (e.key === 'ArrowRight' || e.key === 'ArrowDown') go(1);
     if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') go(-1);
-    if (e.key === 'Escape') { closeSheet(); if (detailsOpen) toggleDetails(); }
+    if (e.key === 'Escape') { if (zoom > 1) { resetZoom(); return; } closeSheet(); if (detailsOpen) toggleDetails(); }
     if (e.key === 'Tab') { e.preventDefault(); selectSection((curSection + 1) % sections.length); }
     if (e.key === '[') selectSection(Math.max(0, curSection - 1));
     if (e.key === ']') selectSection(Math.min(sections.length - 1, curSection + 1));
   });
+  // Viewer event listeners (passive:false needed for preventDefault in wheel/touch)
+  const vEl = document.getElementById('viewer');
+  vEl.addEventListener('mousedown', onDragStart);
+  vEl.addEventListener('dblclick', onViewerDblClick);
+  vEl.addEventListener('wheel', onViewerWheel, { passive: false });
+  vEl.addEventListener('touchstart', onTouchStart, { passive: false });
+  vEl.addEventListener('touchmove', onTouchMove, { passive: false });
+  vEl.addEventListener('touchend', onTouchEnd);
 }
 
 // ─── NAV ────────────────────────────────────────────────────────
@@ -749,6 +772,7 @@ function loadSection(idx, animate) {
 
 // ─── SLIDES ─────────────────────────────────────────────────────
 function showSlide(n, animate = true) {
+  resetZoom();
   const imgs = sections[curSection]?.imgs || [];
   const prev = document.getElementById(`slide-${curSlide}`);
   const prevThumb = document.querySelectorAll('.thumb')[curSlide];
@@ -790,13 +814,160 @@ function updateArrows() {
   }
 }
 
-// ─── TOUCH / DRAG ───────────────────────────────────────────────
-function onTouchStart(e) { touchStartX = e.touches[0].clientX; }
-function onTouchEnd(e) {
-  const dx = e.changedTouches[0].clientX - touchStartX;
-  if (Math.abs(dx) > 40) go(dx < 0 ? 1 : -1);
+// ─── ZOOM / PAN ──────────────────────────────────────────────────
+function activeSlide() { return document.getElementById(`slide-${curSlide}`); }
+
+function applyZoom() {
+  const s = activeSlide(); if (!s) return;
+  if (zoom <= 1) {
+    zoom = 1; panX = 0; panY = 0;
+    s.style.transform = ''; s.style.cursor = '';
+    s.style.transformOrigin = ''; s.style.willChange = '';
+  } else {
+    s.style.transformOrigin = '0 0';
+    s.style.willChange = 'transform';
+    s.style.transform = `translate(${panX}px,${panY}px) scale(${zoom})`;
+    s.style.cursor = _panning ? 'grabbing' : 'grab';
+  }
+  const ind = document.getElementById('zoom-indicator');
+  if (ind) {
+    if (zoom > 1) {
+      ind.textContent = '×' + zoom.toFixed(1);
+      ind.classList.add('show');
+      clearTimeout(_zoomIndTimer);
+      _zoomIndTimer = setTimeout(() => ind.classList.remove('show'), 1500);
+    } else {
+      clearTimeout(_zoomIndTimer);
+      ind.classList.remove('show');
+    }
+  }
 }
+
+function clampPan() {
+  const v = document.getElementById('viewer');
+  const W = v.clientWidth, H = v.clientHeight;
+  panX = Math.max(W - W * zoom, Math.min(0, panX));
+  panY = Math.max(H - H * zoom, Math.min(0, panY));
+}
+
+function resetZoom() { zoom = 1; panX = 0; panY = 0; applyZoom(); }
+
+function zoomAt(clientX, clientY, f) {
+  const v = document.getElementById('viewer');
+  const r = v.getBoundingClientRect();
+  const vx = clientX - r.left, vy = clientY - r.top;
+  const nz = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, zoom * f));
+  const af = nz / zoom;
+  panX = vx - (vx - panX) * af;
+  panY = vy - (vy - panY) * af;
+  zoom = nz;
+  if (zoom <= 1) { zoom = 1; panX = 0; panY = 0; } else clampPan();
+  applyZoom();
+}
+
+// ─── WHEEL (Mac trackpad pinch + desktop scroll/ctrl+wheel) ──────
+function onViewerWheel(e) {
+  e.preventDefault();
+  if (e.ctrlKey) {
+    // Mac trackpad pinch gesture or Ctrl+scroll → zoom toward cursor
+    const capped = Math.max(-30, Math.min(30, e.deltaY));
+    zoomAt(e.clientX, e.clientY, Math.exp(-capped * 0.025));
+  } else if (zoom > 1) {
+    // Two-finger scroll when zoomed → pan
+    panX -= e.deltaX; panY -= e.deltaY;
+    clampPan(); applyZoom();
+  } else if (Math.abs(e.deltaX) > Math.abs(e.deltaY) && Math.abs(e.deltaX) > 15) {
+    // Horizontal trackpad swipe → navigate slides
+    go(e.deltaX > 0 ? 1 : -1);
+  }
+}
+
+// ─── DOUBLE CLICK ────────────────────────────────────────────────
+function onViewerDblClick(e) {
+  if (zoom > 1) resetZoom(); else zoomAt(e.clientX, e.clientY, 3);
+}
+
+// ─── TOUCH ───────────────────────────────────────────────────────
+function _dist2(t) { return Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY); }
+function _mid2(t) { return { x: (t[0].clientX + t[1].clientX) / 2, y: (t[0].clientY + t[1].clientY) / 2 }; }
+
+function onTouchStart(e) {
+  if (e.touches.length === 2) {
+    e.preventDefault(); _panning = false; _pinchDist = _dist2(e.touches); return;
+  }
+  const t = e.touches[0];
+  _swipeStartX = t.clientX; _wasZoomedOnSwipeStart = zoom > 1;
+  // Double-tap to zoom/reset
+  const now = Date.now();
+  if (now - _lastTap < 300) {
+    e.preventDefault();
+    if (zoom > 1) resetZoom(); else zoomAt(t.clientX, t.clientY, 3);
+    _lastTap = 0; return;
+  }
+  _lastTap = now;
+  if (zoom > 1) {
+    _panning = true;
+    _panSX = t.clientX; _panSY = t.clientY; _panPX = panX; _panPY = panY;
+  }
+}
+
+function onTouchMove(e) {
+  if (e.touches.length === 2) {
+    e.preventDefault();
+    const nd = _dist2(e.touches);
+    if (_pinchDist > 0) { const m = _mid2(e.touches); zoomAt(m.x, m.y, nd / _pinchDist); }
+    _pinchDist = nd; return;
+  }
+  if (_panning && e.touches.length === 1) {
+    e.preventDefault();
+    panX = _panPX + (e.touches[0].clientX - _panSX);
+    panY = _panPY + (e.touches[0].clientY - _panSY);
+    clampPan(); applyZoom();
+  }
+}
+
+function onTouchEnd(e) {
+  if (e.touches.length === 1) {
+    // One finger remaining after pinch → transition to pan
+    _pinchDist = 0;
+    if (zoom > 1) {
+      _panning = true;
+      _panSX = e.touches[0].clientX; _panSY = e.touches[0].clientY;
+      _panPX = panX; _panPY = panY;
+    }
+    return;
+  }
+  // All fingers up
+  if (!_panning && !_wasZoomedOnSwipeStart && zoom <= 1) {
+    const dx = (e.changedTouches[0]?.clientX ?? _swipeStartX) - _swipeStartX;
+    if (Math.abs(dx) > 40) go(dx < 0 ? 1 : -1);
+  }
+  _panning = false; _pinchDist = 0; applyZoom();
+}
+
+// ─── MOUSE DRAG ──────────────────────────────────────────────────
 function onDragStart(e) {
+  if (e.button !== 0) return;
+  if (zoom > 1) {
+    _panning = true;
+    _panSX = e.clientX; _panSY = e.clientY; _panPX = panX; _panPY = panY;
+    const s = activeSlide(); if (s) s.style.cursor = 'grabbing';
+    const onMove = mv => {
+      mv.preventDefault();
+      panX = _panPX + (mv.clientX - _panSX);
+      panY = _panPY + (mv.clientY - _panSY);
+      clampPan(); applyZoom();
+    };
+    const onUp = () => {
+      _panning = false; applyZoom();
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    e.preventDefault(); return;
+  }
+  // Swipe-to-navigate when not zoomed
   dragStartX = e.clientX;
   const onUp = up => {
     const dx = up.clientX - dragStartX;
