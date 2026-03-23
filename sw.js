@@ -1,5 +1,5 @@
 // BladeFlow Service Worker - stale-while-revalidate
-const CACHE = 'bf-app-v1';
+const CACHE = 'bf-app-v2';
 const CORE = ['/bladeflow/', '/bladeflow/index.html'];
 
 self.addEventListener('install', e => {
