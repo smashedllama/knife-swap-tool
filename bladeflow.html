@@ -948,8 +948,6 @@ async function load(){
   // Lifetime stats — session counter, first-use date, time tracking
   try{const _bfs=JSON.parse(localStorage.getItem('bf_stats')||'{}');if(!_bfs.firstUsed)_bfs.firstUsed=new Date().toISOString();_bfs.lastUsed=new Date().toISOString();_bfs.sessions=(_bfs.sessions||0)+1;localStorage.setItem('bf_stats',JSON.stringify(_bfs));}catch(e){}
   S.loaded=true;
-  // Open guide view directly if ?guide param is present
-  if(new URLSearchParams(location.search).has('guide'))S.view='guide';
   render();
 }
 // Debounced Supabase batch sync — fires 1.5s after the last save call.
@@ -4925,6 +4923,8 @@ render();
   await initSupabase();
   if(!currentUser){await load();}
   if(!localStorage.getItem('ks-tutorial-done')){S.modal='tutorial';S.tutStep=0;}
+  // Always honour ?guide URL param regardless of auth state
+  if(new URLSearchParams(location.search).has('guide'))S.view='guide';
   render();
 })();
 </script>
