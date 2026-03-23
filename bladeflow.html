@@ -1677,6 +1677,8 @@ function computeDataNerd(){
   // Lifetime stats from localStorage
   let bfStats={sessions:1,firstUsed:null,lastUsed:null,totalTimeMs:0,totalCopies:0};
   try{Object.assign(bfStats,JSON.parse(localStorage.getItem('bf_stats')||'{}'));}catch(e){}
+  let cdnBytes=0,cdnCount=0;
+  try{const c=JSON.parse(localStorage.getItem('ks_cdn_bytes')||'{}');cdnBytes=c.bytes||0;cdnCount=c.count||0;}catch(e){}
   // Environment / device
   const screenW=screen.width,screenH=screen.height;
   const winW=window.innerWidth,winH=window.innerHeight;
@@ -1727,6 +1729,7 @@ function computeDataNerd(){
     lsTotal,lsKeys,lsAppKeys,
     domReady,pageLoad,ttfb,dnsTime,connectTime,
     sessionCopies,sessionViews,
+    cdnBytes,cdnCount,
   };
 }
 function renderDataNerdModal(){
@@ -1867,7 +1870,8 @@ function renderDataNerdModal(){
         ${stat("App Data Size",fBytes(d.totalDBSize),"posts+inv+settings")}
         ${stat("localStorage Keys",f(d.lsKeys),"total browser keys")}
         ${stat("localStorage Used",fBytes(d.lsTotal),"~estimate, all domains")}
-      </div><div style="margin-top:12px">${bars([["Posts",d.postsSize],["Inventory",d.invSize],["Settings",d.settingsSize]].filter(([,v])=>v>0).map(([l,v])=>[l+" ("+fBytes(v)+")",v]),"var(--purple)")}</div><div style="font-size:10.5px;color:var(--t4);margin-top:8px">Total app data: ${fBytes(d.totalDBSize)}${S.user?" · synced to cloud":" · local only"}</div>`)}
+        ${d.cdnBytes>0?stat("Cloudinary Uploads",fBytes(d.cdnBytes),d.cdnCount+" photos tracked this device","var(--blue)"):""}
+      </div><div style="margin-top:12px">${bars([["Posts",d.postsSize],["Inventory",d.invSize],["Settings",d.settingsSize]].filter(([,v])=>v>0).map(([l,v])=>[l+" ("+fBytes(v)+")",v]),"var(--purple)")}</div>${d.cdnBytes>0?`<div style="font-size:10.5px;color:var(--t4);margin-top:8px">☁️ Cloudinary: ~${fBytes(d.cdnBytes)} uploaded from this device (${d.cdnCount} photos) · estimated, not synced with Cloudinary</div>`:""}<div style="font-size:10.5px;color:var(--t4);margin-top:8px">Total app data: ${fBytes(d.totalDBSize)}${S.user?" · synced to cloud":" · local only"}</div>`)}
       ${sec("Browser &amp; Device",`<div class="dn-grid">
         ${stat("Screen",d.screenW+"×"+d.screenH,"physical pixels")}
         ${stat("Viewport",d.winW+"×"+d.winH,"CSS pixels")}
@@ -2086,6 +2090,7 @@ async function uploadToHost(file){
     if(!res.ok)throw new Error("Cloudinary error "+res.status);
     const data=await res.json();
     if(data.error)throw new Error(data.error.message||"Cloudinary upload failed");
+    if(data.bytes){try{const t=JSON.parse(localStorage.getItem('ks_cdn_bytes')||'{"bytes":0,"count":0}');t.bytes=(t.bytes||0)+data.bytes;t.count=(t.count||0)+1;localStorage.setItem('ks_cdn_bytes',JSON.stringify(t));}catch(e){}}
     return data.secure_url;
   }
   throw new Error("Cloudinary is not configured. Set up your Cloud Name and Upload Preset in Settings, or paste a direct image URL (e.g. i.imgur.com/xxx.jpg) instead.");
@@ -4626,6 +4631,7 @@ function renderSettings(){
     <div class="srow" style="flex-wrap:wrap;gap:10px"><div style="flex:1;min-width:200px"><div class="srow-lbl">Photo Hosting</div><div class="srow-sub">Drag-and-drop uploads via your own free <a href="https://cloudinary.com" target="_blank" style="color:var(--blue);text-decoration:none">Cloudinary</a> account. Photos go directly from your browser to your account. Never through our servers. Stored with <strong>AES-256</strong> at rest, <strong>TLS 1.2+</strong> in transit.</div></div><div class="srow-ctrl" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${sv.cloudinaryCloud&&sv.cloudinaryPreset?`<span style="font-size:11px;font-weight:600;color:var(--greent);background:var(--greenbg);padding:4px 9px;border-radius:20px;display:inline-flex;align-items:center;gap:4px">${icon("check-circle",12,'var(--greent)')} Connected</span>`:`<span style="font-size:11px;font-weight:600;color:var(--oranget);background:var(--orangebg);padding:4px 9px;border-radius:20px;display:inline-flex;align-items:center;gap:4px">${icon("alert-circle",12,'var(--oranget)')} Setup needed</span>`}<button class="btn btn-sec btn-sm" onclick="S.modal='cloudinary';render()">📖 Setup Guide</button></div></div>
     <div class="srow"><div><div class="srow-lbl">Cloud Name</div><div class="srow-sub">Your Cloudinary cloud name (dashboard, top-left).</div></div><div class="srow-ctrl"><input type="text" style="width:170px;min-width:170px;font-size:13px;padding:7px 10px" value="${esc(sv.cloudinaryCloud||"")}" placeholder="e.g. dxyz12abc" onchange="SETTINGS.cloudinaryCloud=this.value.trim();saveSettings()"/></div></div>
     <div class="srow"><div><div class="srow-lbl">Upload Preset</div><div class="srow-sub">Must be set to Unsigned in Cloudinary.</div></div><div class="srow-ctrl"><input type="text" style="width:170px;min-width:170px;font-size:13px;padding:7px 10px" value="${esc(sv.cloudinaryPreset||"")}" placeholder="e.g. knife-swap" onchange="SETTINGS.cloudinaryPreset=this.value.trim();saveSettings()"/></div></div>
+    ${(()=>{let cb=0,cc=0;try{const c=JSON.parse(localStorage.getItem('ks_cdn_bytes')||'{}');cb=c.bytes||0;cc=c.count||0;}catch(e){}if(!cb)return"";const fB=n=>{const u=["B","KB","MB"];let i=0,v=n;while(v>=1024&&i<u.length-1){v/=1024;i++;}return v.toFixed(i===0?0:1)+" "+u[i];};return`<div class="srow"><div><div class="srow-lbl">☁️ Cloudinary Usage (this device)</div><div class="srow-sub">~${fB(cb)} uploaded from this browser across ${cc} photo${cc!==1?"s":""}. Estimated — tracked since you set up Cloudinary. <a href="https://console.cloudinary.com" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:none">View actual usage ↗</a></div></div></div>`;})()}
     <div class="srow"><div><div class="srow-lbl">Running low on storage?</div><div class="srow-sub" style="line-height:1.6">Open your <a href="https://console.cloudinary.com" target="_blank" rel="noopener" style="color:var(--blue);font-weight:600;text-decoration:none">Cloudinary Media Library ↗</a>, sort by upload date (oldest first), and bulk-delete photos from confirmed sales more than 3 years old. The knife records in BladeFlow stay intact — only the hosted images are removed.</div></div></div>
   </div>
   ${S.authStatus==="signed_in"?`
