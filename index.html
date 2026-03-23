@@ -4422,7 +4422,9 @@ function composeChecklist(d){
     if(!k.steel?.trim()) knifeProblems.push(`${n}: missing steel`);
     if((kt==="WTS"||kt==="WTS/WTT")&&!(parseFloat(k.price)>0)) knifeProblems.push(`${n}: missing asking price`);
     if((kt==="WTT"||kt==="WTS/WTT")&&!(parseFloat(k.tradeValue)>0)) knifeProblems.push(`${n}: missing trade value`);
-    if(!(k.photos||[]).filter(Boolean).length) knifeProblems.push(`${n}: no photos`);
+    const kphotos=(k.photos||[]).filter(Boolean);
+    if(kphotos.length===0) knifeProblems.push(`${n}: no photos (Show Side + Clip Side required)`);
+    else if(kphotos.length<2) knifeProblems.push(`${n}: needs Clip Side photo`);
   });
   const items=[
     {ok:d.knives.length>0,label:"At least one knife added"},
@@ -4867,8 +4869,10 @@ function checkPostRules(pid){
   const totalActive=activeKnives.length+(p.items||[]).length;
   const mixedLotsOk=(p.items||[]).length===0||totalActive===0||(activeKnives.length/totalActive)>=0.5;
   const noExtLinks=!BANNED_LINK_RE.test(txt);
+  const missingSlots=activeKnives.filter(k=>(k.photos||[]).filter(Boolean).length<2);
   return[
     {ok:(p.photos||[]).filter(Boolean).length>0,msg:"Timestamp photo link in post"},
+    {ok:missingSlots.length===0,msg:missingSlots.length===0?"All knives have Show Side + Clip Side photos":`Missing Show/Clip photos: ${missingSlots.map(k=>k.brand+" "+k.model).join(", ")}`},
     {ok:activeKnives.filter(k=>k.knifeType!=="WTT").every(k=>k.price&&k.price.length>0),msg:"All WTS knives have a price"},
     {ok:p.payment&&p.payment.length>0,msg:"Payment method specified"},
     {ok:(p.postType||"").startsWith("["),msg:"Post type in title (e.g. [WTS])"},
