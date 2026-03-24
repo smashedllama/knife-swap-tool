@@ -890,7 +890,7 @@ async function saveSettings(){
 // ─── STATE ────────────────────────────────────────────────────
 const EK=()=>({brand:"",model:"",steel:"",price:"",soldPrice:"",obo:false,knifeType:"WTS",tradeValue:"",sharpened:"No",usedCut:"No",carried:"No",bladeCondition:"Factory edge, carried",owners:"1",centering:"Perfect",lockup:"Solid",lockupNotes:"",issues:["None"],issuesOther:"",accessories:["None"],accessoriesOther:"",notes:"",inventoryId:null,prevPrice:"",photos:[],pending:false,priceHistory:[],comps:[],shippingClass:"Priority",shippingAddress:null,trackingNumber:null,trackingCarrier:"USPS",shippedAt:null,deliveredAt:null,confirmedAt:null,addonEnabled:false,addonPrice:"",soldElsewhere:false,soldElsewhereTrackShip:false,withdrawn:false});
 const EI=()=>({id:gid(),brand:"",model:"",steel:"",price:"",obo:false,knifeType:"WTS",tradeValue:"",sharpened:"No",usedCut:"No",carried:"No",bladeCondition:"Factory edge, carried",owners:"1",centering:"Perfect",lockup:"Solid",lockupNotes:"",issues:["None"],issuesOther:"",accessories:["None"],accessoriesOther:"",notes:"",status:"available",addedAt:new Date().toISOString(),soldAt:null,photos:[],pending:false,priceHistory:[],comps:[],shippingClass:"Priority",shippingAddress:null,trackingNumber:null,trackingCarrier:"USPS",shippedAt:null,deliveredAt:null,confirmedAt:null,addonEnabled:false,addonPrice:""});
-const ENI=()=>({id:gid(),itemCategory:"other",description:"",condition:"Excellent",price:"",tradeValue:"",saleType:"WTS",photos:[],notes:"",status:"available",addedAt:new Date().toISOString(),soldAt:null});
+const ENI=()=>({id:gid(),itemCategory:"other",description:"",condition:"Excellent",price:"",tradeValue:"",saleType:"WTS",photos:[],notes:"",status:"available",addedAt:new Date().toISOString(),soldAt:null,pending:false,soldTo:null,soldPrice:"",shippingAddress:null,trackingNumber:null,trackingCarrier:"USPS",shippedAt:null,deliveredAt:null,confirmedAt:null});
 const isNI=item=>!!item.itemCategory;
 const ICONS={
   settings:`<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>`,
@@ -951,7 +951,7 @@ const NI_ICONS={watch:icon("watch",14),sunglasses:icon("glasses",14),flashlight:
 const NI_LABELS={watch:"Watch",sunglasses:"Sunglasses",flashlight:"Flashlight","multi-tool":"Multi-tool",bag:"Bag / Case",clothing:"Clothing",other:"Other"};
 const SYNC_SAYINGS=["Sharpening the sync edge…","Honing your data to a razor's edge…","Applying the Scary Sharp protocol…","Stropping your listings clean…","Deburring your inventory…","Heat treating your data for maximum retention…","Running a paper test on your posts…","Putting a hair-whittling edge on your backup…","Your collection is in good hands…","Checking the grind geometry…","Buffing out the data scratches…","No false edges on this backup…","Setting the bevel on your backup…","Full flat grind on your file transfer…","Convex-grinding your cloud storage…","Making sure your data has no microbevels…"];
 const ED=()=>({postType:"[WTS]",knives:[],items:[],payment:[...SETTINGS.payment],paymentOther:"",noShip:[...SETTINGS.noShip],noShipOther:"",repost:false,photos:[],notes:"",rulesConfirmed:false,bundleEnabled:false,bundlePrice:"",bundles:[],groupAddons:false,tradeInterests:SETTINGS.tradeInterests||"",shippingCarrier:SETTINGS.shippingCarrier||"USPS"});
-let S={posts:[],inventory:[],loaded:false,view:"list",expanded:null,copied:null,draft:ED(),kfOpen:false,kfIdx:-1,kf:EK(),kfMode:"draft",adv:false,err:"",saveNotice:false,lockerFilter:"all",lockerPicker:false,movingKnife:null,uploadFiles:[],kfUploads:[],kfPhotoTag:"other",priceResearch:{status:"idle",results:[],query:""},modal:null,authStatus:"guest",authEmail:"",showMigrate:false,soldFlow:null,delFlowEmail:null,authLoading:true,mdPreview:new Set(),undoStack:[],undoToast:null,_undoTid:null,flairToast:null,_flairTid:null,rollSort:"added",soldFilter:"all",listFilter:"all",shipFilter:"all",soldExpanded:new Set(),tutStep:0,aboutTab:"about",feedbackTab:"bug",trackingFlow:null,preflight:null,priceFilter:"sold",tour:null,bundlePicker:null,niOpen:false,ni:null,niIdx:-1,gearPicker:false,_skipRollAnim:false,rollKnivesOpen:true,rollGearOpen:true,emailChangeOpen:false,emailChangeNotice:false,accountDeleted:false,migrateConfirm:null,syncingScreen:false,syncMsg:0,_sessionStart:Date.now(),_renderCount:0,_loadTime:null,_copyCount:0,_viewChanges:0,_lastView:""};
+let S={posts:[],inventory:[],loaded:false,view:"list",expanded:null,copied:null,draft:ED(),kfOpen:false,kfIdx:-1,kf:EK(),kfMode:"draft",adv:false,err:"",saveNotice:false,lockerFilter:"all",lockerPicker:false,movingKnife:null,uploadFiles:[],kfUploads:[],kfPhotoTag:"other",niUploads:[],priceResearch:{status:"idle",results:[],query:""},modal:null,authStatus:"guest",authEmail:"",showMigrate:false,soldFlow:null,gearSoldFlow:null,delFlowEmail:null,authLoading:true,mdPreview:new Set(),undoStack:[],undoToast:null,_undoTid:null,flairToast:null,_flairTid:null,rollSort:"added",soldFilter:"all",listFilter:"all",shipFilter:"all",soldExpanded:new Set(),tutStep:0,aboutTab:"about",feedbackTab:"bug",trackingFlow:null,preflight:null,priceFilter:"sold",tour:null,bundlePicker:null,niOpen:false,ni:null,niIdx:-1,gearPicker:false,_skipRollAnim:false,rollKnivesOpen:true,rollGearOpen:true,emailChangeOpen:false,emailChangeNotice:false,accountDeleted:false,migrateConfirm:null,syncingScreen:false,syncMsg:0,_sessionStart:Date.now(),_renderCount:0,_loadTime:null,_copyCount:0,_viewChanges:0,_lastView:""};
 
 // ─── STORAGE ──────────────────────────────────────────────────
 async function load(){
@@ -2250,6 +2250,14 @@ function removeKnife(i){
 }
 function setPrevPrice(i,v){syncDraft();S.draft.knives[i].prevPrice=v;render();}
 function applyDropPrice(i,p){syncDraft();S.draft.knives[i].price=String(p);render();}
+function gearPickerIssues(item){
+  const issues=[];
+  if(!item.description?.trim())issues.push("missing description");
+  const st=item.saleType||"WTS";
+  if((st==="WTS"||st==="WTS/WTT")&&!(parseFloat(item.price)>0))issues.push("missing price");
+  if(!(item.photos||[]).filter(Boolean).length)issues.push("no photo");
+  return issues;
+}
 function knifePickerIssues(k){
   const issues=[];
   if(!k.brand?.trim()||!k.model?.trim())issues.push("missing brand/model");
@@ -2286,6 +2294,7 @@ function markInvSold(idx){upInv(s=>{const k=s.inventory[idx];if(k.confirmedAt)re
 function openNI(idx){
   if(idx===-1){S.ni=ENI();S.niIdx=-1;}
   else{const item=S.inventory[idx];S.ni=JSON.parse(JSON.stringify(item));S.niIdx=idx;}
+  S.niUploads=(S.ni.photos||[]).map((url,i)=>({uid:gid(),name:url.split("/").pop()||"photo",url,uploading:false,error:null}));
   S.niOpen=true;S.err="";render();
 }
 function closeNI(){S.niOpen=false;S.ni=null;S.niIdx=-1;S.err="";render();}
@@ -2301,6 +2310,7 @@ function saveNI(){
 }
 function removeNI(idx){if(!confirm("Remove this item from The Roll?"))return;const gone=S.inventory[idx];if(gone)_sbDeleteInv(gone.id);upInv(s=>{s.inventory.splice(idx,1)});}
 function markNISold(idx){upInv(s=>{const k=s.inventory[idx];k.status=k.status==="sold"?"available":"sold";k.soldAt=k.status==="sold"?new Date().toISOString():null;});}
+function markNIPending(idx){upInv(s=>{const k=s.inventory[idx];k.pending=!k.pending;});}
 function renderNIForm(){
   const f=S.ni;if(!f)return"";
   const catChips=NI_CATS.map(c=>`<button class="chip sm${f.itemCategory===c?" on":""}" onclick="S.ni.itemCategory='${c}';S._skipRollAnim=true;render()">${NI_ICONS[c]||icon("package",13)} ${NI_LABELS[c]}</button>`).join("");
@@ -2315,9 +2325,56 @@ function renderNIForm(){
     <div class="kf-type-sel" style="margin-bottom:10px">${stChips}</div>
     <div class="fr2" style="margin-bottom:10px">${priceFields}</div>
     <div class="field" style="margin-bottom:10px"><label>Details <span style="font-weight:400;color:var(--t4);font-size:11px">(optional)</span></label><input type="text" value="${esc(f.notes||"")}" placeholder="e.g. black dial, box and papers included" oninput="S.ni.notes=this.value"/></div>
+    <div class="field" style="margin-bottom:10px" id="ni-photos-field">
+      <label>Photos <span style="font-size:11px;font-weight:400;color:var(--redt)">· 1 photo required to list</span></label>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">
+        ${S.niUploads.map(u=>`<div style="position:relative;width:72px;height:72px;border-radius:8px;overflow:hidden;border:.5px solid var(--b2);background:var(--bg);flex-shrink:0">
+          ${u.url?`<img src="${esc(cdnImg(u.url,144,144,'limit'))}" style="width:100%;height:100%;object-fit:contain" loading="lazy"/>`:u.uploading?`<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--t4)">${icon('refresh-cw',16)}</div>`:`<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--redt)">${icon('alert-circle',16)}</div>`}
+          <button onclick="removeNIUpload('${u.uid}')" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.55);border:none;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;padding:0">${icon('x',10,'#fff')}</button>
+        </div>`).join("")}
+        <button onclick="triggerNIUpload()" style="width:72px;height:72px;border-radius:8px;border:1.5px dashed var(--b2);background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:var(--blue);font-size:11px;font-weight:600;flex-shrink:0">${icon('camera',18,'var(--blue)')}<span>Upload</span></button>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:6px">
+        <input id="ni-url-input" type="url" placeholder="Or paste a direct image URL" style="flex:1;font-size:12px;padding:7px 10px"/>
+        <button class="btn btn-sec btn-sm" onclick="addNIPhotoUrl()">Add</button>
+      </div>
+      <input id="ni-file-input" type="file" accept="image/*" multiple style="display:none" onchange="handleNIFileInput(event)"/>
+    </div>
     ${S.err?`<div class="err">${esc(S.err)}</div>`:""}
     <div style="display:flex;gap:8px;margin-top:10px"><button class="btn btn-pri" onclick="saveNI()">Done - ${S.niIdx===-1?"Add":"Update"} Item</button><button class="btn btn-sec" onclick="closeNI()">Cancel</button></div>
   </div>`;
+}
+
+function triggerNIUpload(){document.getElementById("ni-file-input")?.click();}
+function handleNIFileInput(e){const files=Array.from(e.target.files||[]);e.target.value="";files.forEach(f=>uploadNIPhoto(f));}
+function uploadNIPhoto(file){
+  const uid=gid();
+  S.niUploads=[...S.niUploads,{uid,name:file.name,url:"",uploading:true,error:null}];render();
+  const cloud=SETTINGS.cloudinaryCloud,preset=SETTINGS.cloudinaryPreset;
+  if(!cloud||!preset){S.niUploads=S.niUploads.map(u=>u.uid===uid?{...u,uploading:false,error:"Set up Cloudinary in Settings to upload photos."}:u);render();return;}
+  const fd=new FormData();fd.append("file",file);fd.append("upload_preset",preset);
+  fetch(`https://api.cloudinary.com/v1_1/${cloud}/image/upload`,{method:"POST",body:fd})
+    .then(r=>r.json()).then(d=>{
+      if(d.secure_url){
+        S.niUploads=S.niUploads.map(u=>u.uid===uid?{...u,url:d.secure_url,uploading:false}:u);
+        S.ni.photos=[...S.niUploads.filter(u=>u.url).map(u=>u.url)];
+        SETTINGS.cdnBytes=(SETTINGS.cdnBytes||0)+(d.bytes||0);SETTINGS.cdnCount=(SETTINGS.cdnCount||0)+1;saveSettings();
+      } else {S.niUploads=S.niUploads.map(u=>u.uid===uid?{...u,uploading:false,error:d.error?.message||"Upload failed"}:u);}
+      render();
+    }).catch(()=>{S.niUploads=S.niUploads.map(u=>u.uid===uid?{...u,uploading:false,error:"Upload failed"}:u);render();});
+}
+function removeNIUpload(uid){
+  S.niUploads=S.niUploads.filter(u=>u.uid!==uid);
+  S.ni.photos=S.niUploads.filter(u=>u.url).map(u=>u.url);
+  render();
+}
+async function addNIPhotoUrl(){
+  const el=document.getElementById("ni-url-input");
+  const url=(el?.value||"").trim();if(!url)return;
+  const uid=gid();
+  S.niUploads=[...S.niUploads,{uid,name:url.split("/").pop()||"photo",url,uploading:false,error:null}];
+  S.ni.photos=S.niUploads.filter(u=>u.url).map(u=>u.url);
+  if(el)el.value="";render();
 }
 
 // ─── MOVE BETWEEN POSTS ───────────────────────────────────────
@@ -2482,6 +2539,118 @@ function confirmSoldFlow(){
   saveInv();S.soldFlow=null;render();
 }
 function cancelSoldFlow(){S.soldFlow=null;render();}
+function markGearSold(pid,gi){
+  const p=S.posts.find(x=>x.id===pid);if(!p)return;
+  const item=p.items?.[gi];if(!item)return;
+  if(item.sold){
+    if(item.confirmedAt&&item.deliveredAt)return;
+    up(s=>{const p=s.posts.find(x=>x.id===pid);if(!p)return;const it=p.items[gi];it.sold=false;it.soldAt=null;it.soldTo=null;it.pending=false;if(it.inventoryId){const inv=s.inventory.find(x=>x.id===it.inventoryId);if(inv)inv.status="listed";}p.postText=buildPost(p);});
+    saveInv();return;
+  }
+  S.gearSoldFlow={pid,gi};render();
+}
+function confirmGearSoldFlow(){
+  const sf=S.gearSoldFlow;if(!sf)return;
+  const g=id=>document.getElementById(id);
+  const raw=(g("gsold-to-input")?.value||"").trim();
+  const buyer=raw.replace(/^@/,"").replace(/^\/?u\//i,"");
+  const soldPrice=(g("gsold-price-input")?.value||"").trim().replace(/^\$/,"");
+  const addr={name:(g("gship-name")?.value||"").trim(),line1:(g("gship-line1")?.value||"").trim(),line2:(g("gship-line2")?.value||"").trim(),city:(g("gship-city")?.value||"").trim(),state:(g("gship-state")?.value||"").trim().toUpperCase(),zip:(g("gship-zip")?.value||"").trim()};
+  const hasAddr=!!(addr.line1||addr.zip);
+  pushUndo("Item marked sold");
+  up(s=>{const p=s.posts.find(x=>x.id===sf.pid);if(!p)return;const it=p.items[sf.gi];it.sold=true;it.soldAt=new Date().toISOString();it.soldTo=buyer||null;it.soldPrice=soldPrice||null;it.shippingAddress=hasAddr?addr:null;it.pending=false;if(it.inventoryId){const inv=s.inventory.find(x=>x.id===it.inventoryId);if(inv)inv.status="sold";}p.postText=buildPost(p);});
+  saveInv();S.gearSoldFlow=null;render();
+}
+function cancelGearSoldFlow(){S.gearSoldFlow=null;render();}
+function markGearPending(pid,gi){
+  up(s=>{const p=s.posts.find(x=>x.id===pid);if(!p)return;const it=p.items[gi];it.pending=!it.pending;p.postText=buildPost(p);});
+}
+async function lookupZipGear(zip){
+  if(!/^\d{5}$/.test(zip))return;
+  try{
+    const r=await fetch(`https://api.zippopotam.us/us/${zip}`);if(!r.ok)return;
+    const d=await r.json();const place=d.places?.[0];if(!place)return;
+    const cityEl=document.getElementById("gship-city");const stateEl=document.getElementById("gship-state");
+    if(cityEl){cityEl.value=place["place name"];cityEl.classList.add("ok");}
+    if(stateEl){stateEl.value=place["state abbreviation"];stateEl.classList.add("ok");}
+    document.getElementById("gship-zip")?.classList.add("ok");
+  }catch(e){}
+}
+function saveGearTracking(pid,gi){
+  const trk=(document.getElementById(`gtrk-${pid}-${gi}`)?.value||"").trim();
+  const carr=document.getElementById(`gcarr-${pid}-${gi}`)?.value||"USPS";
+  if(!trk){alert("Please enter a tracking number.");return;}
+  pushUndo("Gear tracking added");
+  up(s=>{const p=s.posts.find(x=>x.id===pid);if(!p)return;const it=p.items[gi];it.trackingNumber=trk;it.trackingCarrier=carr;it.shippedAt=it.shippedAt||new Date().toISOString();});
+  saveInv();S.trackingFlow=null;render();
+}
+function markGearShipped(pid,gi){
+  const trk=(document.getElementById(`gtrk-${pid}-${gi}`)?.value||"").trim();
+  const carr=document.getElementById(`gcarr-${pid}-${gi}`)?.value||"USPS";
+  if(!trk){alert("Please enter a tracking number first.");return;}
+  pushUndo("Gear marked shipped");
+  up(s=>{const p=s.posts.find(x=>x.id===pid);if(!p)return;const it=p.items[gi];it.trackingNumber=trk;it.trackingCarrier=carr;it.shippedAt=new Date().toISOString();});
+  saveInv();render();
+}
+function markGearDelivered(pid,gi){
+  pushUndo("Gear marked delivered");
+  up(s=>{const p=s.posts.find(x=>x.id===pid);if(!p)return;p.items[gi].deliveredAt=new Date().toISOString();});
+  saveInv();render();
+}
+function markGearConfirmed(pid,gi){
+  pushUndo("Gear trade confirmed");
+  up(s=>{const p=s.posts.find(x=>x.id===pid);if(!p)return;const it=p.items[gi];it.confirmedAt=new Date().toISOString();if(it.inventoryId){const inv=s.inventory.find(x=>x.id===it.inventoryId);if(inv)inv.confirmedAt=it.confirmedAt;}});
+  saveInv();render();
+}
+async function copyGearConfirmComment(pid,gi){
+  const p=S.posts.find(x=>x.id===pid);
+  const it=p?.items?.[gi];if(!it)return;
+  const label=NI_LABELS[it.itemCategory||"other"]||"Item";
+  const desc=it.description?` (${it.description})`:"";
+  const price=it.soldPrice?` · $${it.soldPrice}`:it.price?` · $${it.price}`:"";
+  const buyer=it.soldTo?`u/${it.soldTo}`:"buyer";
+  const msg=`Confirmed trade with ${buyer}${price} — ${label}${desc}. Great seller/buyer, would deal with again!`;
+  try{await navigator.clipboard.writeText(msg);}catch(e){}
+  S.copied=`gcc_${pid}_${gi}`;render();
+  setTimeout(()=>{if(S.copied===`gcc_${pid}_${gi}`){S.copied=null;render();}},2000);
+}
+function gearAddrDisplayHtml(pid,gi){
+  const p=S.posts.find(x=>x.id===pid);
+  const it=p?.items?.[gi];if(!it?.shippingAddress)return"";
+  const a=it.shippingAddress;
+  const nameHtml=a.name?`<div style="font-size:12px;font-weight:700;color:var(--t1);margin-bottom:2px">${esc(a.name)}</div>`:"";
+  const addrOnlyCopied=S.copied===`gaddronly_${pid}_${gi}`;
+  return`<div class="addr-block">${nameHtml}<div class="addr-text">${esc(fmtAddrNoName(a,true))}</div><div class="addr-acts"><button class="btn btn-sm${addrOnlyCopied?" btn-gn":" btn-sec"}" onclick="(async()=>{try{await navigator.clipboard.writeText(fmtAddrNoName(${JSON.stringify(a)},true));}catch(e){}S.copied='gaddronly_${pid}_${gi}';render();setTimeout(()=>{if(S.copied==='gaddronly_${pid}_${gi}'){S.copied=null;render();}},2000)})()">${addrOnlyCopied?"✓ Copied!":"Copy Address"}</button><button class="btn btn-sm btn-pu" onclick="(()=>{try{navigator.clipboard.writeText(fmtAddrNoName(${JSON.stringify(a)},true));}catch(e){}Object.assign(document.createElement('a'),{href:'https://pirateship.com',target:'_blank',rel:'noopener noreferrer'}).click()})()">${icon('anchor',13)} PirateShip</button></div></div>`;
+}
+function gearSoldFlowHtml(pid,gi){
+  const p=S.posts.find(x=>x.id===pid);
+  const it=p?.items?.[gi];if(!it)return"";
+  const label=NI_LABELS[it.itemCategory||"other"]||"Item";
+  return`<div class="sf" style="border-top:.5px solid var(--b2);padding:12px 14px;background:var(--greenbg)">
+    <div style="font-size:12px;font-weight:700;color:var(--t1);margin-bottom:10px">${icon('check-circle',13,'var(--greent)')} Mark ${esc(label)}: ${esc(it.description||"")} as Sold</div>
+    <div class="fr2" style="margin-bottom:8px">
+      <div class="field"><label style="font-size:11px">Buyer (Reddit username)</label><input id="gsold-to-input" type="text" placeholder="e.g. u/buyer123" style="font-size:13px;padding:8px 10px"/></div>
+      <div class="field"><label style="font-size:11px">Sale Price ($)</label><input id="gsold-price-input" type="number" min="0" placeholder="${esc(it.price||"")}" style="font-size:13px;padding:8px 10px"/></div>
+    </div>
+    <div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Shipping Address <span style="font-weight:400;text-transform:none;color:var(--t4)">(optional but recommended)</span></div>
+    <div class="fr2" style="margin-bottom:6px">
+      <div class="field"><label style="font-size:11px">Full Name</label><input id="gship-name" type="text" placeholder="John Smith" style="font-size:13px;padding:8px 10px"/></div>
+      <div class="field"><label style="font-size:11px">ZIP Code</label><input id="gship-zip" type="text" maxlength="5" placeholder="12345" style="font-size:13px;padding:8px 10px" oninput="if(this.value.length===5)lookupZipGear(this.value)"/></div>
+    </div>
+    <div class="fr2" style="margin-bottom:6px">
+      <div class="field"><label style="font-size:11px">Street Address</label><input id="gship-line1" type="text" placeholder="123 Main St" style="font-size:13px;padding:8px 10px"/></div>
+      <div class="field"><label style="font-size:11px">Apt/Suite <span style="font-weight:400;color:var(--t4)">(optional)</span></label><input id="gship-line2" type="text" placeholder="Apt 4B" style="font-size:13px;padding:8px 10px"/></div>
+    </div>
+    <div class="fr2" style="margin-bottom:10px">
+      <div class="field"><label style="font-size:11px">City</label><input id="gship-city" type="text" placeholder="Springfield" style="font-size:13px;padding:8px 10px"/></div>
+      <div class="field"><label style="font-size:11px">State</label><input id="gship-state" type="text" maxlength="2" placeholder="IL" style="font-size:13px;padding:8px 10px;text-transform:uppercase"/></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-gn" onclick="confirmGearSoldFlow()">${icon('check-circle',13)} Confirm Sale</button>
+      <button class="btn btn-sec" onclick="cancelGearSoldFlow()">Cancel</button>
+    </div>
+  </div>`;
+}
 function markSoldElsewhere(pid,ki){
   const p=S.posts.find(x=>x.id===pid);if(!p)return;
   S.soldFlow={pid,ki,mode:"elsewhere"};render();
@@ -3793,7 +3962,22 @@ function renderList(){
         :isRaw
           ?`<div class="post-box">${esc(p.postText||"")}</div>`
           :`<div class="post-box preview">${renderMd(p.postText||"")}</div>`;
-      body=`<div class="pc-body"><div class="pc-meta"><span class="pmeta"${charColor?` style="color:${charColor};font-weight:600"`:""}>${charLen.toLocaleString()} chars${charLen>38000?` ${icon('alert-triangle',11,'var(--redt)')}`:charLen>30000?` ${icon('zap',11,'var(--oranget)')}`:""}</span><span class="pmeta"> · ${fmtD(p.createdAt)}</span><span class="pmeta${hasPhotos?" ok":""}">${hasPhotos?" · "+p.photos.length+" photo"+(p.photos.length>1?"s":"")+" linked":" · No timestamp"}</span><span class="pmeta"> · ${TMPL[p.variant||0]}</span></div>${postBox}<div class="pc-acts"><button class="btn btn-pri btn-sm" onclick="openPreflight('${p.id}')"${s.copied===p.id?` style="background:var(--green)"`:""} title="${!hasPhotos?"Add your timestamp in the pre-flight check":"Copy post text"}">${s.copied===p.id?"✓ Copied!":"Copy Post"}</button><button class="btn btn-gn btn-sm" onclick="openPreflight('${p.id}')" title="Post to Reddit">Post to Reddit &#8599;</button><button class="btn btn-sec btn-sm" onclick="cycleTmpl('${p.id}')">Switch: ${TMPL[((p.variant||0)+1)%TMPL.length]}</button>${hasPhotos?`<button class="btn btn-sec btn-sm" onclick="toggleMdPreview('${p.id}')">${isRaw?`${icon('eye',13)} Preview`:"&lt;/&gt; Raw"}</button>`:""}<button class="btn btn-rd btn-sm" onclick="deletePost('${p.id}')">Delete</button></div><div class="rule-tags">${checkPostRules(p.id).map(c=>`<span class="rule-tag ${c.ok?'ok':'fail'}">${c.ok?"✓":"✗"} ${esc(c.msg)}</span>`).join("")}</div>${repostSection}<div class="krows-hdr">Knives in this post</div>${krows}</div>`;
+      const gearRows=(p.items||[]).length?(()=>{
+        const gearItemRows=(p.items||[]).map((item,gi)=>{
+          const glabel=NI_LABELS[item.itemCategory||"other"]||"Item";
+          const gicn=NI_ICONS[item.itemCategory||"other"]||"";
+          const gpriceStr=item.saleType!=="WTT"&&item.price?`$${item.price}`:item.tradeValue?`TV: $${item.tradeValue}`:"$TBD";
+          const isGSF=s.gearSoldFlow&&s.gearSoldFlow.pid===p.id&&s.gearSoldFlow.gi===gi;
+          const gsfHtml=isGSF?gearSoldFlowHtml(p.id,gi):"";
+          const gAddrHtml=item.sold&&item.shippingAddress?gearAddrDisplayHtml(p.id,gi):"";
+          const gDot=item.sold?`<span class="sdot sdot-r"></span>`:item.pending?`<span class="sdot sdot-y"></span>`:`<span class="sdot sdot-g"></span>`;
+          const gRowClass=`krow${item.sold?" sold":item.pending?" pending-row":""}`;
+          const gActsHtml=item.sold?(!(item.confirmedAt&&item.deliveredAt)?`<span class="sold-chip">Sold</span><button class="btn btn-sm btn-sec" onclick="markGearSold('${p.id}',${gi})">Relist</button>`:`<span class="sold-chip">Sold</span>`):(`<button class="btn btn-sm${item.pending?" btn-am":" btn-sec"}" onclick="markGearPending('${p.id}',${gi})">${item.pending?`<span class="sdot sdot-y"></span> Pending`:`<span class="sdot sdot-y"></span> Pending?`}</button><button class="btn btn-sm btn-gn" onclick="markGearSold('${p.id}',${gi})"><span class="sdot sdot-r"></span> Sold</button>`);
+          return`<div class="${gRowClass}"><div class="krow-top"><div class="krow-info"><div class="krow-name${item.sold?" s":""}">${gDot} ${gicn} ${esc(glabel)}: ${esc(item.description||"")}${item.pending&&!item.sold?` <span class="pending-tag">PENDING</span>`:""}</div><div class="krow-meta">${esc(item.condition||"")} · ${gpriceStr}${item.sold&&item.soldAt?" · Sold "+fmtD(item.soldAt):""}${item.soldTo?" · Buyer: u/"+esc(item.soldTo):""}</div></div><span class="krow-price${item.sold?" s":""}">${gpriceStr}</span></div><div class="krow-acts">${gActsHtml}</div>${gAddrHtml}${gsfHtml}</div>`;
+        }).join("");
+        return`<div class="krows-hdr" style="margin-top:10px">Gear &amp; Extras</div>${gearItemRows}`;
+      })():"";
+      body=`<div class="pc-body"><div class="pc-meta"><span class="pmeta"${charColor?` style="color:${charColor};font-weight:600"`:""}>${charLen.toLocaleString()} chars${charLen>38000?` ${icon('alert-triangle',11,'var(--redt)')}`:charLen>30000?` ${icon('zap',11,'var(--oranget)')}`:""}</span><span class="pmeta"> · ${fmtD(p.createdAt)}</span><span class="pmeta${hasPhotos?" ok":""}">${hasPhotos?" · "+p.photos.length+" photo"+(p.photos.length>1?"s":"")+" linked":" · No timestamp"}</span><span class="pmeta"> · ${TMPL[p.variant||0]}</span></div>${postBox}<div class="pc-acts"><button class="btn btn-pri btn-sm" onclick="openPreflight('${p.id}')"${s.copied===p.id?` style="background:var(--green)"`:""} title="${!hasPhotos?"Add your timestamp in the pre-flight check":"Copy post text"}">${s.copied===p.id?"✓ Copied!":"Copy Post"}</button><button class="btn btn-gn btn-sm" onclick="openPreflight('${p.id}')" title="Post to Reddit">Post to Reddit &#8599;</button><button class="btn btn-sec btn-sm" onclick="cycleTmpl('${p.id}')">Switch: ${TMPL[((p.variant||0)+1)%TMPL.length]}</button>${hasPhotos?`<button class="btn btn-sec btn-sm" onclick="toggleMdPreview('${p.id}')">${isRaw?`${icon('eye',13)} Preview`:"&lt;/&gt; Raw"}</button>`:""}<button class="btn btn-rd btn-sm" onclick="deletePost('${p.id}')">Delete</button></div><div class="rule-tags">${checkPostRules(p.id).map(c=>`<span class="rule-tag ${c.ok?'ok':'fail'}">${c.ok?"✓":"✗"} ${esc(c.msg)}</span>`).join("")}</div>${repostSection}<div class="krows-hdr">Knives in this post</div>${krows}${gearRows}</div>`;
     }
     const da=daysAgo(p.createdAt);
     const ageBadge=!allSold?(da>=7?`<span class="repost-day-badge rdy">Repost ready</span>`:`<span class="repost-day-badge wait">${da}d old</span>`):"";
@@ -3817,6 +4001,13 @@ function kShipStatus(k){
   if(k.confirmedAt)return"confirmed";
   if(k.deliveredAt)return"delivered";
   if(k.trackingNumber)return"shipped";
+  return"ready";
+}
+function gShipStatus(item){
+  if(!item.sold)return null;
+  if(item.confirmedAt)return"confirmed";
+  if(item.deliveredAt)return"delivered";
+  if(item.trackingNumber)return"shipped";
   return"ready";
 }
 function trackingUrl(carrier,num){
@@ -3933,19 +4124,94 @@ function renderKnifeDetailModal(){
     ${footerHtml}
   </div></div>`;
 }
+function gearShipCard(p,item,gi){
+  const status=gShipStatus(item);
+  const label=NI_LABELS[item.itemCategory||"other"]||"Item";
+  const buyer=item.soldTo?`<span style="color:var(--blue);font-weight:600">u/${esc(item.soldTo)}</span>`:`<span style="color:var(--t3);font-style:italic">No buyer recorded</span>`;
+  const priceStr=item.soldPrice?`$${item.soldPrice}`:item.price?`$${item.price}`:"$TBD";
+  const CARRIERS=["USPS","UPS","FedEx","DHL","Other"];
+  const gccKey=`gcc_${p.id}_${gi}`;const gccCopied=S.copied===gccKey;
+  const addrHtml=gearAddrDisplayHtml(p.id,gi);
+  if(status==="ready"){
+    return`<div class="pc" style="padding:13px 14px;margin-bottom:8px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:5px">
+        <div style="font-size:14px;font-weight:700;color:var(--t1)">${NI_ICONS[item.itemCategory||"other"]} ${esc(label)}: ${esc(item.description||"")}</div>
+        <div style="font-size:13px;font-weight:700;color:var(--greent);white-space:nowrap;flex-shrink:0">${priceStr}</div>
+      </div>
+      <div style="font-size:12px;color:var(--t2);margin-bottom:${item.shippingAddress?4:10}px">${buyer}</div>
+      ${addrHtml}
+      <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+        <select id="gcarr-${p.id}-${gi}" style="font-size:12px;padding:6px 8px;border-radius:8px;border:.5px solid var(--b2);background:var(--card);color:var(--t1);flex-shrink:0">${CARRIERS.map(c=>`<option value="${c}"${(item.trackingCarrier||"USPS")===c?" selected":""}>${c}</option>`).join("")}</select>
+        <input id="gtrk-${p.id}-${gi}" type="text" placeholder="Tracking number" style="flex:1;min-width:140px;font-size:12px;padding:6px 10px" value="${esc(item.trackingNumber||"")}"/>
+        <button class="btn btn-pri btn-sm" onclick="markGearShipped('${p.id}',${gi})">${icon('send',13)} Mark Shipped</button>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+        <button class="btn btn-sm${gccCopied?" btn-gn":" btn-sec"}" onclick="copyGearConfirmComment('${p.id}',${gi})">${gccCopied?"✓ Copied!":`${icon('clipboard',13)} Confirm Comment`}</button>
+      </div>
+    </div>`;
+  }
+  if(status==="shipped"){
+    const url=item.trackingNumber?trackingUrl(item.trackingCarrier||"USPS",item.trackingNumber):null;
+    const urlCopied=S.copied===`gtrkurl_${p.id}_${gi}`;
+    return`<div class="pc" style="padding:13px 14px;margin-bottom:8px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:5px">
+        <div style="font-size:14px;font-weight:700;color:var(--t1)">${NI_ICONS[item.itemCategory||"other"]} ${esc(label)}: ${esc(item.description||"")}</div>
+        <div style="font-size:13px;font-weight:700;color:var(--greent);white-space:nowrap;flex-shrink:0">${priceStr}</div>
+      </div>
+      <div style="font-size:12px;color:var(--t2);margin-bottom:4px">${buyer}</div>
+      <div style="font-size:11px;color:var(--t3);margin-bottom:${item.shippingAddress?4:10}px">${esc(item.trackingCarrier||"USPS")} · <span style="font-family:monospace">${esc(item.trackingNumber||"")}</span>${item.shippedAt?" · "+fmtD(item.shippedAt):""}</div>
+      ${addrHtml}
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${url?`<a href="${url}" target="_blank" rel="noopener" class="btn btn-sec btn-sm" style="text-decoration:none">${icon('link',13)} Track Package</a>`:""}
+        <button class="btn btn-gn btn-sm" onclick="markGearDelivered('${p.id}',${gi})">${icon('check-circle',13)} Mark Delivered</button>
+        <button class="btn btn-sm${urlCopied?" btn-gn":" btn-sec"}" onclick="(async()=>{try{await navigator.clipboard.writeText('${esc(url||"")}');}catch(e){}S.copied='gtrkurl_${p.id}_${gi}';render();setTimeout(()=>{if(S.copied==='gtrkurl_${p.id}_${gi}'){S.copied=null;render();}},2000)})()">${urlCopied?"✓ Copied!":`${icon('clipboard',13)} Copy Tracking`}</button>
+      </div>
+    </div>`;
+  }
+  if(status==="delivered"){
+    return`<div class="pc" style="padding:13px 14px;margin-bottom:8px;border-left:3px solid var(--greent)">
+      <div style="font-size:14px;font-weight:700;color:var(--t1);margin-bottom:4px">${NI_ICONS[item.itemCategory||"other"]} ${esc(label)}: ${esc(item.description||"")}</div>
+      <div style="font-size:12px;color:var(--t2);margin-bottom:8px">${buyer}</div>
+      <div style="font-size:12px;color:var(--greent);margin-bottom:10px">${icon('check-circle',13,'var(--greent)')} Delivered${item.deliveredAt?" on "+fmtD(item.deliveredAt):""}! Post in the Confirmed Trade Thread to complete the swap.</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-sm${gccCopied?" btn-gn":" btn-pu"}" onclick="copyGearConfirmComment('${p.id}',${gi})">${gccCopied?"✓ Copied!":`${icon('clipboard',13)} Copy Confirm Comment`}</button>
+        <button class="btn btn-sec btn-sm" onclick="markGearConfirmed('${p.id}',${gi})">${icon('users',13)} Mark Confirmed</button>
+      </div>
+    </div>`;
+  }
+  if(status==="confirmed"){
+    return`<div class="pc" style="padding:13px 14px;margin-bottom:8px;border-left:3px solid var(--greent);opacity:.8">
+      <div style="display:flex;align-items:center;gap:10px;justify-content:space-between">
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--t1);margin-bottom:2px">${NI_ICONS[item.itemCategory||"other"]} ${esc(label)}: ${esc(item.description||"")}</div>
+          <div style="font-size:12px;color:var(--t2)">${buyer}</div>
+        </div>
+        <span style="font-size:11px;font-weight:600;color:var(--greent);background:var(--greenbg);padding:3px 9px;border-radius:20px;white-space:nowrap;flex-shrink:0">${icon('check-circle',11,'var(--greent)')} Confirmed</span>
+      </div>
+    </div>`;
+  }
+  return"";
+}
 function renderShipping(){
   const hdr=mainHdr();
   // Collect all sold post-knives
   const all=[];
-  S.posts.forEach(p=>p.knives.forEach((k,i)=>{if(k.sold)all.push({p,k,i});}));
+  S.posts.forEach(p=>p.knives.forEach((k,i)=>{if(k.sold)all.push({p,k,i,type:'knife'});}));
+  const gearAll=[];
+  S.posts.forEach(p=>(p.items||[]).forEach((item,gi)=>{if(item.sold)gearAll.push({p,item,gi,type:'gear'});}));
 
   const byStatus=g=>all.filter(({k})=>kShipStatus(k)===g);
   const ready=byStatus("ready");
   const shipped=byStatus("shipped");
   const delivered=byStatus("delivered");
   const confirmed=byStatus("confirmed");
+  const gByStatus=g=>gearAll.filter(({item})=>gShipStatus(item)===g);
+  const gReady=gByStatus("ready");
+  const gShipped=gByStatus("shipped");
+  const gDelivered=gByStatus("delivered");
+  const gConfirmed=gByStatus("confirmed");
 
-  if(!all.length){
+  if(!all.length && !gearAll.length){
     return hdr+`<div class="main"><div class="empty"><div class="empty-ico">${icon('package',44,'var(--t4)')}</div><div class="empty-h">No shipments yet</div><div class="empty-p">Knives you mark as sold in your listings will appear here so you can track shipping and confirm trades.</div></div></div>`;
   }
 
@@ -4039,19 +4305,27 @@ function renderShipping(){
     </div>`:"";
 
   const sf=S.shipFilter||"all";
+  const allReadyCount=ready.length+gReady.length;
+  const allShippedCount=shipped.length+gShipped.length;
+  const allDeliveredCount=delivered.length+gDelivered.length;
+  const allConfirmedCount=confirmed.length+gConfirmed.length;
   const statsBar=`<div class="stats" style="margin-bottom:16px">
-    <div class="stat clickable" onclick="S.shipFilter=S.shipFilter==='ready'?'all':'ready';render()"><div class="stat-n orange${sf==='ready'?' ring':''}">${ready.length}</div><div class="stat-l">Ready to Ship</div></div>
-    <div class="stat clickable" onclick="S.shipFilter=S.shipFilter==='shipped'?'all':'shipped';render()"><div class="stat-n blue${sf==='shipped'?' ring':''}">${shipped.length}</div><div class="stat-l">In Transit</div></div>
-    <div class="stat clickable" onclick="S.shipFilter=S.shipFilter==='delivered'?'all':'delivered';render()"><div class="stat-n green${sf==='delivered'?' ring':''}">${delivered.length}</div><div class="stat-l">Delivered</div></div>
-    <div class="stat clickable" onclick="S.shipFilter=S.shipFilter==='confirmed'?'all':'confirmed';render()"><div class="stat-n purple${sf==='confirmed'?' ring':''}">${confirmed.length}</div><div class="stat-l">Confirmed</div></div>
+    <div class="stat clickable" onclick="S.shipFilter=S.shipFilter==='ready'?'all':'ready';render()"><div class="stat-n orange${sf==='ready'?' ring':''}">${allReadyCount}</div><div class="stat-l">Ready to Ship</div></div>
+    <div class="stat clickable" onclick="S.shipFilter=S.shipFilter==='shipped'?'all':'shipped';render()"><div class="stat-n blue${sf==='shipped'?' ring':''}">${allShippedCount}</div><div class="stat-l">In Transit</div></div>
+    <div class="stat clickable" onclick="S.shipFilter=S.shipFilter==='delivered'?'all':'delivered';render()"><div class="stat-n green${sf==='delivered'?' ring':''}">${allDeliveredCount}</div><div class="stat-l">Delivered</div></div>
+    <div class="stat clickable" onclick="S.shipFilter=S.shipFilter==='confirmed'?'all':'confirmed';render()"><div class="stat-n purple${sf==='confirmed'?' ring':''}">${allConfirmedCount}</div><div class="stat-l">Confirmed</div></div>
   </div>`;
+  const allReadyCards=readyCards+gReady.map(({p,item,gi})=>gearShipCard(p,item,gi)).join("");
+  const allShippedCards=shippedCards+gShipped.map(({p,item,gi})=>gearShipCard(p,item,gi)).join("");
+  const allDeliveredCards=deliveredCards+gDelivered.map(({p,item,gi})=>gearShipCard(p,item,gi)).join("");
+  const allConfirmedCards=confirmedCards+gConfirmed.map(({p,item,gi})=>gearShipCard(p,item,gi)).join("");
 
   return hdr+`<div class="main">
     ${statsBar}
-    ${sf==="all"||sf==="ready"?section(`${icon('package',13)} Ready to Ship`,readyCards,ready.length):""}
-    ${sf==="all"||sf==="shipped"?section(`${icon('truck',13)} In Transit`,shippedCards,shipped.length):""}
-    ${sf==="all"||sf==="delivered"?section(`${icon('check-circle',13)} Delivered: Ready to Confirm`,deliveredCards,delivered.length):""}
-    ${sf==="all"||sf==="confirmed"?section(`${icon('shield-check',13)} Confirmed`,confirmedCards,confirmed.length):""}
+    ${sf==="all"||sf==="ready"?section(`${icon('package',13)} Ready to Ship`,allReadyCards,allReadyCount):""}
+    ${sf==="all"||sf==="shipped"?section(`${icon('truck',13)} In Transit`,allShippedCards,allShippedCount):""}
+    ${sf==="all"||sf==="delivered"?section(`${icon('check-circle',13)} Delivered: Ready to Confirm`,allDeliveredCards,allDeliveredCount):""}
+    ${sf==="all"||sf==="confirmed"?section(`${icon('shield-check',13)} Confirmed`,allConfirmedCards,allConfirmedCount):""}
   </div>`;
 }
 
@@ -4123,13 +4397,14 @@ function renderRoll(){
       const realIdx=inv.indexOf(item);
       const icon=NI_ICONS[item.itemCategory]||icon("package",14);
       const label=NI_LABELS[item.itemCategory]||"Other";
-      const sb=item.status==="sold"?`<span class="lk-badge so"><span class="sdot sdot-r"></span> Sold</span>`:item.status==="listed"?`<span class="lk-badge li">In Listing</span>`:`<span class="lk-badge av"><span class="sdot sdot-g"></span> Available</span>`;
+      const sb=item.status==="sold"?`<span class="lk-badge so"><span class="sdot sdot-r"></span> Sold</span>`:item.status==="listed"?`<span class="lk-badge li">In Listing</span>`:item.pending?`<span class="lk-badge" style="background:var(--orangebg);color:var(--oranget)"><span class="sdot sdot-y"></span> Pending</span>`:`<span class="lk-badge av"><span class="sdot sdot-g"></span> Available</span>`;
       const priceStr=item.saleType!=="WTT"&&item.price?`$${item.price}`:item.saleType!=="WTS"&&item.tradeValue?`TV: $${item.tradeValue}`:"$TBD";
       return`<div class="ni-card">
         <div class="ni-card-hdr"><span class="ni-icon">${icon}</span><span class="ni-cat">${label}</span>${sb}</div>
         <div class="ni-desc">${esc(item.description||"")}</div>
+        ${(()=>{const _fp=(item.photos||[]).filter(Boolean)[0];return _fp?`<div style="border-radius:8px;overflow:hidden;background:var(--bg);margin-bottom:8px;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;cursor:pointer" onclick="openNI(${realIdx})"><img src="${esc(cdnImg(_fp,400,300,'limit'))}" style="width:100%;height:100%;object-fit:contain;display:block" loading="lazy"/></div>`:"";})()}
         <div class="ni-price">${priceStr}${item.condition?` · ${item.condition}`:""}</div>
-        <div class="lk-acts">${item.status!=="sold"?`<button class="btn btn-sm btn-gn" onclick="markNISold(${realIdx})"><span class="sdot sdot-r"></span> Sold</button>`:`<button class="btn btn-sm btn-sec" onclick="markNISold(${realIdx})">Relist</button>`}<button class="btn btn-sm btn-sec" onclick="openNI(${realIdx})">Edit</button><button class="btn btn-sm btn-rd" onclick="removeNI(${realIdx})">Remove</button></div>
+        <div class="lk-acts">${item.status!=="sold"?`<button class="btn btn-sm${item.pending?" btn-am":" btn-sec"}" onclick="markNIPending(${realIdx})" title="${item.pending?"Remove pending flag":"Mark as pending payment"}">${item.pending?`<span class="sdot sdot-y"></span> Pending`:`<span class="sdot sdot-y"></span> Pending?`}</button><button class="btn btn-sm btn-gn" onclick="markNISold(${realIdx})"><span class="sdot sdot-r"></span> Sold</button>`:`<button class="btn btn-sm btn-sec" onclick="markNISold(${realIdx})">Relist</button>`}<button class="btn btn-sm btn-sec" onclick="openNI(${realIdx})">Edit</button><button class="btn btn-sm btn-rd" onclick="removeNI(${realIdx})">Remove</button></div>
       </div>`;
     }).join("");
     const emptyNI=!niItems.length&&!S.niOpen?`<div style="padding:16px;color:var(--t4);font-size:13px;border:1px dashed rgba(128,128,128,.2);border-radius:var(--rs)">Watches, sunglasses, flashlights, bags &amp; more. Use <strong style="color:var(--t3)">+ Add Gear</strong> above to add items.</div>`:"";
@@ -4498,7 +4773,7 @@ function renderCompose(){
     return`<div class="ki"><span class="ki-num">${i+1}</span><div class="ki-info"><div class="ki-name">${esc(k.brand)} ${esc(k.model)}${typeTag}${bundleTag}${k.inventoryId?`<span class="ki-fromlock">The Roll</span>`:""}</div><div class="ki-meta">${esc(k.steel||"N/A")} · ${esc(k.bladeCondition)}</div></div><span class="ki-price">${priceStr}</span><button class="btn btn-sec btn-xs" onclick="openKF(${i},'draft')">Edit</button><button class="btn btn-rd btn-xs" onclick="removeKnife(${i})">Remove</button></div>`;
   }).join(""):`<div style="text-align:center;padding:20px 16px;color:var(--t4);font-size:13px;border:1px dashed rgba(0,0,0,.13);border-radius:var(--rs)">No knives added yet</div>`;
   const lockerPickerHtml=s.lockerPicker&&availInLocker.length?`<div class="lk-picker" style="margin-top:6px">${availInLocker.map((k,i)=>{const ri=s.inventory.indexOf(k);const issues=knifePickerIssues(k);const ok=issues.length===0;const issueText=issues.slice(0,2).join(" · ")+(issues.length>2?` +${issues.length-2} more`:"");return ok?`<div class="lk-pick-row" onclick="addFromLocker(${ri})"><div><div class="lk-pick-name">${esc(k.brand)} ${esc(k.model)}</div><div class="lk-pick-meta">${esc(k.steel||"N/A")} · ${esc(k.bladeCondition)} · $${esc(k.price)}</div></div><button class="btn btn-gn btn-xs" style="pointer-events:none">Add</button></div>`:`<div class="lk-pick-row" style="cursor:not-allowed;opacity:.75" title="${esc(issueText)}"><div style="flex:1;min-width:0"><div class="lk-pick-name">${esc(k.brand)} ${esc(k.model)}</div><div class="lk-pick-meta">${esc(k.steel||"N/A")} · ${esc(k.bladeCondition)}</div><div style="font-size:10px;color:var(--redt);margin-top:3px;font-weight:500;display:flex;align-items:center;gap:3px">${icon('alert-triangle',10,'var(--redt)')} ${esc(issueText)}</div></div><button class="btn btn-xs" style="pointer-events:none;flex-shrink:0;background:var(--orangebg);color:var(--oranget);border:.5px solid var(--oranget)">Fix first</button></div>`;}).join("")}<div style="padding:8px 14px;font-size:11px;color:var(--t4);border-top:.5px solid var(--b2);cursor:pointer" onclick="S.lockerPicker=false;render()">Close picker</div></div>`:s.lockerPicker&&!availInLocker.length?`<div style="padding:12px 14px;background:var(--bg);border-radius:var(--rs);font-size:12.5px;color:var(--t3);margin-top:6px">No available knives in The Roll. <span style="color:var(--blue);cursor:pointer" onclick="S.view='roll';render()">Add some first.</span></div>`:"";
-  const gearPickerHtml=s.gearPicker&&availGearInLocker.length?`<div class="lk-picker" style="margin-top:6px">${availGearInLocker.map((item)=>{const ri=s.inventory.indexOf(item);const icon=NI_ICONS[item.itemCategory||"other"]||icon("package",14);const label=NI_LABELS[item.itemCategory||"other"]||"Other";return`<div class="lk-pick-row" onclick="addGearFromRoll(${ri})"><div><div class="lk-pick-name">${icon} ${esc(label)}: ${esc(item.description||"")}</div><div class="lk-pick-meta">${esc(item.condition||"")}${item.price?" · $"+esc(item.price):""}</div></div><button class="btn btn-gn btn-xs" style="pointer-events:none">Add</button></div>`}).join("")}<div style="padding:8px 14px;font-size:11px;color:var(--t4);border-top:.5px solid var(--b2);cursor:pointer" onclick="S.gearPicker=false;render()">Close</div></div>`:s.gearPicker&&!availGearInLocker.length?`<div style="padding:12px 14px;background:var(--bg);border-radius:var(--rs);font-size:12.5px;color:var(--t3);margin-top:6px">No available gear in The Roll. <span style="color:var(--blue);cursor:pointer" onclick="S.view='roll';render()">Add items first.</span></div>`:"";
+  const gearPickerHtml=s.gearPicker&&availGearInLocker.length?`<div class="lk-picker" style="margin-top:6px">${availGearInLocker.map((item)=>{const ri=s.inventory.indexOf(item);const icn=NI_ICONS[item.itemCategory||"other"]||icon("package",14);const label=NI_LABELS[item.itemCategory||"other"]||"Other";const gissues=gearPickerIssues(item);const gok=gissues.length===0;const gissueText=gissues.join(" · ");return gok?`<div class="lk-pick-row" onclick="addGearFromRoll(${ri})"><div><div class="lk-pick-name">${icn} ${esc(label)}: ${esc(item.description||"")}</div><div class="lk-pick-meta">${esc(item.condition||"")}${item.price?" · $"+esc(item.price):""}</div></div><button class="btn btn-gn btn-xs" style="pointer-events:none">Add</button></div>`:`<div class="lk-pick-row" style="cursor:not-allowed;opacity:.75" title="${esc(gissueText)}"><div style="flex:1;min-width:0"><div class="lk-pick-name">${icn} ${esc(label)}: ${esc(item.description||"")}</div><div class="lk-pick-meta">${esc(item.condition||"")}</div><div style="font-size:10px;color:var(--redt);margin-top:3px;font-weight:500;display:flex;align-items:center;gap:3px">${icon('alert-triangle',10,'var(--redt)')} ${esc(gissueText)}</div></div><button class="btn btn-xs" style="pointer-events:none;flex-shrink:0;background:var(--orangebg);color:var(--oranget);border:.5px solid var(--oranget)">Fix first</button></div>`;}).join("")}<div style="padding:8px 14px;font-size:11px;color:var(--t4);border-top:.5px solid var(--b2);cursor:pointer" onclick="S.gearPicker=false;render()">Close picker</div></div>`:s.gearPicker&&!availGearInLocker.length?`<div style="padding:12px 14px;background:var(--bg);border-radius:var(--rs);font-size:12.5px;color:var(--t3);margin-top:6px">No available gear in The Roll. <span style="color:var(--blue);cursor:pointer" onclick="S.view='roll';render()">Add some first.</span></div>`:"";
   const gearItemsList=(d.items||[]).length?`<div style="margin-top:10px"><div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Gear &amp; Extras</div>${(d.items||[]).map((item,di)=>{const icon=NI_ICONS[item.itemCategory||"other"]||icon("package",14);const label=NI_LABELS[item.itemCategory||"other"]||"Other";const priceStr=item.saleType!=="WTT"&&item.price?`$${item.price}`:item.tradeValue?`TV: $${item.tradeValue}`:"$TBD";return`<div class="ki"><span>${icon}</span><div class="ki-info"><div class="ki-name">${esc(label)}: ${esc(item.description||"")}</div><div class="ki-meta">${esc(item.condition||"")} · ${priceStr}</div></div><button class="btn btn-rd btn-xs" onclick="removeGearItem(${di})">Remove</button></div>`;}).join("")}</div>`:"";
   const addBtns=!s.kfOpen?`<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn btn-sec" style="flex:1;justify-content:center;border-radius:var(--rs)" onclick="openKF(-1,'draft')">+ New Knife</button>${availInLocker.length?`<button class="btn btn-pu" style="border-radius:var(--rs)" onclick="S.lockerPicker=!S.lockerPicker;S.gearPicker=false;render()">From Roll: Knives${s.lockerPicker?" &#9650;":" &#9660;"}</button>`:""}${availGearInLocker.length?`<button class="btn btn-pu" style="border-radius:var(--rs)" onclick="S.gearPicker=!S.gearPicker;S.lockerPicker=false;render()">From Roll: Gear${s.gearPicker?" &#9650;":" &#9660;"}</button>`:""}</div>${lockerPickerHtml}${gearPickerHtml}${gearItemsList}`:"";
   const kfHtml=s.kfOpen&&s.kfMode==="draft"?kfFormHtml():"";
@@ -4747,7 +5022,7 @@ window.openKF=openKF;window.closeKF=closeKF;window.syncKF=syncKF;window.saveKF=s
 window.removeKnife=removeKnife;window.setPrevPrice=setPrevPrice;window.applyDropPrice=applyDropPrice;window.addFromLocker=addFromLocker;window.removeFromInventory=removeFromInventory;window.markInvSold=markInvSold;
 window.syncDraft=syncDraft;window.submitPost=submitPost;
 window.openBundlePicker=openBundlePicker;window.closeBundlePicker=closeBundlePicker;window.toggleBundleKnife=toggleBundleKnife;window.confirmBundleCreate=confirmBundleCreate;window.removeBundle=removeBundle;
-window.openNI=openNI;window.closeNI=closeNI;window.saveNI=saveNI;window.removeNI=removeNI;window.markNISold=markNISold;window.addGearFromRoll=addGearFromRoll;window.removeGearItem=removeGearItem;
+window.openNI=openNI;window.closeNI=closeNI;window.saveNI=saveNI;window.removeNI=removeNI;window.markNISold=markNISold;window.addGearFromRoll=addGearFromRoll;window.removeGearItem=removeGearItem;window.markNIPending=markNIPending;window.triggerNIUpload=triggerNIUpload;window.handleNIFileInput=handleNIFileInput;window.removeNIUpload=removeNIUpload;window.addNIPhotoUrl=addNIPhotoUrl;window.markGearSold=markGearSold;window.confirmGearSoldFlow=confirmGearSoldFlow;window.cancelGearSoldFlow=cancelGearSoldFlow;window.markGearPending=markGearPending;window.lookupZipGear=lookupZipGear;window.saveGearTracking=saveGearTracking;window.markGearShipped=markGearShipped;window.markGearDelivered=markGearDelivered;window.markGearConfirmed=markGearConfirmed;window.copyGearConfirmComment=copyGearConfirmComment;window.gearShipCard=gearShipCard;window.gearAddrDisplayHtml=gearAddrDisplayHtml;window.gearPickerIssues=gearPickerIssues;window.gearSoldFlowHtml=gearSoldFlowHtml;
 window.markSold=markSold;window.cycleTmpl=cycleTmpl;window.deletePost=deletePost;window.copyPost=copyPost;window.copyText=copyText;window.openRedditPost=openRedditPost;window.startPriceDropRepost=startPriceDropRepost;window.startSamePriceRepost=startSamePriceRepost;window.tutDone=tutDone;window.tutGo=tutGo;window.openPreflight=openPreflight;window.closePreflight=closePreflight;window.addTimestampToPreflight=addTimestampToPreflight;window.copyFromPreflight=copyFromPreflight;window.openRedditFromPreflight=openRedditFromPreflight;
 window.startMove=startMove;window.cancelMove=cancelMove;window.executeMove=executeMove;
 window.updateModelList=updateModelList;window.autoFillInput=autoFillInput;window.saveSettings=saveSettings;
@@ -4768,6 +5043,7 @@ document.addEventListener("keydown",e=>{
   if(e.key==="Escape"&&!e.metaKey&&!e.ctrlKey){
     if(S.modal){S.modal=null;render();return;}
     if(S.soldFlow){cancelSoldFlow();return;}
+    if(S.gearSoldFlow){cancelGearSoldFlow();return;}
     if(S.kfOpen){closeKF();return;}
     if(S.view==="settings"){S.view="list";render();return;}
     return;
@@ -4914,9 +5190,11 @@ function checkPostRules(pid){
   const mixedLotsOk=(p.items||[]).length===0||totalActive===0||(activeKnives.length/totalActive)>=0.5;
   const noExtLinks=!BANNED_LINK_RE.test(txt);
   const missingSlots=activeKnives.filter(k=>(k.photos||[]).filter(Boolean).length<2);
+  const missingGearPhotos=(p.items||[]).filter(it=>!it.sold&&!(it.photos||[]).filter(Boolean).length);
   return[
     {ok:(p.photos||[]).filter(Boolean).length>0,msg:"Timestamp photo link in post"},
     {ok:missingSlots.length===0,msg:missingSlots.length===0?"All knives have Show Side + Clip Side photos":`Missing Show/Clip photos: ${missingSlots.map(k=>k.brand+" "+k.model).join(", ")}`},
+    {ok:missingGearPhotos.length===0,msg:missingGearPhotos.length===0?"All gear items have a photo":`Missing photo: ${missingGearPhotos.map(it=>it.description||NI_LABELS[it.itemCategory||"other"]||"item").join(", ")}`},
     {ok:activeKnives.filter(k=>k.knifeType!=="WTT").every(k=>k.price&&k.price.length>0),msg:"All WTS knives have a price"},
     {ok:p.payment&&p.payment.length>0,msg:"Payment method specified"},
     {ok:(p.postType||"").startsWith("["),msg:"Post type in title (e.g. [WTS])"},
