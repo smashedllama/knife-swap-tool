@@ -2129,8 +2129,8 @@ function buildPost(post,v){
       const soldLabel=k.soldElsewhere?(k.soldPrice?`[SOLD ELSEWHERE @ $${k.soldPrice}]`:"[SOLD ELSEWHERE]"):k.withdrawn?"[WITHDRAWN]":k.sold?(k.soldPrice?`[SOLD @ $${k.soldPrice}]`:"[SOLD]"):"";
       const num=i+1;
       const hdr=(k.sold||k.soldElsewhere||k.withdrawn)
-        ?`~~**${dot(k)} ${num}. ${nameLinked}**~~ **${soldLabel}** | ~~${pl}~~`
-        :`**${dot(k)} ${num}. ${nameLinked}${statusLabel?" "+statusLabel:""}** | **${pl}**`;
+        ?`~~**${num}. ${nameLinked}**~~ **${soldLabel}** | ~~${pl}~~`
+        :`**${num}. ${nameLinked}${statusLabel?" "+statusLabel:""}** | **${pl}**`;
       const sc=k.shippingClass||"Priority";
       const lines=[
         `- **Steel:** ${k.steel||"N/A"} | **Condition:** ${k.bladeCondition}`,
@@ -2169,7 +2169,7 @@ function buildPost(post,v){
       const nameLinked=kphotos.length?`[${k.brand} ${k.model}](${buildPostGalleryUrl(post,i)||galleryUrl(k)})`:(`${k.brand} ${k.model}`);
       const statusLabel=k.soldElsewhere?(k.soldPrice?` [SOLD ELSEWHERE @ $${k.soldPrice}]`:" [SOLD ELSEWHERE]"):k.withdrawn?" [WITHDRAWN]":k.sold?(k.soldPrice?` [SOLD @ $${k.soldPrice}]`:" [SOLD]"):k.pending?" [PENDING]":"";
       const inlineAddon=k.addonEnabled&&!post.groupAddons&&k.addonPrice?` | Add-on: $${k.addonPrice}`:"";
-      let block=`${dot(k)} **${i+1}. ${nameLinked}**${statusLabel} | ${knifePrice(k)}${inlineAddon}`;
+      let block=`**${i+1}. ${nameLinked}**${statusLabel} | ${knifePrice(k)}${inlineAddon}`;
       block+=`\n${k.steel||"N/A"} | ${k.bladeCondition} | ${k.owners} owner | Centering: ${k.centering}`;
       if(iss!=="None")block+=` | Issues: ${iss}`;
       if(ac!=="None")block+=` | Accessories: ${ac}`;
@@ -2243,7 +2243,7 @@ function buildPost(post,v){
   const sig=un?`${un} - ${ts}`:ts;
   const shipSummary2=post.knives.every(k=>(k.shippingClass||"Priority")===(post.knives[0].shippingClass||"Priority"))?`${carrier} ${post.knives[0].shippingClass||"Priority"} w/ ins`:`${carrier} w/ ins`;
   const itemsSection2=buildItemsSection(post);
-  return`${type} ${title}${rp}\n${photoLine}${headerBlock}\n\n${post.knives.map((k,i)=>{const gu=(k.photos||[]).filter(Boolean).length?(buildPostGalleryUrl(post,i)||galleryUrl(k)):null;const nm=gu?`[${k.brand} ${k.model}](${gu})`:(`${k.brand} ${k.model}`);const inlineAddon2=k.addonEnabled&&k.addonPrice?` | Add-on: $${k.addonPrice}`:"";return`${dot(k)} ${nm}${k.soldElsewhere?(k.soldPrice?` [SOLD ELSEWHERE @ $${k.soldPrice}]`:" [SOLD ELSEWHERE]"):k.withdrawn?" [WITHDRAWN]":k.sold?(k.soldPrice?` [SOLD @ $${k.soldPrice}]`:" [SOLD]"):k.pending?" [PENDING]":""} | ${knifePrice(k)}${inlineAddon2} | ${k.steel||"N/A"}, ${k.bladeCondition}`;}).join("\n")}${bundleLine}${selBundleLine2}${itemsSection2}\n\nPayment: ${pay} | Shipping: ${shipSummary2}${noshipLine}${tradeFooter}${post.notes?"\n"+post.notes:""}\n${sig}`;
+  return`${type} ${title}${rp}\n${photoLine}${headerBlock}\n\n${post.knives.map((k,i)=>{const gu=(k.photos||[]).filter(Boolean).length?(buildPostGalleryUrl(post,i)||galleryUrl(k)):null;const nm=gu?`[${k.brand} ${k.model}](${gu})`:(`${k.brand} ${k.model}`);const inlineAddon2=k.addonEnabled&&k.addonPrice?` | Add-on: $${k.addonPrice}`:"";return`${nm}${k.soldElsewhere?(k.soldPrice?` [SOLD ELSEWHERE @ $${k.soldPrice}]`:" [SOLD ELSEWHERE]"):k.withdrawn?" [WITHDRAWN]":k.sold?(k.soldPrice?` [SOLD @ $${k.soldPrice}]`:" [SOLD]"):k.pending?" [PENDING]":""} | ${knifePrice(k)}${inlineAddon2} | ${k.steel||"N/A"}, ${k.bladeCondition}`;}).join("\n")}${bundleLine}${selBundleLine2}${itemsSection2}\n\nPayment: ${pay} | Shipping: ${shipSummary2}${noshipLine}${tradeFooter}${post.notes?"\n"+post.notes:""}\n${sig}`;
 }
 
 // ─── UPLOAD ───────────────────────────────────────────────────
@@ -2586,8 +2586,20 @@ function syncDraft(){
   const g=id=>document.getElementById(id);
   ["notes","paymentOther","noShipOther","tradeInterests"].forEach(k=>{const e=g("d-"+k);if(e)S.draft[k]=e.value});
   const bp=g("d-bundlePrice");if(bp)S.draft.bundlePrice=bp.value;
-  // Also grab manual photo URL if set
-  const mu=g("d-manualUrl");if(mu&&mu.value.trim()){if(!S.draft.photos.includes(mu.value.trim()))S.draft.photos.push(mu.value.trim());}
+}
+function addTimestampUrl(){
+  const el=document.getElementById("d-manualUrl");
+  const url=(el?.value||"").trim();
+  if(!url)return;
+  syncDraft();
+  if(!S.draft.photos.includes(url))S.draft.photos.push(url);
+  if(el)el.value="";
+  render();
+}
+function removeTimestampUrl(url){
+  syncDraft();
+  S.draft.photos=S.draft.photos.filter(u=>u!==url);
+  render();
 }
 
 function submitPost(){
@@ -4631,7 +4643,7 @@ function renderRoll(){
     const kt=k.knifeType||"WTS";
     const ktClass=kt==="WTS"?"wts":kt==="WTT"?"wtt":"wtstt";
     const _fp=(k.photos||[]).find(Boolean);
-    const _cov=_fp?`<div style="border-radius:10px;overflow:hidden;background:var(--bg);margin-bottom:12px;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;cursor:pointer" onclick="openKnifeDetail(null,null,'${k.id}')"><img src="${esc(cdnImg(_fp,500,375,'limit'))}" style="width:100%;height:100%;object-fit:contain;display:block" loading="lazy"/></div>`:"";
+    const _cov=_fp?`<div style="border-radius:10px;overflow:hidden;background:var(--bg);margin-bottom:12px;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;cursor:pointer" onclick="openKnifeDetail(null,null,'${k.id}')"><img src="${esc(cdnImg(_fp,500,375,'limit'))}" style="width:100%;height:100%;object-fit:contain;display:block" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentElement.style.display='none'"/></div>`:"";
     const _pickIssues=k.status!=="sold"?knifePickerIssues(k):[];
     const _readyBadge=k.status!=="sold"?(_pickIssues.length===0?`<div style="font-size:11px;font-weight:600;color:var(--greent);margin:7px 0 4px">✓ Ready to list</div>`:`<div style="font-size:11px;color:var(--redt);margin:7px 0 4px;line-height:1.5"><strong>Incomplete:</strong> ${esc(_pickIssues.join(" · "))}</div>`):``;
 
@@ -4659,7 +4671,7 @@ function renderRoll(){
       const sb=item.status==="sold"?`<span class="lk-badge so"><span class="sdot sdot-r"></span> Sold</span>`:item.status==="listed"?`<span class="lk-badge li">In Listing</span>`:item.pending?`<span class="lk-badge" style="background:var(--orangebg);color:var(--oranget)"><span class="sdot sdot-y"></span> Pending</span>`:`<span class="lk-badge av"><span class="sdot sdot-g"></span> Available</span>`;
       const priceStr=item.saleType!=="WTT"&&item.price?`$${item.price}`:item.saleType!=="WTS"&&item.tradeValue?`TV: $${item.tradeValue}`:"$TBD";
       const _nfp=(item.photos||[]).find(Boolean);
-      const _ncov=_nfp?`<div style="border-radius:10px;overflow:hidden;background:var(--bg);margin-bottom:12px;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;cursor:pointer" onclick="openNI(${realIdx})"><img src="${esc(cdnImg(_nfp,500,375,'limit'))}" style="width:100%;height:100%;object-fit:contain;display:block" loading="lazy"/></div>`:"";
+      const _ncov=_nfp?`<div style="border-radius:10px;overflow:hidden;background:var(--bg);margin-bottom:12px;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;cursor:pointer" onclick="openNI(${realIdx})"><img src="${esc(cdnImg(_nfp,500,375,'limit'))}" style="width:100%;height:100%;object-fit:contain;display:block" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentElement.style.display='none'"/></div>`:"";
       const _ngIssues=item.status!=="sold"?gearPickerIssues(item):[];
       const _ngReady=item.status!=="sold"?(_ngIssues.length===0?`<div style="font-size:11px;font-weight:600;color:var(--greent);margin:7px 0 4px">✓ Ready to list</div>`:`<div style="font-size:11px;color:var(--redt);margin:7px 0 4px;line-height:1.5"><strong>Incomplete:</strong> ${esc(_ngIssues.join(" · "))}</div>`):``;
       const stTag=item.saleType&&item.saleType!=="WTS"?`<span class="ki-type-tag${item.saleType==="WTT"?" wtt":" wtstt"}">${esc(item.saleType)}</span>`:`<span class="ki-type-tag wts">WTS</span>`;
@@ -5069,10 +5081,13 @@ function renderCompose(){
       <div class="ts-req" style="display:flex;gap:8px;align-items:flex-start">${icon('camera',14)} <span>Include one photo showing <strong>all knives</strong> in this post with a handwritten note: your Reddit username + full date (e.g. <em>u/yourname - March 14, 2026</em>)</span></div>
       ${(()=>{const svc=activePhotoService();return svc==="cloudinary"?`<div class="up-zone" onclick="triggerUpload()" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave()"><div class="up-lbl">Drop photos here or click to upload</div><div class="up-sub">Photos only · videos: paste a URL below</div></div>`:`<div class="up-zone" style="cursor:default;opacity:.55;pointer-events:none"><div class="up-lbl" style="font-size:13px">Upload not configured</div><div class="up-sub">Set up Cloudinary in Settings to enable drag-and-drop uploads, or paste an Imgur URL below</div></div>`;})()}
       ${upRows?`<div class="up-files">${upRows}</div>`:""}
-      <div style="margin-top:8px;display:flex;align-items:center;gap:6px"><div style="flex:1;height:.5px;background:rgba(0,0,0,.1)"></div><span style="font-size:11px;color:var(--t4);white-space:nowrap">or paste any image or video URL</span><div style="flex:1;height:.5px;background:rgba(0,0,0,.1)"></div></div>
-      <input type="text" id="d-manualUrl" placeholder="https://i.imgur.com/xxx.jpg or any direct image link" style="margin-top:8px" onchange="syncDraft()"/>
-      <div style="font-size:11px;color:var(--t4);margin-top:4px">Direct image links only - not album pages.</div>
-      ${d.photos.length?`<div style="font-size:11px;color:var(--greent);margin-top:5px;font-weight:500">${d.photos.length} photo${d.photos.length>1?"s":""} linked</div>`:""}
+      <div style="margin-top:8px;display:flex;align-items:center;gap:6px"><div style="flex:1;height:.5px;background:var(--b1)"></div><span style="font-size:11px;color:var(--t4);white-space:nowrap">or paste a direct image URL</span><div style="flex:1;height:.5px;background:var(--b1)"></div></div>
+      <div style="display:flex;gap:6px;margin-top:6px">
+        <input type="text" id="d-manualUrl" placeholder="https://i.imgur.com/xxx.jpg" style="flex:1;font-size:12px;padding:7px 10px;background:var(--bg);color:var(--t1);border:1px solid var(--b2);border-radius:var(--rs)" onkeydown="if(event.key==='Enter'){event.preventDefault();addTimestampUrl();}"/>
+        <button class="btn btn-sec btn-sm" onclick="addTimestampUrl()">Add</button>
+      </div>
+      <div style="font-size:11px;color:var(--t4);margin-top:4px">Direct image links only — not album pages (i.imgur.com/xxx.jpg).</div>
+      ${d.photos.length?`<div style="margin-top:8px;display:flex;flex-direction:column;gap:4px">${d.photos.filter(Boolean).map(u=>`<div style="display:flex;align-items:center;gap:6px;background:var(--greenbg);border-radius:8px;padding:5px 10px"><span style="font-size:11px;font-weight:600;color:var(--greent);flex-shrink:0">${icon('check-circle',13,'var(--greent)')}</span><span style="font-size:11px;color:var(--t2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(u)}</span><button onclick="removeTimestampUrl('${esc(u)}')" style="background:none;border:none;cursor:pointer;color:var(--t4);font-size:14px;padding:0;flex-shrink:0;line-height:1">&times;</button></div>`).join("")}</div>`:""}
     </div>
     <div style="margin-bottom:12px"><div class="field"><label>Payment <button onclick="S.modal='rules';render()" style="background:none;border:none;cursor:pointer;font-size:11px;font-weight:600;color:var(--blue);padding:0 0 0 6px;font-family:var(--font)">Rules &#8599;</button></label><div style="font-size:11px;color:var(--oranget);background:var(--orangebg);border-radius:var(--rxs);padding:6px 10px;margin:5px 0 8px;line-height:1.4">Venmo, Zelle, Cash App, Apple Pay &amp; Other require <strong>25+ confirmed swaps</strong>. PayPal G&amp;S is required until then.</div><div class="chips" style="margin-top:5px">${PAYS.map(p=>`<button class="chip sm mul${d.payment.includes(p)?" on":""}" onclick="syncDraft();S.draft.payment=tm(S.draft.payment,'${p}').length?tm(S.draft.payment,'${p}'):S.draft.payment;render()">${p}</button>`).join("")}</div>${d.payment.includes("Other")?`<input type="text" id="d-paymentOther" value="${esc(d.paymentOther)}" placeholder="Please specify payment method…" style="margin-top:8px" oninput="syncDraft()"/>`:""}
     </div></div>
@@ -5294,7 +5309,7 @@ window.undoLast=undoLast;window.pushUndo=pushUndo;
 window.startCompose=startCompose;window.cancelCompose=cancelCompose;
 window.openKF=openKF;window.closeKF=closeKF;window.syncKF=syncKF;window.saveKF=saveKF;
 window.removeKnife=removeKnife;window.setPrevPrice=setPrevPrice;window.applyDropPrice=applyDropPrice;window.addFromLocker=addFromLocker;window.removeFromInventory=removeFromInventory;window.markInvSold=markInvSold;
-window.syncDraft=syncDraft;window.submitPost=submitPost;
+window.syncDraft=syncDraft;window.submitPost=submitPost;window.addTimestampUrl=addTimestampUrl;window.removeTimestampUrl=removeTimestampUrl;
 window.openBundlePicker=openBundlePicker;window.closeBundlePicker=closeBundlePicker;window.toggleBundleKnife=toggleBundleKnife;window.confirmBundleCreate=confirmBundleCreate;window.removeBundle=removeBundle;
 window.openNI=openNI;window.closeNI=closeNI;window.saveNI=saveNI;window.removeNI=removeNI;window.markNISold=markNISold;window.addGearFromRoll=addGearFromRoll;window.removeGearItem=removeGearItem;window.markNIPending=markNIPending;window.triggerNIUpload=triggerNIUpload;window.handleNIFileInput=handleNIFileInput;window.removeNIUpload=removeNIUpload;window.addNIPhotoUrl=addNIPhotoUrl;window.markGearSold=markGearSold;window.confirmGearSoldFlow=confirmGearSoldFlow;window.cancelGearSoldFlow=cancelGearSoldFlow;window.markGearPending=markGearPending;window.lookupZipGear=lookupZipGear;window.saveGearTracking=saveGearTracking;window.markGearShipped=markGearShipped;window.markGearDelivered=markGearDelivered;window.markGearConfirmed=markGearConfirmed;window.copyGearConfirmComment=copyGearConfirmComment;window.gearShipCard=gearShipCard;window.gearAddrDisplayHtml=gearAddrDisplayHtml;window.gearPickerIssues=gearPickerIssues;window.gearSoldFlowHtml=gearSoldFlowHtml;
 window.markSold=markSold;window.cycleTmpl=cycleTmpl;window.deletePost=deletePost;window.copyPost=copyPost;window.copyText=copyText;window.openRedditPost=openRedditPost;window.startPriceDropRepost=startPriceDropRepost;window.startSamePriceRepost=startSamePriceRepost;window.tutDone=tutDone;window.tutGo=tutGo;window.openPreflight=openPreflight;window.closePreflight=closePreflight;window.addTimestampToPreflight=addTimestampToPreflight;window.copyFromPreflight=copyFromPreflight;window.openRedditFromPreflight=openRedditFromPreflight;
