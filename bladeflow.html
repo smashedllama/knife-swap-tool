@@ -1087,10 +1087,19 @@ async function _doSbSync(){
     new Promise((_,rej)=>setTimeout(()=>rej(new Error(label+' timed out (12s)')),12000))
   ]);
 
+  // Pre-flight: user_id must exist or Supabase rejects rows silently
+  if(!currentUser?.id)throw new Error('No user ID — cannot sync');
+
+  const postsPayload=posts.map(p=>({id:p.id,user_id:currentUser.id,data:p,updated_at:now}));
+  const invPayload=inv.map(k=>({id:k.id,user_id:currentUser.id,data:k,updated_at:now}));
+
+  // Log payload sizes — catches accidental base64-photo inflation
+  console.log('[sync] payload bytes — posts:'+JSON.stringify(postsPayload).length+' inv:'+JSON.stringify(invPayload).length);
+
   if(posts.length){
     console.log('[sync] posts →',posts.length);
     const{error}=await withTimeout(
-      _sb.from("posts").upsert(posts.map(p=>({id:p.id,user_id:currentUser.id,data:p,updated_at:now}))),
+      _sb.from("posts").upsert(postsPayload,{onConflict:'id'}),
       'Posts upsert'
     );
     if(error)throw new Error('Posts: '+(error.message||error.code||JSON.stringify(error)));
@@ -1100,7 +1109,7 @@ async function _doSbSync(){
   if(inv.length){
     console.log('[sync] inventory →',inv.length,'(knives:',inv.filter(k=>!k.itemCategory).length,'gear:',inv.filter(k=>k.itemCategory).length,')');
     const{error}=await withTimeout(
-      _sb.from("inventory").upsert(inv.map(k=>({id:k.id,user_id:currentUser.id,data:k,updated_at:now}))),
+      _sb.from("inventory").upsert(invPayload,{onConflict:'id'}),
       'Inventory upsert'
     );
     if(error)throw new Error('Inventory: '+(error.message||error.code||JSON.stringify(error)));
