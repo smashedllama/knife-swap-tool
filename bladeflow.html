@@ -1063,7 +1063,7 @@ const NI_ICONS={watch:icon("watch",14),sunglasses:icon("glasses",14),flashlight:
 const NI_LABELS={watch:"Watch",sunglasses:"Sunglasses",flashlight:"Flashlight","multi-tool":"Multi-tool",bag:"Bag / Case",clothing:"Clothing",other:"Other"};
 const SYNC_SAYINGS=["Sharpening the sync edge…","Honing your data to a razor's edge…","Applying the Scary Sharp protocol…","Stropping your listings clean…","Deburring your inventory…","Heat treating your data for maximum retention…","Running a paper test on your posts…","Putting a hair-whittling edge on your backup…","Your collection is in good hands…","Checking the grind geometry…","Buffing out the data scratches…","No false edges on this backup…","Setting the bevel on your backup…","Full flat grind on your file transfer…","Convex-grinding your cloud storage…","Making sure your data has no microbevels…"];
 const ED=()=>({postType:"[WTS]",knives:[],items:[],payment:[...SETTINGS.payment],paymentOther:"",noShip:[...SETTINGS.noShip],noShipOther:"",repost:false,photos:[],notes:"",rulesConfirmed:false,bundleEnabled:false,bundlePrice:"",bundles:[],groupAddons:false,tradeInterests:SETTINGS.tradeInterests||"",shippingCarrier:SETTINGS.shippingCarrier||"USPS"});
-let S={posts:[],inventory:[],loaded:false,view:"list",expanded:null,copied:null,draft:ED(),kfOpen:false,kfIdx:-1,kf:EK(),kfMode:"draft",adv:false,err:"",saveNotice:false,lockerFilter:"all",lockerPicker:false,movingKnife:null,uploadFiles:[],kfUploads:[],kfPhotoTag:"other",niUploads:[],priceResearch:{status:"idle",results:[],query:""},modal:null,authStatus:"guest",authEmail:"",showMigrate:false,soldFlow:null,gearSoldFlow:null,delFlowEmail:null,authLoading:true,mdPreview:new Set(),undoStack:[],undoToast:null,_undoTid:null,flairToast:null,_flairTid:null,rollSort:"added",soldFilter:"all",listFilter:"all",shipFilter:"all",soldExpanded:new Set(),tutStep:0,aboutTab:"about",feedbackTab:"bug",acctPopover:false,trackingFlow:null,preflight:null,priceFilter:"sold",tour:null,bundlePicker:null,niOpen:false,ni:null,niIdx:-1,gearPicker:false,_skipRollAnim:false,rollKnivesOpen:true,rollGearOpen:true,emailChangeOpen:false,emailChangeNotice:false,accountDeleted:false,migrateConfirm:null,syncingScreen:false,syncMsg:0,_sessionStart:Date.now(),_renderCount:0,_loadTime:null,_copyCount:0,_viewChanges:0,_lastView:""};
+let S={posts:[],inventory:[],loaded:false,view:"list",expanded:null,copied:null,draft:ED(),kfOpen:false,kfIdx:-1,kf:EK(),kfMode:"draft",adv:false,err:"",saveNotice:false,lockerFilter:"all",lockerPicker:false,movingKnife:null,uploadFiles:[],kfUploads:[],kfPhotoTag:"other",niUploads:[],priceResearch:{status:"idle",results:[],query:""},modal:null,authStatus:"guest",authEmail:"",showMigrate:false,soldFlow:null,gearSoldFlow:null,delFlowEmail:null,authLoading:true,mdPreview:new Set(),undoStack:[],undoToast:null,_undoTid:null,flairToast:null,_flairTid:null,rollSort:"added",soldFilter:"all",listFilter:"all",shipFilter:"all",soldExpanded:new Set(),tutStep:0,aboutTab:"about",feedbackTab:"bug",acctPopover:false,trackingFlow:null,preflight:null,priceFilter:"sold",tour:null,bundlePicker:null,niOpen:false,ni:null,niIdx:-1,gearPicker:false,_skipRollAnim:false,rollKnivesOpen:true,rollGearOpen:true,emailChangeOpen:false,emailChangeNotice:false,accountDeleted:false,migrateConfirm:null,syncingScreen:false,syncMsg:0,vidBwTip:false,_sessionStart:Date.now(),_renderCount:0,_loadTime:null,_copyCount:0,_viewChanges:0,_lastView:""};
 
 // ─── STORAGE ──────────────────────────────────────────────────
 async function load(){
@@ -4218,9 +4218,22 @@ function kfFormHtml(){
               ${u.url&&!u.uploading?`<button onclick="removeKnifeUpload('${u.uid}')" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.6);border:none;color:#fff;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:13px;padding:0;line-height:1;display:flex;align-items:center;justify-content:center">&times;</button>`:''}
             </div>`;
           }).join('')}
-          ${showVidControls?`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            ${activePhotoService()==='cloudinary'?`<button class="btn btn-sm" onclick="triggerKnifeVideoUpload()" type="button" style="background:#7c3aed;color:#fff;border:none;font-weight:600">${icon('video',13,'#fff')} Upload Video</button>`:`<button class="btn btn-sm" style="opacity:.4;cursor:default;background:var(--bg);border:.5px solid var(--b2);color:var(--t4)" disabled>Configure Cloudinary to upload</button>`}
-            <span style="font-size:10.5px;color:#6d28d9">or paste an Imgur link in any photo slot above</span>
+          ${showVidControls?`<div style="display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              ${activePhotoService()==='cloudinary'?`<button class="btn btn-sm" onclick="triggerKnifeVideoUpload()" type="button" style="background:#7c3aed;color:#fff;border:none;font-weight:600">${icon('video',13,'#fff')} Upload Video</button>`:`<button class="btn btn-sm" style="opacity:.4;cursor:default;background:var(--bg);border:.5px solid var(--b2);color:var(--t4)" disabled>Configure Cloudinary to upload</button>`}
+              <button onclick="S.vidBwTip=!S.vidBwTip;render()" type="button" title="Bandwidth info" style="background:none;border:none;cursor:pointer;padding:0;line-height:1;font-size:15px;opacity:.75;flex-shrink:0">⚠️</button>
+              <span style="font-size:10.5px;color:#6d28d9">or paste an Imgur link in any photo slot above</span>
+            </div>
+            ${s.vidBwTip?`<div style="background:#fffbeb;border:.5px solid #f59e0b;border-radius:8px;padding:9px 11px;font-size:11px;color:#78350f;line-height:1.55">
+              <strong style="display:block;margin-bottom:4px">⚠ Heads up on video bandwidth</strong>
+              Videos are served from your Cloudinary account. The free tier includes 25GB of bandwidth per month — at ~4MB per video, that's roughly 6,000 unique plays before hitting the limit. Heavy sellers with many listings or long videos may reach this faster than expected.
+              <br><br>
+              If you hit the limit, videos will stop loading for viewers. At that point switch to <strong>Imgur links</strong> pasted into the photo slots — those use Imgur's bandwidth, not yours.
+              <br><br>
+              <strong>Photos are the most reliable option</strong> and have no bandwidth concerns. Keep videos short and use them selectively.
+              <br><br>
+              <a href="https://console.cloudinary.com/settings/usage" target="_blank" rel="noopener" style="color:#7c3aed;font-weight:600;text-decoration:none">View your Cloudinary usage ↗</a>
+            </div>`:''}
           </div>`:''}
         </div>`;
       })()}
