@@ -3148,7 +3148,7 @@ function renderLoading(){
 function render(){
   S._renderCount=(S._renderCount||0)+1;
   if(S.loaded&&S._lastView!==S.view){S._viewChanges=(S._viewChanges||0)+1;S._lastView=S.view;
-    const _hv=['list','roll','sold','shipping','guide','settings'];
+    const _hv=['list','roll','sold','shipping','guide','settings','sales'];
     if(_hv.includes(S.view))history.replaceState(null,'',location.pathname+'#'+S.view);
   }
   if(S.loaded&&_loadingMsgTid){clearInterval(_loadingMsgTid);_loadingMsgTid=null;}
@@ -3678,7 +3678,7 @@ function renderTutorialModal(){
        <span style="display:flex;align-items:center">${icon('check-circle',18,'var(--greent)')}</span><div><strong style="color:var(--t1)">Delivered</strong><br><span style="font-size:12px">Arrived! Confirm Comment is ready to copy for the trade thread.</span></div>
        <span style="display:flex;align-items:center">${icon('users',18,'var(--greent)')}</span><div><strong style="color:var(--t1)">Confirmed</strong><br><span style="font-size:12px">Trade confirmed on Reddit. Done.</span></div>
      </div>`)}
-     <div class="tut-cta-row"><button class="btn btn-sec btn-sm" onclick="${go('shipping')}">${icon('truck',13)} View Shipping Tab</button></div>`},
+     <div class="tut-cta-row"><button class="btn btn-sec btn-sm" onclick="S.view='shipping';render()">${icon('truck',13)} View Shipping</button></div>`},
     // 12 - PirateShip
     {phase:"Shipping",icon:icon('anchor',48,'var(--t2)'),title:"Shipping with PirateShip",
      body:`PirateShip offers deeply discounted USPS and UPS rates, often 30-40% cheaper than paying at the post office. It's free to use.
@@ -4025,8 +4025,7 @@ function mainHdr(){
     <div class="hdr-tabs"><div class="tab-seg">
       <button class="tab-item${S.view==='list'?' on':''}" onclick="S.view='list';render()">Listings</button>
       <button class="tab-item${S.view==='roll'?' on':''}" onclick="S.view='roll';render()">The Roll</button>
-      <button class="tab-item${S.view==='sold'?' on':''}" onclick="S.view='sold';render()">Sold</button>
-      <button class="tab-item${S.view==='shipping'?' on':''}" onclick="S.view='shipping';render()" style="position:relative">${icon('truck',13)} Shipping${(()=>{const n=S.posts.reduce((a,p)=>a+p.knives.filter(k=>{const s=kShipStatus(k);return s==='ready'||s==='shipped'||s==='delivered';}).length,0);return n?`<span style="position:absolute;top:3px;right:3px;background:var(--oranget);color:#fff;font-size:9px;font-weight:700;border-radius:10px;min-width:15px;height:15px;display:flex;align-items:center;justify-content:center;padding:0 3px;line-height:1">${n}</span>`:"";})()} </button>
+      <button class="tab-item${(S.view==='sold'||S.view==='shipping')?' on':''}" onclick="if(S.view!=='sold'&&S.view!=='shipping')S.view='shipping';render()" style="position:relative">${icon('truck',13)} Sales${(()=>{const n=S.posts.reduce((a,p)=>a+p.knives.filter(k=>{const s=kShipStatus(k);return s==='ready'||s==='shipped'||s==='delivered';}).length,0);return n?`<span style="position:absolute;top:3px;right:3px;background:var(--oranget);color:#fff;font-size:9px;font-weight:700;border-radius:10px;min-width:15px;height:15px;display:flex;align-items:center;justify-content:center;padding:0 3px;line-height:1">${n}</span>`:"";})()} </button>
     </div></div>
     <div class="hdr-r">
       <a class="hdr-ico-btn" href="https://buymeacoffee.com/erunyan" target="_blank" rel="noopener" title="Support the developer"><span class="ico">☕</span><span class="btn-lbl">Support</span></a>
@@ -4592,6 +4591,17 @@ function gearShipCard(p,item,gi){
   }
   return"";
 }
+function salesSubNav(){
+  const n=S.posts.reduce((a,p)=>a+p.knives.filter(k=>{const s=kShipStatus(k);return s==='ready'||s==='shipped'||s==='delivered';}).length,0);
+  return`<div style="display:flex;gap:6px;margin-bottom:16px">
+    <button onclick="S.view='shipping';render()" style="font-size:12px;font-weight:600;padding:5px 14px;border-radius:20px;border:none;cursor:pointer;background:${S.view==='shipping'?'var(--blue)':'var(--surf3)'};color:${S.view==='shipping'?'#fff':'var(--t2)'}">
+      ${icon('truck',12,S.view==='shipping'?'#fff':'var(--t2)')} Shipping${n?` <span style="background:${S.view==='shipping'?'rgba(255,255,255,.3)':'var(--oranget)'};color:#fff;font-size:9px;font-weight:700;border-radius:10px;padding:1px 5px;margin-left:3px">${n}</span>`:''}
+    </button>
+    <button onclick="S.view='sold';render()" style="font-size:12px;font-weight:600;padding:5px 14px;border-radius:20px;border:none;cursor:pointer;background:${S.view==='sold'?'var(--blue)':'var(--surf3)'};color:${S.view==='sold'?'#fff':'var(--t2)'}">
+      ${icon('bar-chart-2',12,S.view==='sold'?'#fff':'var(--t2)')} History
+    </button>
+  </div>`;
+}
 function renderShipping(){
   const hdr=mainHdr();
   // Collect all sold post-knives
@@ -4612,7 +4622,7 @@ function renderShipping(){
   const gConfirmed=gByStatus("confirmed");
 
   if(!all.length && !gearAll.length){
-    return hdr+`<div class="main"><div class="empty"><div class="empty-ico">${icon('package',44,'var(--t4)')}</div><div class="empty-h">No shipments yet</div><div class="empty-p">Knives you mark as sold in your listings will appear here so you can track shipping and confirm trades.</div></div></div>`;
+    return hdr+`<div class="main">${salesSubNav()}<div class="empty"><div class="empty-ico">${icon('package',44,'var(--t4)')}</div><div class="empty-h">No shipments yet</div><div class="empty-p">Knives you mark as sold in your listings will appear here so you can track shipping and confirm trades.</div></div></div>`;
   }
 
   const kHead=({p,k,i})=>{
@@ -4720,7 +4730,7 @@ function renderShipping(){
   const allDeliveredCards=deliveredCards+gDelivered.map(({p,item,gi})=>gearShipCard(p,item,gi)).join("");
   const allConfirmedCards=confirmedCards+gConfirmed.map(({p,item,gi})=>gearShipCard(p,item,gi)).join("");
 
-  return hdr+`<div class="main">
+  return hdr+`<div class="main">${salesSubNav()}
     ${statsBar}
     ${sf==="all"||sf==="ready"?section(`${icon('package',13)} Ready to Ship`,allReadyCards,allReadyCount):""}
     ${sf==="all"||sf==="shipped"?section(`${icon('truck',13)} In Transit`,allShippedCards,allShippedCount):""}
@@ -4861,7 +4871,7 @@ function renderSold(){
   const sellStatsHtml=all.length>=2?`<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">${avgDays!==null?`<div class="sell-stat"><div class="sell-stat-n blue">${avgDays}d</div><div class="sell-stat-l">Avg days to sell</div></div>`:""}${avgPrice?`<div class="sell-stat"><div class="sell-stat-n orange">$${avgPrice}</div><div class="sell-stat-l">Avg sale price</div></div>`:""}${sellRate!==null?`<div class="sell-stat"><div class="sell-stat-n green">${sellRate}%</div><div class="sell-stat-l">Sell-through rate</div></div>`:""}${totalVal>0?`<div class="sell-stat"><div class="sell-stat-n purple">$${Math.round(totalVal)}</div><div class="sell-stat-l">Total revenue</div></div>`:""}</div>`:"";
   const sf=S.soldFilter||"all";
   const stats=`<div class="stats"><div class="stat clickable" onclick="S.soldFilter='all';render()"><div class="stat-n green${sf==='all'?' ring':''}">${all.length}</div><div class="stat-l">All Sold</div></div><div class="stat clickable" onclick="S.soldFilter='listings';render()"><div class="stat-n${sf==='listings'?' ring':''}">${completedPosts.length}</div><div class="stat-l">Completed Posts</div></div><div class="stat clickable" onclick="S.soldFilter='roll';render()"><div class="stat-n purple${sf==='roll'?' ring':''}">${fromRoll.length}</div><div class="stat-l">From The Roll</div></div><div class="stat" style="margin-left:auto;display:flex;align-items:center"><button class="btn btn-sec btn-sm" onclick="exportSoldCSV()" title="Export sold history to CSV">↓ CSV</button></div></div>${sellStatsHtml}`;
-  if(!all.length&&!completedPosts.length)return hdr+`<div class="main">${stats}<div class="empty"><div class="empty-ico">${icon('tag',44,'var(--t4)')}</div><div class="empty-h">No sold knives yet</div><div class="empty-p">When you mark a knife as sold in a listing or in The Roll, it will show up here.</div></div></div>`;
+  if(!all.length&&!completedPosts.length)return hdr+`<div class="main">${salesSubNav()}${stats}<div class="empty"><div class="empty-ico">${icon('tag',44,'var(--t4)')}</div><div class="empty-h">No sold knives yet</div><div class="empty-p">When you mark a knife as sold in a listing or in The Roll, it will show up here.</div></div></div>`;
   // Completed listings section
   const completedSection=completedPosts.length?`<div style="margin-bottom:20px">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><span class="sec-lbl" style="margin:0">Completed Listings</span><span style="font-size:11px;color:var(--t4);background:rgba(0,0,0,.07);padding:1px 8px;border-radius:10px;font-weight:600">${completedPosts.length}</span></div>
@@ -4912,7 +4922,7 @@ function renderSold(){
   const historySection=historyRows?`<div class="sec-lbl">Sold History</div><div class="pc" style="padding:0;overflow:hidden">${historyRows}</div>`:"";
   const showListings=sf==="all"||sf==="listings";
   const showHistory=sf==="all"||sf==="roll";
-  return hdr+`<div class="main">${stats}${showListings?completedSection:""}${showHistory?historySection:""}</div>`;
+  return hdr+`<div class="main">${salesSubNav()}${stats}${showListings?completedSection:""}${showHistory?historySection:""}</div>`;
 }
 
 // ─── INTERACTIVE TOUR ─────────────────────────────────────────
