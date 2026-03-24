@@ -1381,10 +1381,11 @@ function autoPostType(knives){
   return "[WTS/WTT]";
 }
 // Build title string, truncating to maxLen chars for Reddit
-function buildTitleStr(knives,postType,maxLen){
+function buildTitleStr(knives,postType,maxLen,items){
   maxLen=maxLen||300;
   const prefix=(postType||"[WTS]")+" ";
-  const names=knives.map(k=>k.brand+" "+k.model);
+  const gearNames=(items||[]).map(x=>(NI_LABELS[x.itemCategory||"other"]||"Other")+(x.description?" "+x.description:""));
+  const names=[...knives.map(k=>k.brand+" "+k.model),...gearNames];
   let joined=names.join(" | ");
   if((prefix+joined).length<=maxLen)return prefix+joined;
   // Drop knives from the right until it fits
@@ -1657,6 +1658,8 @@ function galleryUrl(k){
   const imgs=(k.photos||[]).filter(Boolean);
   if(!imgs.length)return null;
   if(imgs.length===1)return imgs[0];
+  // Only build gallery for Cloudinary images; external URLs (imgur etc.) link directly to first photo
+  if(!imgs.some(u=>u.includes("res.cloudinary.com")))return imgs[0];
   try{
     const d=btoa(unescape(encodeURIComponent(JSON.stringify({
       knife:k.brand+" "+k.model,
@@ -1681,6 +1684,9 @@ function buildPostGalleryUrl(post, knifeIdx){
   }));
   const hasKnifePhotos=knifeData.some(k=>k.imgs.length>0);
   if(!hasKnifePhotos&&!timestampPhotos.length)return null;
+  // Only build gallery when at least one Cloudinary image is present; external URLs fall back to direct links
+  const allImgs=[...timestampPhotos,...knifeData.flatMap(k=>k.imgs)];
+  if(!allImgs.some(u=>u.includes("res.cloudinary.com")))return null;
   const hasTs=timestampPhotos.length>0;
   let startAt=0;
   if(knifeIdx!==undefined&&knifeData[knifeIdx]?.imgs.length>0){
@@ -1732,12 +1738,13 @@ function buildItemsSection(post){
   cats.sort((a,b)=>CAT_ORDER.indexOf(a)-CAT_ORDER.indexOf(b));
   const blocks=cats.flatMap(cat=>
     post.items.filter(x=>(x.itemCategory||"other")===cat).map(x=>{
-      const icon=NI_ICONS[cat]||icon("package",14);
       const label=NI_LABELS[cat]||"Other";
       const price=x.saleType!=="WTT"&&x.price?`SV: $${x.price}`:"";
       const tv=x.saleType!=="WTS"&&x.tradeValue?`TV: $${x.tradeValue}`:"";
       const priceStr=[price,tv].filter(Boolean).join(" | ")||"$TBD";
-      return`${icon} **${label}** | ${priceStr}\n${x.description||""}${x.condition?`. Condition: ${x.condition}`:""}.${x.notes?" "+x.notes:""}`;
+      const photoLink=(x.photos||[]).filter(Boolean)[0];
+      const nameStr=photoLink?`[${label}: ${x.description||label}](${photoLink})`:`**${label}: ${x.description||""}**`;
+      return`${nameStr} | ${priceStr}\nCondition: ${x.condition||"N/A"}${x.notes?". "+x.notes:""}`;
     })
   );
   return`\n\n---\n\n**Gear & Extras:**\n\n${blocks.join("\n\n")}`;
@@ -2954,7 +2961,7 @@ function startSamePriceRepost(pid){
 }
 async function openRedditPost(pid){
   const p=S.posts.find(x=>x.id===pid);if(!p)return;
-  const title=buildTitleStr(p.knives,p.postType,300);
+  const title=buildTitleStr(p.knives,p.postType,300,p.items);
   let url="https://www.reddit.com/r/Knife_Swap/submit?selftext=true&title="+encodeURIComponent(title);
   if(p.repost)url+="&flair_text="+encodeURIComponent("Price Reduced");
   // Copy body to clipboard - Reddit ignores the &text= param in the new UI
@@ -5059,7 +5066,7 @@ function renderCompose(){
   }).join(""):`<div style="text-align:center;padding:20px 16px;color:var(--t4);font-size:13px;border:1px dashed rgba(0,0,0,.13);border-radius:var(--rs)">No knives added yet</div>`;
   const lockerPickerHtml=s.lockerPicker&&availInLocker.length?`<div class="lk-picker" style="margin-top:6px">${availInLocker.map((k,i)=>{const ri=s.inventory.indexOf(k);const issues=knifePickerIssues(k);const ok=issues.length===0;const issueText=issues.slice(0,2).join(" · ")+(issues.length>2?` +${issues.length-2} more`:"");return ok?`<div class="lk-pick-row" onclick="addFromLocker(${ri})"><div><div class="lk-pick-name">${esc(k.brand)} ${esc(k.model)}</div><div class="lk-pick-meta">${esc(k.steel||"N/A")} · ${esc(k.bladeCondition)} · $${esc(k.price)}</div></div><button class="btn btn-gn btn-xs" style="pointer-events:none">Add</button></div>`:`<div class="lk-pick-row" style="cursor:not-allowed;opacity:.75" title="${esc(issueText)}"><div style="flex:1;min-width:0"><div class="lk-pick-name">${esc(k.brand)} ${esc(k.model)}</div><div class="lk-pick-meta">${esc(k.steel||"N/A")} · ${esc(k.bladeCondition)}</div><div style="font-size:10px;color:var(--redt);margin-top:3px;font-weight:500;display:flex;align-items:center;gap:3px">${icon('alert-triangle',10,'var(--redt)')} ${esc(issueText)}</div></div><button class="btn btn-xs" style="pointer-events:none;flex-shrink:0;background:var(--orangebg);color:var(--oranget);border:.5px solid var(--oranget)">Fix first</button></div>`;}).join("")}<div style="padding:8px 14px;font-size:11px;color:var(--t4);border-top:.5px solid var(--b2);cursor:pointer" onclick="S.lockerPicker=false;render()">Close picker</div></div>`:s.lockerPicker&&!availInLocker.length?`<div style="padding:12px 14px;background:var(--bg);border-radius:var(--rs);font-size:12.5px;color:var(--t3);margin-top:6px">No available knives in The Roll. <span style="color:var(--blue);cursor:pointer" onclick="S.view='roll';render()">Add some first.</span></div>`:"";
   const gearPickerHtml=s.gearPicker&&availGearInLocker.length?`<div class="lk-picker" style="margin-top:6px">${availGearInLocker.map((item)=>{const ri=s.inventory.indexOf(item);const icn=NI_ICONS[item.itemCategory||"other"]||icon("package",14);const label=NI_LABELS[item.itemCategory||"other"]||"Other";const gissues=gearPickerIssues(item);const gok=gissues.length===0;const gissueText=gissues.join(" · ");return gok?`<div class="lk-pick-row" onclick="addGearFromRoll(${ri})"><div><div class="lk-pick-name">${icn} ${esc(label)}: ${esc(item.description||"")}</div><div class="lk-pick-meta">${esc(item.condition||"")}${item.price?" · $"+esc(item.price):""}</div></div><button class="btn btn-gn btn-xs" style="pointer-events:none">Add</button></div>`:`<div class="lk-pick-row" style="cursor:not-allowed;opacity:.75" title="${esc(gissueText)}"><div style="flex:1;min-width:0"><div class="lk-pick-name">${icn} ${esc(label)}: ${esc(item.description||"")}</div><div class="lk-pick-meta">${esc(item.condition||"")}</div><div style="font-size:10px;color:var(--redt);margin-top:3px;font-weight:500;display:flex;align-items:center;gap:3px">${icon('alert-triangle',10,'var(--redt)')} ${esc(gissueText)}</div></div><button class="btn btn-xs" style="pointer-events:none;flex-shrink:0;background:var(--orangebg);color:var(--oranget);border:.5px solid var(--oranget)">Fix first</button></div>`;}).join("")}<div style="padding:8px 14px;font-size:11px;color:var(--t4);border-top:.5px solid var(--b2);cursor:pointer" onclick="S.gearPicker=false;render()">Close picker</div></div>`:s.gearPicker&&!availGearInLocker.length?`<div style="padding:12px 14px;background:var(--bg);border-radius:var(--rs);font-size:12.5px;color:var(--t3);margin-top:6px">No available gear in The Roll. <span style="color:var(--blue);cursor:pointer" onclick="S.view='roll';render()">Add some first.</span></div>`:"";
-  const gearItemsList=(d.items||[]).length?`<div style="margin-top:10px"><div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Gear &amp; Extras</div>${(d.items||[]).map((item,di)=>{const icon=NI_ICONS[item.itemCategory||"other"]||icon("package",14);const label=NI_LABELS[item.itemCategory||"other"]||"Other";const priceStr=item.saleType!=="WTT"&&item.price?`$${item.price}`:item.tradeValue?`TV: $${item.tradeValue}`:"$TBD";return`<div class="ki"><span>${icon}</span><div class="ki-info"><div class="ki-name">${esc(label)}: ${esc(item.description||"")}</div><div class="ki-meta">${esc(item.condition||"")} · ${priceStr}</div></div><button class="btn btn-rd btn-xs" onclick="removeGearItem(${di})">Remove</button></div>`;}).join("")}</div>`:"";
+  const gearItemsList=(d.items||[]).length?`<div style="margin-top:10px"><div class="krows-hdr">Gear &amp; Extras</div>${(d.items||[]).map((item,di)=>{const gicn=NI_ICONS[item.itemCategory||"other"]||icon("package",14);const label=NI_LABELS[item.itemCategory||"other"]||"Other";const priceStr=item.saleType!=="WTT"&&item.price?`SV: $${item.price}`:item.saleType!=="WTS"&&item.tradeValue?`TV: $${item.tradeValue}`:"$TBD";return`<div class="ki"><span class="ki-num" style="background:var(--surf);color:var(--t2);font-size:13px;width:28px;height:28px">${gicn}</span><div class="ki-info"><div class="ki-name">${esc(label)}: ${esc(item.description||"")}</div><div class="ki-meta">${esc(item.condition||"")} · ${esc(item.saleType||"WTS")}</div></div><span class="ki-price">${priceStr}</span><button class="btn btn-rd btn-xs" onclick="removeGearItem(${di})">Remove</button></div>`;}).join("")}</div>`:"";
   const addBtns=!s.kfOpen?`<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn btn-sec" style="flex:1;justify-content:center;border-radius:var(--rs)" onclick="openKF(-1,'draft')">+ New Knife</button>${availInLocker.length?`<button class="btn btn-pu" style="border-radius:var(--rs)" onclick="S.lockerPicker=!S.lockerPicker;S.gearPicker=false;render()">From Roll: Knives${s.lockerPicker?" &#9650;":" &#9660;"}</button>`:""}${availGearInLocker.length?`<button class="btn btn-pu" style="border-radius:var(--rs)" onclick="S.gearPicker=!S.gearPicker;S.lockerPicker=false;render()">From Roll: Gear${s.gearPicker?" &#9650;":" &#9660;"}</button>`:""}</div>${lockerPickerHtml}${gearPickerHtml}${gearItemsList}`:"";
   const kfHtml=s.kfOpen&&s.kfMode==="draft"?kfFormHtml():"";
   // Upload section
@@ -5071,7 +5078,7 @@ function renderCompose(){
     const reorder=f.url&&!f.uploading?`<button class="up-reorder" onclick="reorderUpload(${fi},-1)" title="Move up" ${fi===0?"disabled style='opacity:.3'":""}>↑</button><button class="up-reorder" onclick="reorderUpload(${fi},1)" title="Move down" ${fi===upFiles.length-1?"disabled style='opacity:.3'":""}>↓</button>`:"";
     return`<div class="up-row">${thumb}<span class="up-name">${esc(f.name)}</span>${f.uploading?`<span class="up-spin"></span><span style="font-size:11px;color:var(--t3)">Uploading...</span>`:f.error?`<span class="up-err">${esc(f.error)}</span>`:f.url?`<span class="up-url">${esc(f.url)}</span><button class="btn btn-sec btn-xs" onclick="copyText('${esc(f.url)}')">Copy</button>`:""}${reorder}${!f.uploading?`<button class="btn btn-rd btn-xs" onclick="removeUpload('${f.uid}')">&#x2715;</button>`:""}</div>`;
   }).join("");
-  const titleStr=buildTitleStr(d.knives,d.postType,300);
+  const titleStr=buildTitleStr(d.knives,d.postType,300,d.items);
   const titleOver=titleStr.length>280;
   const detHtml=d.knives.length>0&&!s.kfOpen?`<div class="det"><div class="det-hdr">Photos &amp; Post Details</div>
     <div style="margin-bottom:16px"><div class="field"><label>Post Type</label><div class="seg" style="margin-top:5px">${["[WTS]","[WTT]","[WTS/WTT]"].map(t=>`<button class="seg-item${d.postType===t?" on":""}" onclick="S.draft.postType='${t}';render()">${t}</button>`).join("")}</div></div></div>
