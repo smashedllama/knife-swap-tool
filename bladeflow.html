@@ -2291,6 +2291,56 @@ function activePhotoService(){
   if((SETTINGS.cloudinaryCloud||"").trim()&&(SETTINGS.cloudinaryPreset||"").trim())return"cloudinary";
   return null;
 }
+// Compress a video file in-browser using canvas capture + MediaRecorder.
+// Scales to max 1280px wide, targets 1.5Mbps — turns 88MB 4K → ~6MB.
+// onProgress(0-1) is called each frame so the UI can show a live bar.
+async function compressVideoForUpload(file,onProgress){
+  return new Promise((resolve,reject)=>{
+    const vid=document.createElement('video');
+    vid.preload='auto';
+    vid.muted=true;
+    vid.playsInline=true;
+    const objUrl=URL.createObjectURL(file);
+    vid.src=objUrl;
+    vid.onloadedmetadata=()=>{
+      const MAX_W=1280,MAX_H=720;
+      const scale=Math.min(1,MAX_W/vid.videoWidth,MAX_H/vid.videoHeight);
+      const w=Math.round(vid.videoWidth*scale/2)*2;
+      const h=Math.round(vid.videoHeight*scale/2)*2;
+      const canvas=document.createElement('canvas');
+      canvas.width=w;canvas.height=h;
+      const ctx=canvas.getContext('2d');
+      const canvasStream=canvas.captureStream(30);
+      // Combine scaled canvas video track with original audio if available
+      let audioTracks=[];
+      try{const orig=vid.captureStream();audioTracks=orig.getAudioTracks();}catch(e){}
+      const combined=new MediaStream([...canvasStream.getVideoTracks(),...audioTracks]);
+      const mime=MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')?'video/webm;codecs=vp9,opus':
+                 MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')?'video/webm;codecs=vp8,opus':'video/webm';
+      const chunks=[];
+      let rec;
+      try{rec=new MediaRecorder(combined,{mimeType:mime,videoBitsPerSecond:1_500_000,audioBitsPerSecond:96_000});}
+      catch(e){URL.revokeObjectURL(objUrl);reject(new Error('Video compression not supported in this browser. Try a shorter/smaller video or paste an Imgur link instead.'));return;}
+      rec.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
+      rec.onstop=()=>{URL.revokeObjectURL(objUrl);resolve(new Blob(chunks,{type:'video/webm'}));};
+      rec.onerror=e=>{URL.revokeObjectURL(objUrl);reject(e.error||new Error('Compression failed'));};
+      const dur=vid.duration||1;
+      const drawFrame=()=>{
+        if(vid.ended||vid.paused){rec.stop();return;}
+        ctx.drawImage(vid,0,0,w,h);
+        if(onProgress)onProgress(Math.min(vid.currentTime/dur,0.99));
+        requestAnimationFrame(drawFrame);
+      };
+      rec.start(250);
+      vid.play().catch(e=>{rec.stop();reject(e);});
+      vid.onplay=drawFrame;
+      vid.onended=()=>setTimeout(()=>rec.stop(),300);
+      vid.onerror=()=>{URL.revokeObjectURL(objUrl);reject(new Error('Could not read video file.'));};
+    };
+    vid.onerror=()=>{URL.revokeObjectURL(objUrl);reject(new Error('Could not load video file.'));};
+  });
+}
+
 async function uploadToHost(file){
   const svc=activePhotoService();
   if(svc==="cloudinary"){
@@ -2341,16 +2391,28 @@ function triggerKnifeUpload(tag){S.kfPhotoTag=tag||"other";const el=document.get
 function handleKnifeFileInput(e){const tag=S.kfPhotoTag||"other";[...e.target.files].forEach(f=>{uploadKnifePhoto(f,tag);});}
 async function uploadKnifePhoto(file,tag){
   const uid=gid();
-  S.kfUploads.push({uid,name:file.name,url:null,uploading:true,error:null,tag:tag||"other"});
+  const isVideo=file.type.startsWith('video/');
+  const needsCompress=isVideo&&file.size>8*1024*1024; // >8MB: compress before upload
+  S.kfUploads.push({uid,name:file.name,url:null,uploading:true,error:null,tag:tag||"other",status:needsCompress?'Compressing 0%…':'Uploading…'});
   render();
   try{
-    const url=await uploadToHost(file);
+    let fileToUpload=file;
+    if(needsCompress){
+      fileToUpload=await compressVideoForUpload(file,(pct)=>{
+        const item=S.kfUploads.find(x=>x.uid===uid);
+        if(item){item.status=`Compressing ${Math.round(pct*100)}%…`;render();}
+      });
+      const item=S.kfUploads.find(x=>x.uid===uid);
+      if(item)item.status='Uploading…';
+      render();
+    }
+    const url=await uploadToHost(fileToUpload);
     const item=S.kfUploads.find(x=>x.uid===uid);
-    if(item){item.url=url;item.uploading=false;}
+    if(item){item.url=url;item.uploading=false;item.status=null;}
     S.kf.photos=kfUploadsToPhotos(S.kfUploads);
   }catch(err){
     const item=S.kfUploads.find(x=>x.uid===uid);
-    if(item){item.error=err.message;item.uploading=false;}
+    if(item){item.error=err.message;item.uploading=false;item.status=null;}
   }
   render();
 }
@@ -4062,7 +4124,7 @@ function kfFormHtml(){
               const isVid=u.url&&(isCdnVideo(u.url)||/\.(mp4|mov|webm|avi|mkv)(\?|$)/i.test(u.url));
               const isImg=!isVid&&u.url&&/\.(jpg|jpeg|png|gif|webp|avif)(\?|$)/i.test(u.url);
               return `<div style="position:relative">
-                ${u.uploading?`<div style="height:64px;background:var(--bg);border-radius:6px;display:flex;align-items:center;justify-content:center"><span class="up-spin"></span><span style="font-size:10px;color:var(--t3);margin-left:7px">Uploading${u.name&&u.name.match(/\.(mp4|mov|webm|avi|mkv)/i)?" video":""}…</span></div>`:
+                ${u.uploading?(()=>{const pct=u.status&&u.status.match(/(\d+)%/)?parseInt(u.status.match(/(\d+)%/)[1]):null;return`<div style="background:var(--bg);border-radius:6px;padding:10px 10px 8px;display:flex;flex-direction:column;gap:5px"><div style="display:flex;align-items:center;gap:7px"><span class="up-spin"></span><span style="font-size:10px;color:var(--t3)">${esc(u.status||'Uploading…')}</span></div>${pct!==null?`<div style="height:3px;background:var(--b1);border-radius:2px;overflow:hidden"><div style="height:100%;background:var(--blue);border-radius:2px;width:${pct}%;transition:width .3s"></div></div>`:''}</div>`})():
                 u.error?`<div style="font-size:9px;color:var(--redt);padding:2px 0;word-break:break-all">${esc(u.error)}</div>`:
                 isVid?`<video src="${esc(cdnVideo(u.url,640))}" style="width:100%;height:90px;object-fit:cover;border-radius:6px;display:block" muted playsinline controls preload="metadata"></video>`:
                 isImg?`<img src="${esc(cdnImg(u.url,220,130,'fill'))}" data-orig="${esc(u.url)}" style="width:100%;height:64px;object-fit:cover;border-radius:6px;display:block" loading="lazy" referrerpolicy="no-referrer" onerror="imgFallback(this)"/>`:
