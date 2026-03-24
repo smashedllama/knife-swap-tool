@@ -3341,7 +3341,7 @@ function renderFeedbackModal(){
       <label style="display:block;font-size:12px;font-weight:600;color:var(--t2);margin-bottom:5px">Model name(s) <span style="font-weight:400;color:var(--t3)">(optional)</span></label>
       <textarea id="fb-models" rows="3" placeholder="e.g. Praetorian Ti, Marauder, Eris…" style="${inputStyle};resize:vertical"></textarea>
     </div>`;
-  const titles={bug:`${icon('alert-circle',16)} Report a Bug`,feature:`${icon('lightbulb',16)} Request a Feature`,brand:`${icon('tag',16)} Add Brand / Model`};
+  const titles={bug:`${icon('alert-circle',16)} Report a Bug`,feature:`${icon('lightbulb',16)} Request a Feature`,brand:`${icon('tag',16)} Brand Request`};
   return`<div class="modal-overlay" onclick="S.modal=null;render()">
   <div class="modal" onclick="event.stopPropagation()" style="max-width:460px">
     <div class="modal-hdr">
@@ -3352,7 +3352,7 @@ function renderFeedbackModal(){
       <div style="display:flex;gap:4px;background:var(--bg);border-radius:10px;padding:3px;margin-bottom:18px">
         ${tabBtn("bug",`${icon('alert-circle',12)} Bug`)}
         ${tabBtn("feature",`${icon('lightbulb',12)} Feature`)}
-        ${tabBtn("brand",`${icon('tag',12)} Brand / Model`)}
+        ${tabBtn("brand",`${icon('tag',12)} Brand Request`)}
       </div>
       ${isBug?bugFields:isBrand?brandFields:featureFields}
       <div style="display:flex;gap:8px;margin-top:18px">
@@ -3366,7 +3366,7 @@ function renderFeedbackModal(){
             var device=(document.getElementById('fb-device')||{}).value||'';
             body='What happened:\n'+(what||'(not provided)')+'\n\nSteps to reproduce:\n'+(steps||'(not provided)')+'\n\nDevice / browser:\n'+(device||'(not provided)');
           }else if(S.feedbackTab==='brand'){
-            subj=encodeURIComponent('BladeFlow \u2013 Brand / Model Request');
+            subj=encodeURIComponent('BladeFlow \u2013 Brand Request');
             var brand=(document.getElementById('fb-brand')||{}).value||'';
             var models=(document.getElementById('fb-models')||{}).value||'';
             if(!brand){alert('Please enter a brand name.');return;}
