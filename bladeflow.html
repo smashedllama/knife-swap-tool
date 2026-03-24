@@ -1157,7 +1157,7 @@ function _scheduleSbSync(){
     // One deferred re-sync if edits landed while we were in-flight
     if(_syncPending){_syncPending=false;_scheduleSbSync();}
     render();
-  },8000);
+  },3000);
 }
 
 async function manualSync(){
@@ -3147,6 +3147,8 @@ function renderLoading(){
 }
 function render(){
   S._renderCount=(S._renderCount||0)+1;
+  // Track whether this render is the first time we're landing on Roll — used to gate the unfurl animation
+  S._rollJustEntered=(S.view==='roll'&&S._lastView!=='roll');
   if(S.loaded&&S._lastView!==S.view){S._viewChanges=(S._viewChanges||0)+1;S._lastView=S.view;
     const _hv=['list','roll','sold','shipping','guide','settings','sales'];
     if(_hv.includes(S.view))history.replaceState(null,'',location.pathname+'#'+S.view);
@@ -4763,7 +4765,7 @@ function renderRoll(){
     return 0; // "added" = insertion order (already correct)
   });
   const filterBar=`<div class="filter-bar"><div class="seg">${[["All","all"],[`<span class="sdot sdot-g"></span> Available`,"available"],["In Listing","listed"],[`<span class="sdot sdot-y"></span> Pending`,"pending"],[`<span class="sdot sdot-r"></span> Sold`,"sold"]].map(([l,v])=>`<button class="seg-item${fil===v?" on":""}" onclick="S.lockerFilter='${v}';render()">${l}</button>`).join("")}</div><select class="sort-select" onchange="S.rollSort=this.value;render()"><option value="added"${srt==="added"?" selected":""}>Sort: Date Added</option><option value="price-asc"${srt==="price-asc"?" selected":""}>Price: Low → High</option><option value="price-desc"${srt==="price-desc"?" selected":""}>Price: High → Low</option><option value="days"${srt==="days"?" selected":""}>Oldest First</option><option value="brand"${srt==="brand"?" selected":""}>Brand A–Z</option></select></div>`;
-  const rollAnimActive=SETTINGS.rollAnim&&!S._skipRollAnim;
+  const rollAnimActive=SETTINGS.rollAnim&&S._rollJustEntered&&!S._skipRollAnim;
   const cards=sortedFiltered.length?`<div class="lk-grid${rollAnimActive?' roll-spreading':''}">${sortedFiltered.map((k,i)=>{
     const realIdx=inv.indexOf(k);
     const statusDot=k.status==="sold"?`<span class="sdot sdot-r"></span>`:k.pending?`<span class="sdot sdot-y"></span>`:`<span class="sdot sdot-g"></span>`;
