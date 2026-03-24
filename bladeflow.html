@@ -2514,10 +2514,12 @@ function renderNIForm(){
         </div>`).join("")}
         <button onclick="triggerNIUpload()" style="width:72px;height:72px;border-radius:8px;border:1.5px dashed var(--b2);background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:var(--blue);font-size:11px;font-weight:600;flex-shrink:0">${icon('camera',18,'var(--blue)')}<span>Upload</span></button>
       </div>
+      <div style="margin-top:8px;display:flex;align-items:center;gap:6px"><div style="flex:1;height:.5px;background:var(--b1)"></div><span style="font-size:11px;color:var(--t4);white-space:nowrap">or paste any direct image URL</span><div style="flex:1;height:.5px;background:var(--b1)"></div></div>
       <div style="display:flex;gap:6px;margin-top:6px">
-        <input id="ni-url-input" type="url" placeholder="Or paste a direct image URL" style="flex:1;font-size:12px;padding:7px 10px;background:var(--bg);color:var(--t1);border:1px solid var(--b2);border-radius:var(--rs)"/>
+        <input id="ni-url-input" type="url" placeholder="https://i.imgur.com/xxx.jpg" style="flex:1;font-size:12px;padding:7px 10px;background:var(--bg);color:var(--t1);border:1px solid var(--b2);border-radius:var(--rs)"/>
         <button class="btn btn-sec btn-sm" onclick="addNIPhotoUrl()">Add</button>
       </div>
+      <div style="font-size:11px;color:var(--t4);margin-top:4px">Direct image links only — not album pages (e.g. i.imgur.com/xxx.jpg).</div>
       <input id="ni-file-input" type="file" accept="image/*" multiple style="display:none" onchange="handleNIFileInput(event)"/>
     </div>
     ${S.err?`<div class="err">${esc(S.err)}</div>`:""}
