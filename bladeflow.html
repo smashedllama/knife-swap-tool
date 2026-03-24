@@ -967,7 +967,7 @@ const PAYS=["PayPal G&S","PayPal F&F","Venmo","Zelle","Cash App","Apple Pay","Ot
 const NO_SHIP=["California","New York","New Jersey","Illinois","Massachusetts","Hawaii","Alaska","Puerto Rico","International","Other"];
 const ISSUES=["Light scratches","Deep scratches","Snail trails","Blade stain","Handle marks","Tip damage","Blade play","Lock stick","Lock slip","Lock rock","Ano wear","Detent issues","Detent lash","Other","None"];
 const ACC=["Original box","Certificate/papers","Carrying pouch","Kydex sheath","Sheath","Pocket clip","Adjustment tool","Spare scales","Extra hardware","Extra screws","Blade oil","Lanyard","Polishing cloth","Other","None"];
-const BLADE_COND=["New in box","Mint / uncarried","Factory edge, uncarried","Factory edge, carried","Lightly used","Field sharpened","Reprofiled","Dull","Needs sharpening"];
+const BLADE_COND=["New in box","Mint","Factory edge","Lightly used","Field sharpened","Reprofiled","Dull","Needs sharpening"];
 const TMPL=["Detailed","Compact","Minimal","Table"];
 
 // ─── HELPERS ──────────────────────────────────────────────────
@@ -991,8 +991,8 @@ async function saveSettings(){
 }
 
 // ─── STATE ────────────────────────────────────────────────────
-const EK=()=>({brand:"",model:"",steel:"",price:"",soldPrice:"",obo:false,knifeType:"WTS",tradeValue:"",sharpened:"No",usedCut:"No",carried:"No",bladeCondition:"Factory edge, carried",owners:"1",centering:"Perfect",lockup:"Solid",lockupNotes:"",issues:["None"],issuesOther:"",accessories:["None"],accessoriesOther:"",notes:"",inventoryId:null,prevPrice:"",photos:[],pending:false,priceHistory:[],comps:[],shippingClass:"Priority",shippingAddress:null,trackingNumber:null,trackingCarrier:"USPS",shippedAt:null,deliveredAt:null,confirmedAt:null,addonEnabled:false,addonPrice:"",soldElsewhere:false,soldElsewhereTrackShip:false,withdrawn:false});
-const EI=()=>({id:gid(),brand:"",model:"",steel:"",price:"",obo:false,knifeType:"WTS",tradeValue:"",sharpened:"No",usedCut:"No",carried:"No",bladeCondition:"Factory edge, carried",owners:"1",centering:"Perfect",lockup:"Solid",lockupNotes:"",issues:["None"],issuesOther:"",accessories:["None"],accessoriesOther:"",notes:"",status:"available",addedAt:new Date().toISOString(),soldAt:null,photos:[],pending:false,priceHistory:[],comps:[],shippingClass:"Priority",shippingAddress:null,trackingNumber:null,trackingCarrier:"USPS",shippedAt:null,deliveredAt:null,confirmedAt:null,addonEnabled:false,addonPrice:""});
+const EK=()=>({brand:"",model:"",steel:"",price:"",soldPrice:"",obo:false,knifeType:"WTS",tradeValue:"",sharpened:"No",usedCut:"No",carried:"No",bladeCondition:"Factory edge",owners:"1",centering:"Perfect",lockup:"Solid",lockupNotes:"",issues:["None"],issuesOther:"",accessories:["None"],accessoriesOther:"",notes:"",inventoryId:null,prevPrice:"",photos:[],pending:false,priceHistory:[],comps:[],shippingClass:"Priority",shippingAddress:null,trackingNumber:null,trackingCarrier:"USPS",shippedAt:null,deliveredAt:null,confirmedAt:null,addonEnabled:false,addonPrice:"",soldElsewhere:false,soldElsewhereTrackShip:false,withdrawn:false});
+const EI=()=>({id:gid(),brand:"",model:"",steel:"",price:"",obo:false,knifeType:"WTS",tradeValue:"",sharpened:"No",usedCut:"No",carried:"No",bladeCondition:"Factory edge",owners:"1",centering:"Perfect",lockup:"Solid",lockupNotes:"",issues:["None"],issuesOther:"",accessories:["None"],accessoriesOther:"",notes:"",status:"available",addedAt:new Date().toISOString(),soldAt:null,photos:[],pending:false,priceHistory:[],comps:[],shippingClass:"Priority",shippingAddress:null,trackingNumber:null,trackingCarrier:"USPS",shippedAt:null,deliveredAt:null,confirmedAt:null,addonEnabled:false,addonPrice:""});
 const ENI=()=>({id:gid(),itemCategory:"other",description:"",condition:"Excellent",price:"",tradeValue:"",saleType:"WTS",photos:[],notes:"",status:"available",addedAt:new Date().toISOString(),soldAt:null,pending:false,soldTo:null,soldPrice:"",shippingAddress:null,trackingNumber:null,trackingCarrier:"USPS",shippedAt:null,deliveredAt:null,confirmedAt:null});
 const isNI=item=>!!item.itemCategory;
 const ICONS={
@@ -2458,8 +2458,7 @@ function knifePickerIssues(k){
   if((kt==="WTS"||kt==="WTS/WTT")&&!(parseFloat(k.price)>0))issues.push("missing price");
   if((kt==="WTT"||kt==="WTS/WTT")&&!(parseFloat(k.tradeValue)>0))issues.push("missing trade value");
   const photos=(k.photos||[]).filter(Boolean);
-  if(photos.length===0)issues.push("no photos (Show Side + Clip Side required)");
-  else if(photos.length<2)issues.push("missing Clip Side photo");
+  if(photos.length===0)issues.push("no photos (at least one photo required)");
   return issues;
 }
 function addFromLocker(invIdx){
@@ -2686,45 +2685,8 @@ function fmtAddrNoName(a,multiline=false){
   if(multiline)return[street,a.city?`${a.city}, ${a.state} ${a.zip}`:a.zip].filter(Boolean).join("\n");
   return[street,a.city?`${a.city} ${a.state} ${a.zip}`:a.zip].filter(Boolean).join(", ");
 }
-function addrDisplayHtml(pid,ki){
-  const p=S.posts.find(x=>x.id===pid);
-  const k=p?.knives[ki];
-  if(!k?.shippingAddress)return"";
-  const a=k.shippingAddress;
-  const nameCopied=S.copied===`name_${pid}_${ki}`;
-  const addrOnlyCopied=S.copied===`addronly_${pid}_${ki}`;
-  const nameHtml=a.name?`<div style="font-size:12px;font-weight:700;color:var(--t1);margin-bottom:2px">${esc(a.name)}</div>`:"";
-  return`<div class="addr-block">${nameHtml}<div class="addr-text">${esc(fmtAddrNoName(a,true))}</div><div class="addr-acts">${a.name?`<button class="btn btn-sm${nameCopied?" btn-gn":" btn-sec"}" onclick="copyShippingName('${pid}',${ki})">${nameCopied?"✓ Copied!":"Copy Name"}</button>`:""}<button class="btn btn-sm${addrOnlyCopied?" btn-gn":" btn-sec"}" onclick="copyShippingAddrOnly('${pid}',${ki})">${addrOnlyCopied?"✓ Copied!":"Copy Address"}</button><button class="btn btn-sm btn-pu" onclick="openPirateShip('${pid}',${ki})">${icon('anchor',13)} PirateShip</button></div></div>`;
-}
-async function copyShippingAddress(pid,ki){
-  const p=S.posts.find(x=>x.id===pid);
-  const k=p?.knives[ki];if(!k?.shippingAddress)return;
-  try{await navigator.clipboard.writeText(fmtAddress(k.shippingAddress,true));}catch(e){}
-  S.copied=`addr_${pid}_${ki}`;render();
-  setTimeout(()=>{if(S.copied===`addr_${pid}_${ki}`){S.copied=null;render();}},2000);
-}
-async function copyShippingName(pid,ki){
-  const p=S.posts.find(x=>x.id===pid);
-  const k=p?.knives[ki];if(!k?.shippingAddress?.name)return;
-  try{await navigator.clipboard.writeText(k.shippingAddress.name);}catch(e){}
-  S.copied=`name_${pid}_${ki}`;render();
-  setTimeout(()=>{if(S.copied===`name_${pid}_${ki}`){S.copied=null;render();}},2000);
-}
-async function copyShippingAddrOnly(pid,ki){
-  const p=S.posts.find(x=>x.id===pid);
-  const k=p?.knives[ki];if(!k?.shippingAddress)return;
-  try{await navigator.clipboard.writeText(fmtAddrNoName(k.shippingAddress,true));}catch(e){}
-  S.copied=`addronly_${pid}_${ki}`;render();
-  setTimeout(()=>{if(S.copied===`addronly_${pid}_${ki}`){S.copied=null;render();}},2000);
-}
-function openPirateShip(pid,ki){
-  const p=S.posts.find(x=>x.id===pid);
-  const k=p?.knives[ki];
-  if(k?.shippingAddress){
-    try{navigator.clipboard.writeText(fmtAddrNoName(k.shippingAddress,true));}catch(e){}
-  }
-  Object.assign(document.createElement('a'),{href:"https://pirateship.com",target:"_blank",rel:"noopener noreferrer"}).click();
-}
+function addrDisplayHtml(){return"";}
+function openPirateShip(){Object.assign(document.createElement('a'),{href:"https://pirateship.com",target:"_blank",rel:"noopener noreferrer"}).click();}
 function confirmSoldFlow(){
   const sf=S.soldFlow;if(!sf)return;
   // Read ALL form values from the DOM BEFORE calling pushUndo.
@@ -2734,17 +2696,8 @@ function confirmSoldFlow(){
   const raw=(g("sold-to-input")?.value||"").trim();
   const buyer=raw.replace(/^@/,"").replace(/^\/?u\//i,"");
   const soldPrice=(g("sold-price-input")?.value||"").trim().replace(/^\$/,"");
-  const addr={
-    name:(g("ship-name")?.value||"").trim(),
-    line1:(g("ship-line1")?.value||"").trim(),
-    line2:(g("ship-line2")?.value||"").trim(),
-    city:(g("ship-city")?.value||"").trim(),
-    state:(g("ship-state")?.value||"").trim().toUpperCase(),
-    zip:(g("ship-zip")?.value||"").trim()
-  };
-  const hasAddr=!!(addr.line1||addr.zip);
   pushUndo("Knife marked sold");
-  up(s=>{const p=s.posts.find(x=>x.id===sf.pid);if(!p)return;const k=p.knives[sf.ki];k.sold=true;k.soldAt=new Date().toISOString();k.soldTo=buyer||null;k.soldPrice=soldPrice||null;k.shippingAddress=hasAddr?addr:null;k.pending=false;if(k.inventoryId){const inv=s.inventory.find(x=>x.id===k.inventoryId);if(inv)inv.status="sold";}p.postText=buildPost(p);});
+  up(s=>{const p=s.posts.find(x=>x.id===sf.pid);if(!p)return;const k=p.knives[sf.ki];k.sold=true;k.soldAt=new Date().toISOString();k.soldTo=buyer||null;k.soldPrice=soldPrice||null;k.shippingAddress=null;k.pending=false;if(k.inventoryId){const inv=s.inventory.find(x=>x.id===k.inventoryId);if(inv)inv.status="sold";}p.postText=buildPost(p);});
   saveInv();S.soldFlow=null;render();
 }
 function cancelSoldFlow(){S.soldFlow=null;render();}
@@ -2764,10 +2717,8 @@ function confirmGearSoldFlow(){
   const raw=(g("gsold-to-input")?.value||"").trim();
   const buyer=raw.replace(/^@/,"").replace(/^\/?u\//i,"");
   const soldPrice=(g("gsold-price-input")?.value||"").trim().replace(/^\$/,"");
-  const addr={name:(g("gship-name")?.value||"").trim(),line1:(g("gship-line1")?.value||"").trim(),line2:(g("gship-line2")?.value||"").trim(),city:(g("gship-city")?.value||"").trim(),state:(g("gship-state")?.value||"").trim().toUpperCase(),zip:(g("gship-zip")?.value||"").trim()};
-  const hasAddr=!!(addr.line1||addr.zip);
   pushUndo("Item marked sold");
-  up(s=>{const p=s.posts.find(x=>x.id===sf.pid);if(!p)return;const it=p.items[sf.gi];it.sold=true;it.soldAt=new Date().toISOString();it.soldTo=buyer||null;it.soldPrice=soldPrice||null;it.shippingAddress=hasAddr?addr:null;it.pending=false;if(it.inventoryId){const inv=s.inventory.find(x=>x.id===it.inventoryId);if(inv)inv.status="sold";}p.postText=buildPost(p);});
+  up(s=>{const p=s.posts.find(x=>x.id===sf.pid);if(!p)return;const it=p.items[sf.gi];it.sold=true;it.soldAt=new Date().toISOString();it.soldTo=buyer||null;it.soldPrice=soldPrice||null;it.shippingAddress=null;it.pending=false;if(it.inventoryId){const inv=s.inventory.find(x=>x.id===it.inventoryId);if(inv)inv.status="sold";}p.postText=buildPost(p);});
   saveInv();S.gearSoldFlow=null;render();
 }
 function cancelGearSoldFlow(){S.gearSoldFlow=null;render();}
@@ -2823,14 +2774,7 @@ async function copyGearConfirmComment(pid,gi){
   S.copied=`gcc_${pid}_${gi}`;render();
   setTimeout(()=>{if(S.copied===`gcc_${pid}_${gi}`){S.copied=null;render();}},2000);
 }
-function gearAddrDisplayHtml(pid,gi){
-  const p=S.posts.find(x=>x.id===pid);
-  const it=p?.items?.[gi];if(!it?.shippingAddress)return"";
-  const a=it.shippingAddress;
-  const nameHtml=a.name?`<div style="font-size:12px;font-weight:700;color:var(--t1);margin-bottom:2px">${esc(a.name)}</div>`:"";
-  const addrOnlyCopied=S.copied===`gaddronly_${pid}_${gi}`;
-  return`<div class="addr-block">${nameHtml}<div class="addr-text">${esc(fmtAddrNoName(a,true))}</div><div class="addr-acts"><button class="btn btn-sm${addrOnlyCopied?" btn-gn":" btn-sec"}" onclick="(async()=>{try{await navigator.clipboard.writeText(fmtAddrNoName(${JSON.stringify(a)},true));}catch(e){}S.copied='gaddronly_${pid}_${gi}';render();setTimeout(()=>{if(S.copied==='gaddronly_${pid}_${gi}'){S.copied=null;render();}},2000)})()">${addrOnlyCopied?"✓ Copied!":"Copy Address"}</button><button class="btn btn-sm btn-pu" onclick="(()=>{try{navigator.clipboard.writeText(fmtAddrNoName(${JSON.stringify(a)},true));}catch(e){}Object.assign(document.createElement('a'),{href:'https://pirateship.com',target:'_blank',rel:'noopener noreferrer'}).click()})()">${icon('anchor',13)} PirateShip</button></div></div>`;
-}
+function gearAddrDisplayHtml(){return"";}
 function gearSoldFlowHtml(pid,gi){
   const p=S.posts.find(x=>x.id===pid);
   const it=p?.items?.[gi];if(!it)return"";
@@ -2840,19 +2784,6 @@ function gearSoldFlowHtml(pid,gi){
     <div class="fr2" style="margin-bottom:8px">
       <div class="field"><label style="font-size:11px">Buyer (Reddit username)</label><input id="gsold-to-input" type="text" placeholder="e.g. u/buyer123" style="font-size:13px;padding:8px 10px"/></div>
       <div class="field"><label style="font-size:11px">Sale Price ($)</label><input id="gsold-price-input" type="number" min="0" placeholder="${esc(it.price||"")}" style="font-size:13px;padding:8px 10px"/></div>
-    </div>
-    <div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Shipping Address <span style="font-weight:400;text-transform:none;color:var(--t4)">(optional but recommended)</span></div>
-    <div class="fr2" style="margin-bottom:6px">
-      <div class="field"><label style="font-size:11px">Full Name</label><input id="gship-name" type="text" placeholder="John Smith" style="font-size:13px;padding:8px 10px"/></div>
-      <div class="field"><label style="font-size:11px">ZIP Code</label><input id="gship-zip" type="text" maxlength="5" placeholder="12345" style="font-size:13px;padding:8px 10px" oninput="if(this.value.length===5)lookupZipGear(this.value)"/></div>
-    </div>
-    <div class="fr2" style="margin-bottom:6px">
-      <div class="field"><label style="font-size:11px">Street Address</label><input id="gship-line1" type="text" placeholder="123 Main St" style="font-size:13px;padding:8px 10px"/></div>
-      <div class="field"><label style="font-size:11px">Apt/Suite <span style="font-weight:400;color:var(--t4)">(optional)</span></label><input id="gship-line2" type="text" placeholder="Apt 4B" style="font-size:13px;padding:8px 10px"/></div>
-    </div>
-    <div class="fr2" style="margin-bottom:10px">
-      <div class="field"><label style="font-size:11px">City</label><input id="gship-city" type="text" placeholder="Springfield" style="font-size:13px;padding:8px 10px"/></div>
-      <div class="field"><label style="font-size:11px">State</label><input id="gship-state" type="text" maxlength="2" placeholder="IL" style="font-size:13px;padding:8px 10px;text-transform:uppercase"/></div>
     </div>
     <div style="display:flex;gap:8px">
       <button class="btn btn-gn" onclick="confirmGearSoldFlow()">${icon('check-circle',13)} Confirm Sale</button>
@@ -2969,9 +2900,9 @@ function startSamePriceRepost(pid){
 async function openRedditPost(pid){
   const p=S.posts.find(x=>x.id===pid);if(!p)return;
   const title=buildTitleStr(p.knives,p.postType,300,p.items);
-  let url="https://www.reddit.com/r/Knife_Swap/submit?selftext=true&title="+encodeURIComponent(title);
+  let url="https://www.reddit.com/r/Knife_Swap/submit?selftext=true&title="+encodeURIComponent(title)+"&text="+encodeURIComponent(p.postText||"");
   if(p.repost)url+="&flair_text="+encodeURIComponent("Price Reduced");
-  // Copy body to clipboard - Reddit ignores the &text= param in the new UI
+  // Also copy to clipboard — new Reddit ignores &text= but old Reddit uses it; clipboard covers both
   let copied=false;
   try{await navigator.clipboard.writeText(p.postText||"");copied=true;}catch(e){}
   window.open(url,"_blank","noopener");
@@ -3635,7 +3566,6 @@ function renderTutorialModal(){
      ${preview(`<strong style="color:var(--t1)">The sold form captures:</strong>
      <ul style="margin:8px 0 0;padding-left:18px;line-height:2">
        <li><strong>Buyer's Reddit username</strong>: used to generate the confirm comment</li>
-       <li><strong>Shipping address</strong> (optional): saved for PirateShip. Enter the ZIP and city/state auto-fills</li>
      </ul>
      The knife moves to your sold history and the post text updates automatically.`)}
      ${tip("Pending?",`Use <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--oranget);vertical-align:middle"></span> Pending to flag a knife when payment is incoming but not cleared. Mark it Sold once payment hits.`)}`},
@@ -3844,7 +3774,6 @@ function renderGuide(){
       ${step(1,"Click the Sold button on the knife row","Found in your listing on the Listings tab.")}
       ${step(2,"Enter the buyer's Reddit username","This is used to generate the confirmed trade comment.")}
       ${step(3,"Enter the final sale price","This updates the post text and shows in your sold history.")}
-      ${step(4,"Enter the shipping address","ZIP code auto-fills city and state. This gets saved for PirateShip.")}
       ${tool("The post text updates automatically with a strikethrough [SOLD] label next to the knife. Your Roll entry moves to sold status.")}
     `)}
 
@@ -4087,7 +4016,7 @@ function kfFormHtml(){
   }
   return`<div class="kf" style="margin-top:10px"><div class="kf-hdr"><div class="kf-title">${s.kfIdx>=0?"Edit Knife":(isLock?"Add to The Roll":"Add a Knife")}</div>${badge}</div>
     <div class="fr2" style="margin-bottom:11px"><div class="field"><label>Brand</label><input type="text" id="kf-brand" list="dl-brands" value="${esc(f.brand)}" placeholder="e.g. Spyderco" oninput="updateModelList()" onblur="syncKF();render()" onkeydown="if(event.key==='Enter'&&!event.isComposing){event.preventDefault();autoFillInput('kf-brand','dl-brands');updateModelList();}"/></div><div class="field"><label>Model</label><input type="text" id="kf-model" list="dl-models" value="${esc(f.model)}" placeholder="e.g. Para 3 LW" onblur="syncKF();render()" onkeydown="if(event.key==='Enter'&&!event.isComposing){event.preventDefault();autoFillInput('kf-model','dl-models');}"/></div></div>
-    <div class="fr2" style="margin-bottom:11px"><div class="field"><label>Steel</label><input type="text" id="kf-steel" list="dl-steels" value="${esc(f.steel)}" placeholder="e.g. M390" onblur="syncKF();render()" onkeydown="if(event.key==='Enter'&&!event.isComposing){event.preventDefault();autoFillInput('kf-steel','dl-steels');}"/></div><div class="field"><label>Condition</label><select id="kf-bladeCondition">${BLADE_COND.map(v=>`<option${f.bladeCondition===v?" selected":""}>${v}</option>`).join("")}</select></div></div>
+    <div class="fr2" style="margin-bottom:11px"><div class="field"><label>Steel</label><input type="text" id="kf-steel" list="dl-steels" value="${esc(f.steel)}" placeholder="e.g. M390" onblur="syncKF();render()" onkeydown="if(event.key==='Enter'&&!event.isComposing){event.preventDefault();autoFillInput('kf-steel','dl-steels');}"/></div><div class="field"><label>Condition</label><select id="kf-bladeCondition">${[...new Set([...BLADE_COND,...(f.bladeCondition&&!BLADE_COND.includes(f.bladeCondition)?[f.bladeCondition]:[])])].map(v=>`<option${f.bladeCondition===v?" selected":""}>${v}</option>`).join("")}</select></div></div>
     <div class="kf-type-sel"><button class="kf-type-btn${kt==="WTS"?" on wts":""}" onclick="syncKF();S.kf.knifeType='WTS';render()">WTS - For Sale</button><button class="kf-type-btn${kt==="WTT"?" on wtt":""}" onclick="syncKF();S.kf.knifeType='WTT';render()">WTT - For Trade</button><button class="kf-type-btn${kt==="WTS/WTT"?" on wtstt":""}" onclick="syncKF();S.kf.knifeType='WTS/WTT';render()">WTS/WTT - Both</button></div>
     <div class="fr2" style="margin-bottom:13px">
       ${kt!=="WTT"?`<div class="field"><label>Sale Price / SV ($)</label><input type="number" id="kf-price" value="${esc(f.price)}" placeholder="175" min="0" onblur="syncKF();render()"/></div>`:`<div></div>`}
@@ -4207,22 +4136,11 @@ function renderList(){
   <button class="btn btn-gn btn-sm" onclick="confirmSoldFlow()">Confirm Sold</button>
   <button class="btn btn-sec btn-sm" onclick="cancelSoldFlow()">Cancel</button>
 </div>
-<div class="addr-form">
-  <div style="font-size:11px;font-weight:700;color:var(--greent);margin-bottom:1px;display:flex;align-items:center;gap:5px">${icon('truck',12,'var(--greent)')} Shipping Address <span style="font-weight:400;opacity:.7">(optional, saved for PirateShip)</span></div>
-  <input id="ship-name" class="addr-form" type="text" placeholder="Full name" autocomplete="name"/>
-  <input id="ship-line1" class="addr-form" type="text" placeholder="Street address" autocomplete="address-line1"/>
-  <input id="ship-line2" class="addr-form" type="text" placeholder="Apt, suite, unit (optional)" autocomplete="address-line2"/>
-  <div class="addr-row">
-    <input id="ship-zip" class="addr-form" type="text" inputmode="numeric" maxlength="5" placeholder="ZIP" style="max-width:80px;flex:none" autocomplete="postal-code" oninput="if(this.value.length===5)lookupZip(this.value)"/>
-    <input id="ship-city" class="addr-form" type="text" placeholder="City" autocomplete="address-level2"/>
-    <input id="ship-state" class="addr-form" type="text" maxlength="2" placeholder="ST" style="max-width:52px;flex:none;text-transform:uppercase" autocomplete="address-level1"/>
-  </div>
-</div>
 <div style="font-size:11px;color:var(--greent);opacity:.8;margin-top:8px;line-height:1.5">Add their username to generate a confirmation comment for the <a href="https://www.reddit.com/r/Knife_Swap/search/?q=Confirmed+Trade+Thread&restrict_sr=1&sort=new&type=link" target="_blank" rel="noopener" style="color:inherit;font-weight:700;text-decoration:underline">Confirmed Trade Thread</a></div>
 </div>`):"";
         const kDot=k.soldElsewhere?`<span class="sdot sdot-r"></span>`:k.withdrawn?`<span class="sdot sdot-x"></span>`:k.sold?`<span class="sdot sdot-r"></span>`:k.pending?`<span class="sdot sdot-y"></span>`:`<span class="sdot sdot-g"></span>`;
         const kRowClass=`krow${(k.sold||k.soldElsewhere)?" sold":k.withdrawn?" withdrawn-row":k.pending?" pending-row":""}${isMoving?" moving":""}`;
-        const addrHtml=k.sold&&k.shippingAddress?addrDisplayHtml(p.id,i):"";
+        const addrHtml="";
         return`<div class="${kRowClass}"><div class="krow-top"><div class="krow-info"><div class="krow-name${(k.sold||k.soldElsewhere||k.withdrawn)?" s":""}">${kDot} ${esc(k.brand)} ${esc(k.model)}${k.pending&&!k.sold&&!k.soldElsewhere&&!k.withdrawn?` <span class="pending-tag">PENDING</span>`:""}${kPhotoCount?` <span class="photo-tag">${icon('camera',11)} ${kPhotoCount}</span>`:""}</div><div class="krow-meta">${esc(k.steel||"N/A")} · ${esc(k.bladeCondition)}${(k.sold||k.soldElsewhere)&&k.soldAt?" · "+(k.soldElsewhere?"Elsewhere":"Sold")+" "+fmtD(k.soldAt):""}${k.withdrawn?" · Withdrawn":""}${soldToMeta}</div></div><span class="krow-price${(k.sold||k.soldElsewhere||k.withdrawn)?" s":""}">${knifePrice(k)}</span></div><div class="krow-acts">${k.soldElsewhere?`<span class="elsewhere-chip">Sold Elsewhere</span>${!(k.confirmedAt&&k.deliveredAt)?`<button class="btn btn-sm btn-sec" onclick="markSold('${p.id}',${i})">Relist</button>`:``}`:k.withdrawn?`<span class="withdrawn-chip">Withdrawn</span><button class="btn btn-sm btn-sec" onclick="readdKnife('${p.id}',${i})">Re-add</button>`:k.sold?`<span class="sold-chip">Sold</span><button class="btn btn-sm${ccCopied?" btn-gn":" btn-pu"}" onclick="copyConfirmComment('${p.id}',${i})">${ccCopied?"Copied!":"Confirm Comment"}</button>${!(k.confirmedAt&&k.deliveredAt)?`<button class="btn btn-sm btn-sec" onclick="markSold('${p.id}',${i})">Relist</button>`:``}`:`<button class="btn btn-sm${dibsCopied?" btn-gn":" btn-pu"}" onclick="copyDibsMessage('${p.id}',${i})" title="Copy payment confirmation message">${dibsCopied?"Copied!":`${icon('mail',13)} Payment Info`}</button><button class="btn btn-sm${k.pending?" btn-am":" btn-sec"}" onclick="markPending('${p.id}',${i})">${k.pending?`<span class="sdot sdot-y"></span> Pending`:`<span class="sdot sdot-y"></span> Pending?`}</button><button class="btn btn-sm btn-gn" onclick="markSold('${p.id}',${i})"><span class="sdot sdot-g"></span>→<span class="sdot sdot-r"></span> Sold</button><button class="btn btn-sm btn-rd" onclick="markSoldElsewhere('${p.id}',${i})" title="Sold on eBay, FB Marketplace, etc.">Sold Elsewhere</button><button class="btn btn-sm btn-sec" onclick="markWithdrawn('${p.id}',${i})" title="Remove from listing, return to The Roll">Withdraw</button>`}${!k.sold&&!k.soldElsewhere&&!k.withdrawn&&s.posts.length>1?`<button class="btn btn-sm btn-pu" onclick="startMove('${p.id}',${i})">Transfer</button>`:""}</div>${addrHtml}${sfHtml}${picker}</div>`;
       }).join("");
       const da2=daysAgo(p.createdAt);
@@ -4254,7 +4172,7 @@ function renderList(){
           const gpriceStr=item.saleType!=="WTT"&&item.price?`$${item.price}`:item.tradeValue?`TV: $${item.tradeValue}`:"$TBD";
           const isGSF=s.gearSoldFlow&&s.gearSoldFlow.pid===p.id&&s.gearSoldFlow.gi===gi;
           const gsfHtml=isGSF?gearSoldFlowHtml(p.id,gi):"";
-          const gAddrHtml=item.sold&&item.shippingAddress?gearAddrDisplayHtml(p.id,gi):"";
+          const gAddrHtml="";
           const gDot=item.sold?`<span class="sdot sdot-r"></span>`:item.pending?`<span class="sdot sdot-y"></span>`:`<span class="sdot sdot-g"></span>`;
           const gRowClass=`krow${item.sold?" sold":item.pending?" pending-row":""}`;
           const gActsHtml=item.sold?(!(item.confirmedAt&&item.deliveredAt)?`<span class="sold-chip">Sold</span><button class="btn btn-sm btn-sec" onclick="markGearSold('${p.id}',${gi})">Relist</button>`:`<span class="sold-chip">Sold</span>`):(`<button class="btn btn-sm${item.pending?" btn-am":" btn-sec"}" onclick="markGearPending('${p.id}',${gi})">${item.pending?`<span class="sdot sdot-y"></span> Pending`:`<span class="sdot sdot-y"></span> Pending?`}</button><button class="btn btn-sm btn-gn" onclick="markGearSold('${p.id}',${gi})"><span class="sdot sdot-r"></span> Sold</button>`);
@@ -4404,7 +4322,6 @@ function renderKnifeDetailModal(){
       ${k.deliveredAt?row("Delivered",fmtD(k.deliveredAt)):""}
       ${k.confirmedAt?row("Confirmed",fmtD(k.confirmedAt)):""}
       ${trkVal?row("Tracking",trkVal):""}
-      ${addrVal?row("Ship to",addrVal):""}
     </div>
     ${footerHtml}
   </div></div>`;
@@ -4423,8 +4340,7 @@ function gearShipCard(p,item,gi){
         <div style="font-size:14px;font-weight:700;color:var(--t1)">${NI_ICONS[item.itemCategory||"other"]} ${esc(label)}: ${esc(item.description||"")}</div>
         <div style="font-size:13px;font-weight:700;color:var(--greent);white-space:nowrap;flex-shrink:0">${priceStr}</div>
       </div>
-      <div style="font-size:12px;color:var(--t2);margin-bottom:${item.shippingAddress?4:10}px">${buyer}</div>
-      ${addrHtml}
+      <div style="font-size:12px;color:var(--t2);margin-bottom:10px">${buyer}</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
         <select id="gcarr-${p.id}-${gi}" style="font-size:12px;padding:6px 8px;border-radius:8px;border:.5px solid var(--b2);background:var(--card);color:var(--t1);flex-shrink:0">${CARRIERS.map(c=>`<option value="${c}"${(item.trackingCarrier||"USPS")===c?" selected":""}>${c}</option>`).join("")}</select>
         <input id="gtrk-${p.id}-${gi}" type="text" placeholder="Tracking number" style="flex:1;min-width:140px;font-size:12px;padding:6px 10px" value="${esc(item.trackingNumber||"")}"/>
@@ -5025,7 +4941,7 @@ function kfChecklist(f){
   if(kt==="WTS"||kt==="WTS/WTT") items.push({ok:!!(f.price&&parseFloat(f.price)>0),label:"Asking price (SV)"});
   if(kt==="WTT"||kt==="WTS/WTT") items.push({ok:!!(f.tradeValue&&parseFloat(f.tradeValue)>0),label:"Trade value (TV)"});
   const _kpLen=(f.photos||[]).filter(Boolean).length;
-  items.push({ok:_kpLen>=2,label:_kpLen===0?"Knife photos (Show Side + Clip Side needed)":_kpLen===1?"Clip Side photo needed":"Knife photos"});
+  items.push({ok:_kpLen>=1,label:_kpLen===0?"Knife photos (at least one photo needed)":"Knife photos"});
   const allOk=items.every(i=>i.ok);
   const rows=items.map(it=>`<div class="cl-item${it.ok?" ok":""}"><span class="cl-check ${it.ok?"ok":"fail"}">${it.ok?"✓":"○"}</span><span class="cl-label">${it.label}</span></div>`).join("");
   return`<div class="cl"><div class="cl-hdr">Knife checklist</div><div class="cl-items">${rows}</div>${allOk?`<div class="cl-all-good">✓ Knife ready to add</div>`:""}</div>`;
@@ -5041,8 +4957,7 @@ function composeChecklist(d){
     if((kt==="WTS"||kt==="WTS/WTT")&&!(parseFloat(k.price)>0)) knifeProblems.push(`${n}: missing asking price`);
     if((kt==="WTT"||kt==="WTS/WTT")&&!(parseFloat(k.tradeValue)>0)) knifeProblems.push(`${n}: missing trade value`);
     const kphotos=(k.photos||[]).filter(Boolean);
-    if(kphotos.length===0) knifeProblems.push(`${n}: no photos (Show Side + Clip Side required)`);
-    else if(kphotos.length<2) knifeProblems.push(`${n}: needs Clip Side photo`);
+    if(kphotos.length===0) knifeProblems.push(`${n}: no photos`);
   });
   const gearProblems=[];
   (d.items||[]).forEach((it,i)=>{
@@ -5525,11 +5440,11 @@ function checkPostRules(pid){
   const totalActive=activeKnives.length+(p.items||[]).length;
   const mixedLotsOk=(p.items||[]).length===0||totalActive===0||(activeKnives.length/totalActive)>=0.5;
   const noExtLinks=!BANNED_LINK_RE.test(txt);
-  const missingSlots=activeKnives.filter(k=>(k.photos||[]).filter(Boolean).length<2);
+  const missingSlots=activeKnives.filter(k=>(k.photos||[]).filter(Boolean).length<1);
   const missingGearPhotos=(p.items||[]).filter(it=>!it.sold&&!(it.photos||[]).filter(Boolean).length);
   return[
     {ok:(p.photos||[]).filter(Boolean).length>0,msg:"Timestamp photo link in post"},
-    {ok:missingSlots.length===0,msg:missingSlots.length===0?"All knives have Show Side + Clip Side photos":`Missing Show/Clip photos: ${missingSlots.map(k=>k.brand+" "+k.model).join(", ")}`},
+    {ok:missingSlots.length===0,msg:missingSlots.length===0?"All knives have photos":`Missing photos: ${missingSlots.map(k=>k.brand+" "+k.model).join(", ")}`},
     {ok:missingGearPhotos.length===0,msg:missingGearPhotos.length===0?"All gear items have a photo":`Missing photo: ${missingGearPhotos.map(it=>it.description||NI_LABELS[it.itemCategory||"other"]||"item").join(", ")}`},
     {ok:activeKnives.filter(k=>k.knifeType!=="WTT").every(k=>k.price&&k.price.length>0),msg:"All WTS knives have a price"},
     {ok:p.payment&&p.payment.length>0,msg:"Payment method specified"},
