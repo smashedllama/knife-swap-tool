@@ -2515,7 +2515,7 @@ function renderNIForm(){
         <button onclick="triggerNIUpload()" style="width:72px;height:72px;border-radius:8px;border:1.5px dashed var(--b2);background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:var(--blue);font-size:11px;font-weight:600;flex-shrink:0">${icon('camera',18,'var(--blue)')}<span>Upload</span></button>
       </div>
       <div style="display:flex;gap:6px;margin-top:6px">
-        <input id="ni-url-input" type="url" placeholder="Or paste a direct image URL" style="flex:1;font-size:12px;padding:7px 10px"/>
+        <input id="ni-url-input" type="url" placeholder="Or paste a direct image URL" style="flex:1;font-size:12px;padding:7px 10px;background:var(--bg);color:var(--t1);border:1px solid var(--b2);border-radius:var(--rs)"/>
         <button class="btn btn-sec btn-sm" onclick="addNIPhotoUrl()">Add</button>
       </div>
       <input id="ni-file-input" type="file" accept="image/*" multiple style="display:none" onchange="handleNIFileInput(event)"/>
