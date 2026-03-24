@@ -2473,9 +2473,11 @@ function openNI(idx){
 function closeNI(){S.niOpen=false;S.ni=null;S.niIdx=-1;S.err="";render();}
 function saveNI(){
   const f=S.ni;
-  if(!f.description.trim()){S.err="Enter the item name.";render();return;}
+  f.description=(f.description||"").replace(/[\r\n\t]+/g," ").trim();
+  f.notes=(f.notes||"").replace(/[\r\n\t]+/g," ").trim();
+  if(!f.description){S.err="Enter the item name.";render();return;}
   if(f.saleType!=="WTT"&&!String(f.price||"").trim()){S.err="Enter a price or switch to Trade Only.";render();return;}
-  if(BANNED_LINK_RE.test((f.description||"")+" "+(f.notes||""))){S.err="External platform links (eBay, Etsy, Amazon, etc.) are not allowed per r/Knife_Swap rules. Remove the link.";render();return;}
+  if(BANNED_LINK_RE.test(f.description+" "+f.notes)){S.err="External platform links (eBay, Etsy, Amazon, etc.) are not allowed per r/Knife_Swap rules. Remove the link.";render();return;}
   S.err="";
   if(S.niIdx===-1){if(!f.id)f.id=gid();S.inventory.push(JSON.parse(JSON.stringify(f)));}
   else{S.inventory[S.niIdx]=JSON.parse(JSON.stringify(f));}
@@ -2493,11 +2495,11 @@ function renderNIForm(){
     (f.saleType!=="WTS"?`<div class="field" style="flex:1;min-width:120px"><label>Trade Value ($)</label><input type="number" min="0" value="${esc(String(f.tradeValue||""))}" placeholder="e.g. 150" oninput="S.ni.tradeValue=this.value"/></div>`:"");
   return`<div class="kf" style="margin-top:10px"><div class="kf-hdr"><div class="kf-title">${S.niIdx===-1?"Add Item":"Edit Item"}</div></div>
     <div class="field" style="margin-bottom:10px"><label>Category</label><div class="chips" style="margin-top:4px">${catChips}</div></div>
-    <div class="field" style="margin-bottom:10px"><label>Item</label><input type="text" value="${esc(f.description)}" placeholder="e.g. Seiko SKX007" oninput="S.ni.description=this.value"/></div>
+    <div class="field" style="margin-bottom:10px"><label>Item</label><input type="text" value="${esc(f.description)}" placeholder="e.g. Seiko SKX007" oninput="S.ni.description=this.value.replace(/[\r\n]+/g,' ')"/></div>
     <div class="field" style="margin-bottom:10px"><label>Condition</label><div class="chips" style="margin-top:4px">${condChips}</div></div>
     <div class="kf-type-sel" style="margin-bottom:10px">${stChips}</div>
     <div class="fr2" style="margin-bottom:10px">${priceFields}</div>
-    <div class="field" style="margin-bottom:10px"><label>Details <span style="font-weight:400;color:var(--t4);font-size:11px">(optional)</span></label><input type="text" value="${esc(f.notes||"")}" placeholder="e.g. black dial, box and papers included" oninput="S.ni.notes=this.value"/></div>
+    <div class="field" style="margin-bottom:10px"><label>Details <span style="font-weight:400;color:var(--t4);font-size:11px">(optional)</span></label><input type="text" value="${esc(f.notes||"")}" placeholder="e.g. black dial, box and papers included" oninput="S.ni.notes=this.value.replace(/[\r\n]+/g,' ')"/></div>
     <div class="field" style="margin-bottom:10px" id="ni-photos-field">
       <label>Photos <span style="font-size:11px;font-weight:400;color:var(--redt)">· 1 photo required to list</span></label>
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">
@@ -4645,7 +4647,7 @@ function renderRoll(){
     const niForm=S.niOpen&&!S.kfOpen?renderNIForm():"";
     const niCards=niItems.map((item)=>{
       const realIdx=inv.indexOf(item);
-      const icon=NI_ICONS[item.itemCategory]||icon("package",14);
+      const itemIcon=NI_ICONS[item.itemCategory]||icon("package",14);
       const label=NI_LABELS[item.itemCategory]||"Other";
       const sb=item.status==="sold"?`<span class="lk-badge so"><span class="sdot sdot-r"></span> Sold</span>`:item.status==="listed"?`<span class="lk-badge li">In Listing</span>`:item.pending?`<span class="lk-badge" style="background:var(--orangebg);color:var(--oranget)"><span class="sdot sdot-y"></span> Pending</span>`:`<span class="lk-badge av"><span class="sdot sdot-g"></span> Available</span>`;
       const priceStr=item.saleType!=="WTT"&&item.price?`$${item.price}`:item.saleType!=="WTS"&&item.tradeValue?`TV: $${item.tradeValue}`:"$TBD";
@@ -4655,7 +4657,7 @@ function renderRoll(){
       const _ngReady=item.status!=="sold"?(_ngIssues.length===0?`<div style="font-size:11px;font-weight:600;color:var(--greent);margin:7px 0 4px">✓ Ready to list</div>`:`<div style="font-size:11px;color:var(--redt);margin:7px 0 4px;line-height:1.5"><strong>Incomplete:</strong> ${esc(_ngIssues.join(" · "))}</div>`):``;
       const stTag=item.saleType&&item.saleType!=="WTS"?`<span class="ki-type-tag${item.saleType==="WTT"?" wtt":" wtstt"}">${esc(item.saleType)}</span>`:`<span class="ki-type-tag wts">WTS</span>`;
       return`<div class="ni-card">
-        ${_ncov}<div class="ni-card-hdr"><span class="ni-cat">${icon} ${label}</span><div class="lk-card-tags">${stTag}</div></div>
+        ${_ncov}<div class="ni-card-hdr"><span class="ni-cat">${itemIcon} ${label}</span><div class="lk-card-tags">${stTag}</div></div>
         <div class="ni-desc">${esc(item.description||"—")}</div>
         <div class="lk-steel">${esc(item.condition||"")}</div>
         <div class="ni-price">${priceStr}</div>
