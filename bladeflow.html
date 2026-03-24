@@ -2431,6 +2431,7 @@ function submitPost(){
   }
   for(const item of (d.items||[])){
     if(!item.description?.trim()){S.err="Add a description for all gear items.";render();return;}
+    if(!(item.photos||[]).filter(Boolean).length){S.err=`Add at least one photo to "${item.description||NI_LABELS[item.itemCategory||"other"]||"gear item"}".`;render();return;}
   }
   const allNotesText=[...d.knives.map(k=>k.notes||""),...(d.items||[]).map(x=>(x.description||"")+" "+(x.notes||"")),d.notes||""].join(" ");
   if(BANNED_LINK_RE.test(allNotesText)){S.err="External platform links (eBay, Etsy, Amazon, etc.) are not allowed in posts per r/Knife_Swap rules. Remove any external links from notes.";render();return;}
@@ -4757,9 +4758,17 @@ function composeChecklist(d){
     if(kphotos.length===0) knifeProblems.push(`${n}: no photos (Show Side + Clip Side required)`);
     else if(kphotos.length<2) knifeProblems.push(`${n}: needs Clip Side photo`);
   });
+  const gearProblems=[];
+  (d.items||[]).forEach((it,i)=>{
+    const lbl=it.description?.trim()||(NI_LABELS[it.itemCategory||"other"]||"Item")+(d.items.length>1?` ${i+1}`:"");
+    if(!(it.photos||[]).filter(Boolean).length) gearProblems.push(`${lbl}: no photo`);
+    const st=it.saleType||"WTS";
+    if((st==="WTS"||st==="WTS/WTT")&&!(parseFloat(it.price)>0)) gearProblems.push(`${lbl}: missing price`);
+  });
   const items=[
     {ok:d.knives.length>0,label:"At least one knife added"},
     {ok:knifeProblems.length===0,label:knifeProblems.length===0?"All knife details complete":knifeProblems[0]+(knifeProblems.length>1?` (+${knifeProblems.length-1} more)`:"")},
+    ...(gearProblems.length||((d.items||[]).length>0)?[{ok:gearProblems.length===0,label:gearProblems.length===0?"All gear items complete":gearProblems[0]+(gearProblems.length>1?` (+${gearProblems.length-1} more)`:"")}]:[]),
     {ok:(d.photos||[]).filter(Boolean).length>0,label:"Timestamp photo linked"},
     {ok:d.payment.length>0,label:"Payment method selected"},
     {ok:!!d.rulesConfirmed,label:"r/Knife_Swap rules confirmed"},
