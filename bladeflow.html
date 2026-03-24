@@ -4651,7 +4651,11 @@ function renderRoll(){
     const kt=k.knifeType||"WTS";
     const ktClass=kt==="WTS"?"wts":kt==="WTT"?"wtt":"wtstt";
     const _fp=(k.photos||[]).find(Boolean);
-    const _cov=_fp?`<div style="border-radius:10px;overflow:hidden;background:var(--bg);margin-bottom:12px;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;cursor:pointer" onclick="openKnifeDetail(null,null,'${k.id}')"><img src="${esc(cdnImg(_fp,500,375,'limit'))}" data-orig="${esc(_fp)}" style="width:100%;height:100%;object-fit:contain;display:block" loading="lazy" referrerpolicy="no-referrer" onerror="imgFallback(this)"/></div>`:"";
+    const _cdnFp=(k.photos||[]).find(u=>u&&u.includes('res.cloudinary.com'));
+    const _extFp=(k.photos||[]).find(u=>u&&!u.includes('res.cloudinary.com'));
+    const _covImg=_cdnFp?`<div style="border-radius:10px;overflow:hidden;background:var(--bg);margin-bottom:8px;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;cursor:pointer" onclick="openKnifeDetail(null,null,'${k.id}')"><img src="${esc(cdnImg(_cdnFp,500,375,'limit'))}" style="width:100%;height:100%;object-fit:contain;display:block" loading="lazy"/></div>`:"";
+    const _extLink=_extFp?`<a href="${esc(_extFp)}" target="_blank" rel="noopener" style="display:block;font-size:11px;font-weight:600;color:var(--blue);margin-bottom:8px;text-decoration:none">${icon('external-link',11,'var(--blue)')} ${_cdnFp?"Imgur Link":"View photo"} ↗</a>`:"";
+    const _cov=_cdnFp?_covImg+_extLink:_extFp?`<div style="border-radius:10px;background:var(--surf);margin-bottom:8px;padding:12px;display:flex;align-items:center;justify-content:center">${_extLink}</div>`:"";
     const _pickIssues=k.status!=="sold"?knifePickerIssues(k):[];
     const _readyBadge=k.status!=="sold"?(_pickIssues.length===0?`<div style="font-size:11px;font-weight:600;color:var(--greent);margin:7px 0 4px">✓ Ready to list</div>`:`<div style="font-size:11px;color:var(--redt);margin:7px 0 4px;line-height:1.5"><strong>Incomplete:</strong> ${esc(_pickIssues.join(" · "))}</div>`):``;
 
@@ -4679,7 +4683,11 @@ function renderRoll(){
       const sb=item.status==="sold"?`<span class="lk-badge so"><span class="sdot sdot-r"></span> Sold</span>`:item.status==="listed"?`<span class="lk-badge li">In Listing</span>`:item.pending?`<span class="lk-badge" style="background:var(--orangebg);color:var(--oranget)"><span class="sdot sdot-y"></span> Pending</span>`:`<span class="lk-badge av"><span class="sdot sdot-g"></span> Available</span>`;
       const priceStr=item.saleType!=="WTT"&&item.price?`$${item.price}`:item.saleType!=="WTS"&&item.tradeValue?`TV: $${item.tradeValue}`:"$TBD";
       const _nfp=(item.photos||[]).find(Boolean);
-      const _ncov=_nfp?`<div style="border-radius:10px;overflow:hidden;background:var(--bg);margin-bottom:12px;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;cursor:pointer" onclick="openNI(${realIdx})"><img src="${esc(cdnImg(_nfp,500,375,'limit'))}" data-orig="${esc(_nfp)}" style="width:100%;height:100%;object-fit:contain;display:block" loading="lazy" referrerpolicy="no-referrer" onerror="imgFallback(this)"/></div>`:"";
+      const _ncdnFp=(item.photos||[]).find(u=>u&&u.includes('res.cloudinary.com'));
+      const _nextFp=(item.photos||[]).find(u=>u&&!u.includes('res.cloudinary.com'));
+      const _ncovImg=_ncdnFp?`<div style="border-radius:10px;overflow:hidden;background:var(--bg);margin-bottom:8px;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;cursor:pointer" onclick="openNI(${realIdx})"><img src="${esc(cdnImg(_ncdnFp,500,375,'limit'))}" style="width:100%;height:100%;object-fit:contain;display:block" loading="lazy"/></div>`:"";
+      const _nextLink=_nextFp?`<a href="${esc(_nextFp)}" target="_blank" rel="noopener" style="display:block;font-size:11px;font-weight:600;color:var(--blue);margin-bottom:8px;text-decoration:none">${icon('external-link',11,'var(--blue)')} ${_ncdnFp?"Imgur Link":"View photo"} ↗</a>`:"";
+      const _ncov=_ncdnFp?_ncovImg+_nextLink:_nextFp?`<div style="border-radius:10px;background:var(--surf);margin-bottom:8px;padding:12px;display:flex;align-items:center;justify-content:center">${_nextLink}</div>`:"";
       const _ngIssues=item.status!=="sold"?gearPickerIssues(item):[];
       const _ngReady=item.status!=="sold"?(_ngIssues.length===0?`<div style="font-size:11px;font-weight:600;color:var(--greent);margin:7px 0 4px">✓ Ready to list</div>`:`<div style="font-size:11px;color:var(--redt);margin:7px 0 4px;line-height:1.5"><strong>Incomplete:</strong> ${esc(_ngIssues.join(" · "))}</div>`):``;
       const stTag=item.saleType&&item.saleType!=="WTS"?`<span class="ki-type-tag${item.saleType==="WTT"?" wtt":" wtstt"}">${esc(item.saleType)}</span>`:`<span class="ki-type-tag wts">WTS</span>`;
