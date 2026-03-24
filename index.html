@@ -3302,53 +3302,77 @@ function renderCloudinaryModal(){
 </div>`;
 }
 function renderFeedbackModal(){
-  const isBug=S.feedbackTab==="bug";
-  const tabBtn=(id,label)=>`<button onclick="S.feedbackTab='${id}';render()" style="flex:1;padding:9px 0;border:none;cursor:pointer;font-size:13px;font-weight:600;font-family:var(--font);border-radius:8px;transition:all var(--tr);${S.feedbackTab===id?"background:var(--blue);color:#fff":"background:transparent;color:var(--t2)"}">${label}</button>`;
+  const tab=S.feedbackTab||"bug";
+  const isBug=tab==="bug";
+  const isBrand=tab==="brand";
+  const tabBtn=(id,label)=>`<button onclick="S.feedbackTab='${id}';render()" style="flex:1;padding:8px 0;border:none;cursor:pointer;font-size:12px;font-weight:600;font-family:var(--font);border-radius:8px;transition:all var(--tr);${tab===id?"background:var(--blue);color:#fff":"background:transparent;color:var(--t2)"}">${label}</button>`;
+  const inputStyle="width:100%;box-sizing:border-box;font-family:var(--font);font-size:13px;padding:9px 11px;border-radius:10px;border:.5px solid var(--b2);background:var(--bg);color:var(--t1)";
   const bugFields=`
     <div style="margin-bottom:14px">
       <label style="display:block;font-size:12px;font-weight:600;color:var(--t2);margin-bottom:5px">What happened?</label>
-      <textarea id="fb-what" rows="3" placeholder="Describe the bug…" style="width:100%;box-sizing:border-box;font-family:var(--font);font-size:13px;padding:9px 11px;border-radius:10px;border:.5px solid var(--b2);background:var(--bg);color:var(--t1);resize:vertical"></textarea>
+      <textarea id="fb-what" rows="3" placeholder="Describe the bug…" style="${inputStyle};resize:vertical"></textarea>
     </div>
     <div style="margin-bottom:14px">
       <label style="display:block;font-size:12px;font-weight:600;color:var(--t2);margin-bottom:5px">Steps to reproduce <span style="font-weight:400;color:var(--t3)">(optional)</span></label>
-      <textarea id="fb-steps" rows="3" placeholder="1. Go to…&#10;2. Click…&#10;3. See error" style="width:100%;box-sizing:border-box;font-family:var(--font);font-size:13px;padding:9px 11px;border-radius:10px;border:.5px solid var(--b2);background:var(--bg);color:var(--t1);resize:vertical"></textarea>
+      <textarea id="fb-steps" rows="3" placeholder="1. Go to…&#10;2. Click…&#10;3. See error" style="${inputStyle};resize:vertical"></textarea>
     </div>
     <div style="margin-bottom:4px">
       <label style="display:block;font-size:12px;font-weight:600;color:var(--t2);margin-bottom:5px">Device / browser <span style="font-weight:400;color:var(--t3)">(optional)</span></label>
-      <input id="fb-device" type="text" placeholder="e.g. iPhone 15, Safari" style="width:100%;box-sizing:border-box;font-family:var(--font);font-size:13px;padding:9px 11px;border-radius:10px;border:.5px solid var(--b2);background:var(--bg);color:var(--t1)"/>
+      <input id="fb-device" type="text" placeholder="e.g. iPhone 15, Safari" style="${inputStyle}"/>
     </div>`;
   const featureFields=`
     <div style="margin-bottom:14px">
       <label style="display:block;font-size:12px;font-weight:600;color:var(--t2);margin-bottom:5px">What would you like to see?</label>
-      <textarea id="fb-idea" rows="3" placeholder="Describe the feature…" style="width:100%;box-sizing:border-box;font-family:var(--font);font-size:13px;padding:9px 11px;border-radius:10px;border:.5px solid var(--b2);background:var(--bg);color:var(--t1);resize:vertical"></textarea>
+      <textarea id="fb-idea" rows="3" placeholder="Describe the feature…" style="${inputStyle};resize:vertical"></textarea>
     </div>
     <div style="margin-bottom:4px">
       <label style="display:block;font-size:12px;font-weight:600;color:var(--t2);margin-bottom:5px">Why would it be useful? <span style="font-weight:400;color:var(--t3)">(optional)</span></label>
-      <textarea id="fb-why" rows="3" placeholder="How does this help your workflow?" style="width:100%;box-sizing:border-box;font-family:var(--font);font-size:13px;padding:9px 11px;border-radius:10px;border:.5px solid var(--b2);background:var(--bg);color:var(--t1);resize:vertical"></textarea>
+      <textarea id="fb-why" rows="3" placeholder="How does this help your workflow?" style="${inputStyle};resize:vertical"></textarea>
     </div>`;
+  const brandFields=`
+    <div style="margin-bottom:6px;padding:10px 12px;background:var(--bluebg);border-radius:10px;border:.5px solid rgba(0,113,227,.2)">
+      <p style="margin:0;font-size:12px;color:var(--blue);line-height:1.5">${icon('info',12,'var(--blue)')} Brands and models are added in batches. We'll do our best to include your request in the next update.</p>
+    </div>
+    <div style="margin-bottom:14px;margin-top:14px">
+      <label style="display:block;font-size:12px;font-weight:600;color:var(--t2);margin-bottom:5px">Brand name <span style="color:var(--redt)">*</span></label>
+      <input id="fb-brand" type="text" placeholder="e.g. Medford Knife &amp; Tool" style="${inputStyle}"/>
+    </div>
+    <div style="margin-bottom:4px">
+      <label style="display:block;font-size:12px;font-weight:600;color:var(--t2);margin-bottom:5px">Model name(s) <span style="font-weight:400;color:var(--t3)">(optional)</span></label>
+      <textarea id="fb-models" rows="3" placeholder="e.g. Praetorian Ti, Marauder, Eris…" style="${inputStyle};resize:vertical"></textarea>
+    </div>`;
+  const titles={bug:`${icon('alert-circle',16)} Report a Bug`,feature:`${icon('lightbulb',16)} Request a Feature`,brand:`${icon('tag',16)} Add Brand / Model`};
   return`<div class="modal-overlay" onclick="S.modal=null;render()">
   <div class="modal" onclick="event.stopPropagation()" style="max-width:460px">
     <div class="modal-hdr">
-      <div class="modal-title">${isBug?`${icon('alert-circle',16)} Report a Bug`:`${icon('lightbulb',16)} Request a Feature`}</div>
+      <div class="modal-title">${titles[tab]}</div>
       <button class="modal-close" onclick="S.modal=null;render()">&#x2715;</button>
     </div>
     <div class="modal-body">
       <div style="display:flex;gap:4px;background:var(--bg);border-radius:10px;padding:3px;margin-bottom:18px">
-        ${tabBtn("bug",`${icon('alert-circle',13)} Bug Report`)}
-        ${tabBtn("feature",`${icon('lightbulb',13)} Feature Request`)}
+        ${tabBtn("bug",`${icon('alert-circle',12)} Bug`)}
+        ${tabBtn("feature",`${icon('lightbulb',12)} Feature`)}
+        ${tabBtn("brand",`${icon('tag',12)} Brand / Model`)}
       </div>
-      ${isBug?bugFields:featureFields}
+      ${isBug?bugFields:isBrand?brandFields:featureFields}
       <div style="display:flex;gap:8px;margin-top:18px">
         <button class="btn btn-sec btn-sm" style="flex:1;justify-content:center" onclick="S.modal=null;render()">Cancel</button>
         <button class="btn btn-pri" style="flex:2;justify-content:center" onclick="
-          var subj=encodeURIComponent('BladeFlow \u2013 '+(S.feedbackTab==='bug'?'Bug Report':'Feature Request'));
-          var body='';
+          var subj,body;
           if(S.feedbackTab==='bug'){
+            subj=encodeURIComponent('BladeFlow \u2013 Bug Report');
             var what=(document.getElementById('fb-what')||{}).value||'';
             var steps=(document.getElementById('fb-steps')||{}).value||'';
             var device=(document.getElementById('fb-device')||{}).value||'';
             body='What happened:\n'+(what||'(not provided)')+'\n\nSteps to reproduce:\n'+(steps||'(not provided)')+'\n\nDevice / browser:\n'+(device||'(not provided)');
+          }else if(S.feedbackTab==='brand'){
+            subj=encodeURIComponent('BladeFlow \u2013 Brand / Model Request');
+            var brand=(document.getElementById('fb-brand')||{}).value||'';
+            var models=(document.getElementById('fb-models')||{}).value||'';
+            if(!brand){alert('Please enter a brand name.');return;}
+            body='Brand:\n'+brand+'\n\nModels:\n'+(models||'(not specified)');
           }else{
+            subj=encodeURIComponent('BladeFlow \u2013 Feature Request');
             var idea=(document.getElementById('fb-idea')||{}).value||'';
             var why=(document.getElementById('fb-why')||{}).value||'';
             body='Feature idea:\n'+(idea||'(not provided)')+'\n\nWhy it would be useful:\n'+(why||'(not provided)');
