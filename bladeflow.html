@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' https: data: blob:; connect-src 'self' https://*.supabase.co https://api.cloudinary.com https://corsproxy.io https://www.reddit.com; font-src 'self'; object-src 'none'; base-uri 'self';">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>BladeFlow</title>
 <!-- PWA -->
@@ -13,7 +14,7 @@
 <meta name="apple-mobile-web-app-title" content="BladeFlow">
 <link rel="apple-touch-icon" href="/bladeflow/favicon.png">
 <link rel="icon" href="/bladeflow/favicon.png" type="image/png">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" integrity="sha384-NjOMWX/9jMIy9Lerrv8fNnbCxbdHWZ2eIND8LhjTaJ3jb9tkasA9+ITPvVcTGZFG" crossorigin="anonymous"></script>
 </head>
 <body>
 <style>
@@ -5467,7 +5468,7 @@ window.saveRefComp=saveRefComp;window.removeRefComp=removeRefComp;
 // ─── MARKDOWN PREVIEW ─────────────────────────────────────
 function inlineMd(t){
   return t
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener noreferrer" style="color:var(--blue);text-decoration:none;font-weight:500">$1</a>')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g,(_,txt,url)=>/^https?:\/\//i.test(url)?`<a href="${url}" target="_blank" rel="noopener noreferrer" style="color:var(--blue);text-decoration:none;font-weight:500">${txt}</a>`:esc(txt))
     .replace(/~~(.+?)~~/g,"<del>$1</del>")
     .replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>")
     .replace(/\*(.+?)\*/g,"<em>$1</em>");
