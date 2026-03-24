@@ -973,6 +973,7 @@ const TMPL=["Detailed","Compact","Minimal","Table"];
 function gid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
 function fmtD(iso){return new Date(iso).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}
 function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
+function stripNL(v){return String(v||"").replace(/[\r\n\t]+/g," ");}
 function cdnImg(url,w,h,fit){if(!url||!url.includes("res.cloudinary.com"))return url;const t=`w_${w}${h?",h_"+h:""},c_${fit||"limit"},q_auto,f_auto`;return url.replace("/upload/",`/upload/${t}/`)}
 function tm(a,v){return a.includes(v)?a.filter(x=>x!==v):[...a,v]}
 function tmx(a,v,ex){if(v===ex)return[ex];const r=a.filter(x=>x!==ex);return r.includes(v)?r.filter(x=>x!==v):[...r,v]}
@@ -2495,11 +2496,11 @@ function renderNIForm(){
     (f.saleType!=="WTS"?`<div class="field" style="flex:1;min-width:120px"><label>Trade Value ($)</label><input type="number" min="0" value="${esc(String(f.tradeValue||""))}" placeholder="e.g. 150" oninput="S.ni.tradeValue=this.value"/></div>`:"");
   return`<div class="kf" style="margin-top:10px"><div class="kf-hdr"><div class="kf-title">${S.niIdx===-1?"Add Item":"Edit Item"}</div></div>
     <div class="field" style="margin-bottom:10px"><label>Category</label><div class="chips" style="margin-top:4px">${catChips}</div></div>
-    <div class="field" style="margin-bottom:10px"><label>Item</label><input type="text" value="${esc(f.description)}" placeholder="e.g. Seiko SKX007" oninput="S.ni.description=this.value.replace(/[\r\n]+/g,' ')"/></div>
+    <div class="field" style="margin-bottom:10px"><label>Item</label><input type="text" value="${esc(f.description)}" placeholder="e.g. Seiko SKX007" oninput="S.ni.description=stripNL(this.value)"/></div>
     <div class="field" style="margin-bottom:10px"><label>Condition</label><div class="chips" style="margin-top:4px">${condChips}</div></div>
     <div class="kf-type-sel" style="margin-bottom:10px">${stChips}</div>
     <div class="fr2" style="margin-bottom:10px">${priceFields}</div>
-    <div class="field" style="margin-bottom:10px"><label>Details <span style="font-weight:400;color:var(--t4);font-size:11px">(optional)</span></label><input type="text" value="${esc(f.notes||"")}" placeholder="e.g. black dial, box and papers included" oninput="S.ni.notes=this.value.replace(/[\r\n]+/g,' ')"/></div>
+    <div class="field" style="margin-bottom:10px"><label>Details <span style="font-weight:400;color:var(--t4);font-size:11px">(optional)</span></label><input type="text" value="${esc(f.notes||"")}" placeholder="e.g. black dial, box and papers included" oninput="S.ni.notes=stripNL(this.value)"/></div>
     <div class="field" style="margin-bottom:10px" id="ni-photos-field">
       <label>Photos <span style="font-size:11px;font-weight:400;color:var(--redt)">· 1 photo required to list</span></label>
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">
