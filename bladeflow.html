@@ -5226,6 +5226,7 @@ function renderSettings(){
     <img src="/bladeflow/icon.svg" width="160" height="160" alt="BladeFlow"/>
     <div style="font-size:18px;font-weight:700;letter-spacing:-.3px;color:var(--t1)">BladeFlow</div>
     <div style="font-size:12px;color:var(--t3)">r/Knife_Swap post generator</div>
+    <div style="font-size:11px;color:var(--greent);background:var(--greenbg);border-radius:20px;padding:3px 11px;display:inline-flex;align-items:center;gap:4px;margin-top:2px">${icon('shield-check',11,'var(--greent)')} No account required &middot; all data local by default</div>
   </div>
   <div class="settings-section-lbl">Your Profile</div>
   <div class="sgroup">
@@ -5274,6 +5275,24 @@ function renderSettings(){
         </div>
       </div>`:`<button class="btn btn-sec btn-sm" onclick="S.emailChangeOpen=true;S.emailChangeNotice=false;S.err='';render()">Change Address…</button>`}
     </div>`:""}
+  </div>
+  <div class="settings-section-lbl">Privacy</div>
+  <div class="sgroup">
+    <div style="background:var(--greenbg);border:.5px solid rgba(52,199,89,.25);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+      <div style="font-size:12.5px;font-weight:700;color:var(--greent);display:flex;align-items:center;gap:6px">${icon('shield-check',14,'var(--greent)')} Your data stays on your device by default</div>
+      <div style="display:flex;flex-direction:column;gap:7px">
+        ${[
+          ["No account required","Everything works offline in your browser. Sign in only if you want cloud backup across devices."],
+          ["Nothing leaves your device","Posts, inventory, and settings are stored locally in your browser. Zero data sent to any server unless you opt into cloud sync."],
+          ["No tracking or analytics","No Google Analytics, no tracking pixels, no third-party telemetry of any kind."],
+          ["Buyer addresses auto-deleted","Shipping addresses are permanently deleted from your device the moment you enter a tracking number."],
+          ["Cloud sync is fully optional","If you sign in, your data is encrypted in transit (TLS 1.2+) and at rest (AES-256) on Supabase. You can delete your account and all cloud data at any time."],
+        ].map(([title,desc])=>`<div style="display:flex;gap:8px;align-items:flex-start">
+          <span style="color:var(--greent);font-size:13px;margin-top:1px;flex-shrink:0">✓</span>
+          <div><span style="font-size:12px;font-weight:600;color:var(--t1)">${title}:</span> <span style="font-size:12px;color:var(--t2);line-height:1.5">${desc}</span></div>
+        </div>`).join("")}
+      </div>
+    </div>
   </div>
   <div class="settings-section-lbl">About</div>
   <div class="sgroup">
