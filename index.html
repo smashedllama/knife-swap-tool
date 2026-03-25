@@ -3887,7 +3887,8 @@ function renderGuide(){
       ${step(1,"Set your Reddit username","Go to Settings and enter your Reddit handle. It gets stamped into every post and dibs message automatically.")}
       ${step(2,"Set your payment methods","PayPal Goods &amp; Services (G&amp;S) is required for all sellers with fewer than 25 confirmed trades. Once you hit 25 you can accept Venmo, Cash App, Zelle, or anything else. Check the ones you accept in Settings.")}
       ${step(3,"Add your payment links","Paste your PayPal.me URL, Venmo handle, Cash App $tag, etc. in Settings. They auto-fill into every payment message you send buyers. You never retype them.")}
-      ${step(4,"Set up photo uploads","Set up a free Cloudinary account and enter your Cloud Name and Upload Preset in Settings for drag-and-drop uploads directly from your browser. If you prefer, you can skip that and paste direct image URLs instead (i.imgur.com/xxx.jpg format). <strong>Note:</strong> swipeable gallery links in generated posts only work with Cloudinary-uploaded photos — pasted URLs link directly to the image.")}
+      ${step(4,"Set up photo uploads","Set up a free Cloudinary account and enter your Cloud Name and Upload Preset in Settings for drag-and-drop photo and video uploads. Alternatively, paste an Imgur gallery link — no Cloudinary needed. See the Photos &amp; Video section below for the full breakdown.")}
+      ${step(5,"Back up your data (optional)","Your data lives in this browser by default. Use <strong>Settings &rarr; Data Backup &rarr; Export Backup</strong> to download a .json file you can restore on any device at any time. This is the easiest way to move between devices without creating an account.")}
     `)}
 
     ${sec(icon('scissors',18,'#34C759'),"Step 1: Add Items to The Roll","rgba(52,199,89,.15)",`
@@ -3983,6 +3984,35 @@ function renderGuide(){
       ${tip("At 25 confirmed trades your flair unlocks additional payment methods. Keep confirming every trade. It builds your reputation on the sub.")}
     `)}
 
+    ${sec(icon('camera',18,'#FF9500'),"Photos & Video","rgba(255,149,0,.12)",`
+      <p style="font-size:13px;color:var(--t2);line-height:1.7;margin:0 0 14px">Each knife needs proof of photos before it can be added to a listing. There are three ways to satisfy this:</p>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+        <div style="background:var(--greenbg);border:.5px solid rgba(52,199,89,.25);border-radius:10px;padding:12px 14px">
+          <div style="font-size:13px;font-weight:700;color:var(--greent);margin-bottom:4px">Option 1: Two Cloudinary photos (drag and drop)</div>
+          <div style="font-size:12.5px;color:var(--t2);line-height:1.6">Upload at least two photos via Cloudinary directly in the knife form. The Show Side slot is the most important; Clip Side is the other. Any two slots count. Your photos are stored in your own Cloudinary account and never pass through our servers. When you upload two or more photos, the knife name in the generated post automatically links to a swipeable gallery so buyers can flip through every photo.</div>
+        </div>
+        <div style="background:var(--bluebg);border:.5px solid rgba(0,113,227,.2);border-radius:10px;padding:12px 14px">
+          <div style="font-size:13px;font-weight:700;color:var(--bluet);margin-bottom:4px">Option 2: One Cloudinary video (drag and drop)</div>
+          <div style="font-size:12.5px;color:var(--t2);line-height:1.6">Upload a video using the <strong>Upload Video</strong> button in the knife form. The tool automatically compresses it in your browser at 2.5 Mbps before upload, so a 30-second clip is roughly 10MB. Videos give buyers the best look at action, blade finish, and any wear. Keep clips short — 15 to 30 seconds is ideal.</div>
+          ${warn("Videos burn through Cloudinary's 25GB monthly bandwidth much faster than photos. At ~10MB per clip, your account handles roughly 2,500 total plays per month. Read the bandwidth note in the video upload panel before going heavy on video listings.")}
+        </div>
+        <div style="background:var(--surf3);border:.5px solid var(--b2);border-radius:10px;padding:12px 14px">
+          <div style="font-size:13px;font-weight:700;color:var(--t1);margin-bottom:4px">Option 3: One Imgur gallery link</div>
+          <div style="font-size:12.5px;color:var(--t2);line-height:1.6">Paste a link to an Imgur album or gallery into the <strong>Imgur Gallery Link</strong> field on the knife form. This satisfies the photo requirement and the knife name in your post links directly to your Imgur gallery. No Cloudinary account needed. Individual Imgur photo URLs do not hotlink reliably — use the gallery/album link, not a single image link.</div>
+        </div>
+      </div>
+      ${tip("Cloudinary uploads give buyers the best experience: a built-in swipeable gallery hosted in the app. Imgur is the easiest fallback if you already have photos posted there.")}
+    `)}
+
+    ${sec(icon('hard-drive',18,'#8E8E93'),"Your Data & Accounts","rgba(142,142,147,.12)",`
+      <p style="font-size:13px;color:var(--t2);line-height:1.7;margin:0 0 12px">BladeFlow works entirely in your browser. No account is required. Here is how data storage works and your options for keeping it safe.</p>
+      ${step(1,"Local storage (default)","Everything — listings, inventory, settings, Cloudinary credentials — is saved in your browser's local storage. It stays there until you clear your browser data. Works offline.")}
+      ${step(2,"Export / Import backup","Go to <strong>Settings &rarr; Data Backup</strong> and hit <strong>Export Backup</strong> to download a .json file with all your data. To move to a new device or browser, open the app there and use <strong>Import Backup</strong> to restore everything instantly. This is the simplest way to switch devices without an account.")}
+      ${step(3,"Cloud sync (optional)","Sign in with a magic link sent to your email. Once signed in, all your data syncs automatically to a private cloud database so it is available on every device you sign in on. Your data is encrypted in transit and at rest. You can delete your account and all cloud data at any time from Settings.")}
+      ${tip("If you are not ready to create an account, export a backup regularly — especially after a big batch of listings. It takes two seconds and means you never lose anything.")}
+      ${warn("Clearing your browser history, cache, or site data in Safari or Chrome will wipe your local data permanently if you have not backed up or signed in.")}
+    `)}
+
     ${sec(icon('list-checks',18,'var(--t3)'),"Rules Quick Reference","rgba(0,0,0,.06)",`
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         ${[
@@ -4048,10 +4078,10 @@ function renderAboutModal(){
       {q:"What does Pending mean?",a:"Pending flags a knife as payment incoming but not yet cleared. Use it when a buyer has called dibs and you're waiting for funds to arrive. The knife shows as pending in your post and won't be marked sold until you confirm it."},
       {q:"What payment methods should I include?",a:"PayPal G&S (Goods and Services) is required for all sellers until you reach 25 confirmed trades. After 25 trades you can accept Venmo, Cash App, Zelle, and other methods. Add your payment links in Settings and they auto-fill into every dibs message you send."},
       {q:"How does price research work?",a:"After entering a knife's brand, model, and steel, click Check Comps in the knife form. The tool searches r/Knife_Swap for recent sold listings matching that knife and steel, then shows average, median, and price range. You can save any result as a reference comp on that knife."},
-      {q:"Can I export my data?",a:"Yes. Go to Settings and use the Export CSV buttons to download your full inventory (The Roll) or sold history as a spreadsheet-ready CSV file."},
+      {q:"Can I export my data?",a:"Yes, two ways. Settings &rarr; Data Backup &rarr; Export Backup downloads a complete .json file of all your listings, inventory, and settings. You can import this on any device using Import Backup. For just your sold history as a spreadsheet, use the CSV export in the Sales tab."},
       {q:"Is this affiliated with r/Knife_Swap moderators?",a:"No. This is a fan-built tool. It is not officially affiliated with or endorsed by the r/Knife_Swap moderators. Always check the official subreddit rules for the latest requirements."},
       {q:"How do I set up photos?",a:"Option 1: Set up a free Cloudinary account and enter your Cloud Name and Upload Preset in Settings. This enables drag-and-drop uploads. Option 2: Paste any direct image URL (i.imgur.com links work great) into the photo URL field on any knife."},
-      {q:"What happens to my data if I clear my browser?",a:"If you have not signed in for cloud sync, clearing your browser cache will permanently delete all your listings, inventory, and settings. Sign in with a free account to back up your data to the cloud."}
+      {q:"What happens to my data if I clear my browser?",a:"If you have not signed in or exported a backup, clearing browser data will permanently delete everything. Best practice: use Settings &rarr; Data Backup &rarr; Export Backup regularly, or sign in for automatic cloud sync."}
     ];
     content=faqs.map(f=>`<div class="faq-item"><div class="faq-q">${f.q}</div><div class="faq-a">${f.a}</div></div>`).join("");
   }
@@ -5549,6 +5579,27 @@ function renderSettings(){
         </div>
       </div>`:`<button class="btn btn-sec btn-sm" onclick="S.emailChangeOpen=true;S.emailChangeNotice=false;S.err='';render()">Change Address…</button>`}
     </div>`:""}
+  </div>
+  <div class="settings-section-lbl">Data Backup</div>
+  <div class="sgroup">
+    <div class="srow" style="flex-wrap:wrap;gap:10px">
+      <div style="flex:1;min-width:200px">
+        <div class="srow-lbl">Export All Data</div>
+        <div class="srow-sub">Downloads a .json backup of every listing, inventory item, and setting. Use this to transfer to a new device or keep a local copy. No account needed.</div>
+      </div>
+      <div class="srow-ctrl">
+        <button class="btn btn-sec btn-sm" onclick="exportAllData()">${icon('download',13)} Export Backup</button>
+      </div>
+    </div>
+    <div class="srow" style="flex-wrap:wrap;gap:10px">
+      <div style="flex:1;min-width:200px">
+        <div class="srow-lbl">Import Data</div>
+        <div class="srow-sub">Restore from a BladeFlow .json backup. Overwrites your current data. If you are signed in, the imported data syncs to the cloud immediately.</div>
+      </div>
+      <div class="srow-ctrl">
+        ${S.importSuccess?`<span style="font-size:12px;font-weight:600;color:var(--greent);background:var(--greenbg);padding:5px 11px;border-radius:20px;display:inline-flex;align-items:center;gap:5px">${icon('check-circle',13,'var(--greent)')} Imported!</span>`:`<button class="btn btn-sec btn-sm" onclick="importAllData()">${icon('upload',13)} Import Backup</button>`}
+      </div>
+    </div>
   </div>
   <div class="settings-section-lbl">Privacy</div>
   <div class="sgroup">
