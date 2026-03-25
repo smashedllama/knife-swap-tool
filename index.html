@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' https: data: blob:; media-src 'self' blob: https:; connect-src 'self' https://*.supabase.co https://api.cloudinary.com https://corsproxy.io https://www.reddit.com; font-src 'self'; object-src 'none'; base-uri 'self';">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>BladeFlow</title>
 <!-- PWA -->
 <link rel="manifest" href="/bladeflow/manifest.json">
@@ -848,6 +848,13 @@ button:disabled{opacity:.35;cursor:not-allowed}
   .srow>*:last-child{width:100%}
   /* Compose knife actions wrap */
   .ki-acts{flex-wrap:wrap}
+}
+/* Desktop: fill screen width, no center cap */
+@media(min-width:641px){
+  .main{max-width:none;padding:24px 40px 60px}
+  .cmp-main{max-width:none;padding:24px 40px 60px}
+  .settings-main{max-width:none;padding:24px 40px 60px}
+  .sgroup{max-width:none}
 }
 </style>
 
@@ -5561,18 +5568,24 @@ function renderSettings(){
       </div>
     </div>
   </div>
+  <div class="settings-section-lbl">Help</div>
+  <div class="sgroup">
+    <div class="srow"><div><div class="srow-lbl">${icon('book',13)} How-To Guide</div><div class="srow-sub">Step-by-step guide to getting the most out of BladeFlow</div></div><div class="srow-ctrl"><button class="btn btn-sec btn-sm" onclick="S.view='guide';render()">${icon('book',14)} Open Guide</button></div></div>
+    <div class="srow"><div><div class="srow-lbl">${icon('bar-chart',13)} Data for Data Nerds</div><div class="srow-sub">Deep analytics on your selling history, pricing, pipeline, and more</div></div><div class="srow-ctrl"><button class="btn btn-pu btn-sm" onclick="S.modal='datanerds';render()">Open Analytics</button></div></div>
+    <div class="srow"><div class="srow-lbl">More</div><div class="srow-ctrl" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-pri btn-sm" onclick="S.view='list';startTour()">${icon("play-circle",14)} Tour</button><button class="btn btn-am btn-sm" onclick="S.modal='tutorial';S.tutStep=0;render()">${icon("book",14)} Tutorial</button><button class="btn btn-sec btn-sm" onclick="S.modal='about';S.aboutTab='about';render()">${icon("info",14)} FAQ</button><button class="btn btn-sec btn-sm" onclick="S.modal='feedback';S.feedbackTab='bug';render()">${icon("mail",14)} Feedback</button></div></div>
+  </div>
+  <div class="settings-section-lbl">Photo Hosting</div>
+  <div class="sgroup">
+    <div class="srow" style="flex-wrap:wrap;gap:10px"><div style="flex:1;min-width:200px"><div class="srow-lbl">Cloudinary</div><div class="srow-sub" style="line-height:1.5">Drag-and-drop uploads via your own free <a href="https://cloudinary.com" target="_blank" style="color:var(--blue);text-decoration:none">Cloudinary</a> account. Photos go directly from your browser to your account. Never through our servers. Stored with <strong>AES-256</strong> at rest, <strong>TLS 1.2+</strong> in transit.</div></div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${sv.cloudinaryCloud&&sv.cloudinaryPreset?`<span style="font-size:11px;font-weight:600;color:var(--greent);background:var(--greenbg);padding:4px 9px;border-radius:20px;display:inline-flex;align-items:center;gap:4px">${icon("check-circle",12,'var(--greent)')} Connected</span>`:`<span style="font-size:11px;font-weight:600;color:var(--oranget);background:var(--orangebg);padding:4px 9px;border-radius:20px;display:inline-flex;align-items:center;gap:4px">${icon("alert-circle",12,'var(--oranget)')} Setup needed</span>`}<button class="btn btn-sec btn-sm" onclick="S.modal='cloudinary';render()">${icon('book',13)} Setup Guide</button></div></div>
+    <div class="srow"><div><div class="srow-lbl">Cloud Name</div><div class="srow-sub">Your Cloudinary cloud name (dashboard, top-left).</div></div><div class="srow-ctrl"><input type="text" style="width:170px;min-width:170px;font-size:16px;padding:7px 10px" value="${esc(sv.cloudinaryCloud||"")}" placeholder="e.g. dxyz12abc" onchange="SETTINGS.cloudinaryCloud=this.value.trim();saveSettings()"/></div></div>
+    <div class="srow"><div><div class="srow-lbl">Upload Preset</div><div class="srow-sub">Must be set to Unsigned in Cloudinary.</div></div><div class="srow-ctrl"><input type="text" style="width:170px;min-width:170px;font-size:16px;padding:7px 10px" value="${esc(sv.cloudinaryPreset||"")}" placeholder="e.g. knife-swap" onchange="SETTINGS.cloudinaryPreset=this.value.trim();saveSettings()"/></div></div>
+    ${(()=>{const cb=SETTINGS.cdnBytes||0,cc=SETTINGS.cdnCount||0;if(!cb)return"";const fB=n=>{const u=["B","KB","MB"];let i=0,v=n;while(v>=1024&&i<u.length-1){v/=1024;i++;}return v.toFixed(i===0?0:1)+" "+u[i];};return`<div class="srow"><div><div class="srow-lbl">${icon('cloud',13)} Usage (estimated)</div><div class="srow-sub">~${fB(cb)} across ${cc} file${cc!==1?"s":""}${currentUser?" &middot; synced to your account":""}. <a href="https://console.cloudinary.com" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:none">View actual ↗</a></div></div></div>`;})()}
+    <div class="srow"><div><div class="srow-lbl">Running low?</div><div class="srow-sub" style="line-height:1.6">Open your <a href="https://console.cloudinary.com" target="_blank" rel="noopener" style="color:var(--blue);font-weight:600;text-decoration:none">Cloudinary Media Library ↗</a>, sort by oldest, and bulk-delete photos from confirmed sales. Knife records in BladeFlow stay intact.</div></div></div>
+  </div>
   <div class="settings-section-lbl">About</div>
   <div class="sgroup">
-    <div class="srow"><div class="srow-lbl">Version</div><div style="font-size:13px;color:var(--t3);margin-left:auto">3.1 - ${BRANDS.length} brands, ${STEELS.length} steels</div></div>
-    <div class="srow"><div><div class="srow-lbl">${icon('bar-chart',13)} Data for Data Nerds</div><div class="srow-sub">Deep analytics on your selling history, pricing, pipeline, and more</div></div><div class="srow-ctrl"><button class="btn btn-pu btn-sm" onclick="S.modal='datanerds';render()">Open Analytics</button></div></div>
-    <div class="srow"><div><div class="srow-lbl">${icon('book',13)} How-To Guide</div><div class="srow-sub">Step-by-step guide to getting the most out of BladeFlow</div></div><div class="srow-ctrl"><button class="btn btn-sec btn-sm" onclick="S.view='guide';render()">${icon('book',14)} Open Guide</button></div></div>
-    <div class="srow"><div class="srow-lbl">Help</div><div class="srow-ctrl" style="flex-wrap:wrap;gap:6px"><button class="btn btn-pri btn-sm" onclick="S.view='list';startTour()">${icon("play-circle",14)} Interactive Tour</button><button class="btn btn-am btn-sm" onclick="S.modal='tutorial';S.tutStep=0;render()">${icon("book",14)} Tutorial</button><button class="btn btn-sec btn-sm" onclick="S.modal='about';S.aboutTab='about';render()">${icon("info",14)} FAQ</button><button class="btn btn-sec btn-sm" onclick="S.modal='feedback';S.feedbackTab='bug';render()">${icon("mail",14)} Feedback</button></div></div>
+    <div class="srow"><div class="srow-lbl">Version</div><div style="font-size:13px;color:var(--t3);margin-left:auto">3.1 &middot; ${BRANDS.length} brands &middot; ${STEELS.length} steels</div></div>
     <div class="srow"><div><div class="srow-lbl">Built by</div><div class="srow-sub">u/smashedllama2, a free tool for the r/Knife_Swap community</div></div><div class="srow-ctrl"><a href="https://buymeacoffee.com/erunyan" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#FFDD00;color:#000;font-size:12px;font-weight:700;padding:7px 13px;border-radius:8px;text-decoration:none;white-space:nowrap">☕ Buy me a coffee</a></div></div>
-    <div class="srow" style="flex-wrap:wrap;gap:10px"><div style="flex:1;min-width:200px"><div class="srow-lbl">Photo Hosting</div><div class="srow-sub">Drag-and-drop uploads via your own free <a href="https://cloudinary.com" target="_blank" style="color:var(--blue);text-decoration:none">Cloudinary</a> account. Photos go directly from your browser to your account. Never through our servers. Stored with <strong>AES-256</strong> at rest, <strong>TLS 1.2+</strong> in transit.</div></div><div class="srow-ctrl" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${sv.cloudinaryCloud&&sv.cloudinaryPreset?`<span style="font-size:11px;font-weight:600;color:var(--greent);background:var(--greenbg);padding:4px 9px;border-radius:20px;display:inline-flex;align-items:center;gap:4px">${icon("check-circle",12,'var(--greent)')} Connected</span>`:`<span style="font-size:11px;font-weight:600;color:var(--oranget);background:var(--orangebg);padding:4px 9px;border-radius:20px;display:inline-flex;align-items:center;gap:4px">${icon("alert-circle",12,'var(--oranget)')} Setup needed</span>`}<button class="btn btn-sec btn-sm" onclick="S.modal='cloudinary';render()">${icon('book',13)} Setup Guide</button></div></div>
-    <div class="srow"><div><div class="srow-lbl">Cloud Name</div><div class="srow-sub">Your Cloudinary cloud name (dashboard, top-left).</div></div><div class="srow-ctrl"><input type="text" style="width:170px;min-width:170px;font-size:13px;padding:7px 10px" value="${esc(sv.cloudinaryCloud||"")}" placeholder="e.g. dxyz12abc" onchange="SETTINGS.cloudinaryCloud=this.value.trim();saveSettings()"/></div></div>
-    <div class="srow"><div><div class="srow-lbl">Upload Preset</div><div class="srow-sub">Must be set to Unsigned in Cloudinary.</div></div><div class="srow-ctrl"><input type="text" style="width:170px;min-width:170px;font-size:13px;padding:7px 10px" value="${esc(sv.cloudinaryPreset||"")}" placeholder="e.g. knife-swap" onchange="SETTINGS.cloudinaryPreset=this.value.trim();saveSettings()"/></div></div>
-    ${(()=>{const cb=SETTINGS.cdnBytes||0,cc=SETTINGS.cdnCount||0;if(!cb)return"";const fB=n=>{const u=["B","KB","MB"];let i=0,v=n;while(v>=1024&&i<u.length-1){v/=1024;i++;}return v.toFixed(i===0?0:1)+" "+u[i];};return`<div class="srow"><div><div class="srow-lbl">${icon('cloud',13)} Cloudinary Usage (estimated)</div><div class="srow-sub">~${fB(cb)} uploaded across ${cc} photo${cc!==1?"s":""} &amp; video${cc!==1?"s":""}. Tracked in-app since setup${currentUser?" · synced to your account":""}. <a href="https://console.cloudinary.com" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:none">View actual usage ↗</a></div></div></div>`;})()}
-    <div class="srow"><div><div class="srow-lbl">Running low on storage?</div><div class="srow-sub" style="line-height:1.6">Open your <a href="https://console.cloudinary.com" target="_blank" rel="noopener" style="color:var(--blue);font-weight:600;text-decoration:none">Cloudinary Media Library ↗</a>, sort by upload date (oldest first), and bulk-delete photos from confirmed sales more than 3 years old. The knife records in BladeFlow stay intact — only the hosted images are removed.</div></div></div>
   </div>
   ${S.authStatus==="signed_in"?`
   <div class="settings-section-lbl" style="color:var(--redt);margin-top:8px">Danger Zone</div>
