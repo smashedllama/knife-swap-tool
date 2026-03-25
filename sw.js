@@ -1,5 +1,6 @@
-// BladeFlow Service Worker - stale-while-revalidate
-const CACHE = 'bf-app-v2';
+// BladeFlow Service Worker
+// v3: network-first for HTML navigation so auth fixes deploy instantly
+const CACHE = 'bf-app-v3';
 const CORE = ['/bladeflow/', '/bladeflow/index.html'];
 
 self.addEventListener('install', e => {
@@ -23,9 +24,29 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   const url = new URL(e.request.url);
-  // Only cache same-origin HTML/assets (not Supabase API or Reddit)
   if (url.origin !== location.origin) return;
 
+  const isNavigation = e.request.mode === 'navigate' ||
+    url.pathname === '/bladeflow/' ||
+    url.pathname === '/bladeflow/index.html';
+
+  if (isNavigation) {
+    // Network-first for HTML: always get the latest app code.
+    // Falls back to cache only when offline.
+    e.respondWith(
+      fetch(e.request)
+        .then(res => {
+          if (res && res.ok) {
+            caches.open(CACHE).then(c => c.put(e.request, res.clone()));
+          }
+          return res;
+        })
+        .catch(() => caches.match(e.request))
+    );
+    return;
+  }
+
+  // Other same-origin assets: stale-while-revalidate
   e.respondWith(
     caches.open(CACHE).then(cache =>
       cache.match(e.request).then(cached => {
@@ -33,7 +54,6 @@ self.addEventListener('fetch', e => {
           if (res && res.ok) cache.put(e.request, res.clone());
           return res;
         }).catch(() => cached);
-        // Serve cache immediately, update in background
         return cached || networkFetch;
       })
     )
