@@ -1002,7 +1002,7 @@ async function saveSettings(){
 // ─── STATE ────────────────────────────────────────────────────
 const EK=()=>({brand:"",model:"",steel:"",price:"",soldPrice:"",obo:false,knifeType:"WTS",tradeValue:"",usedCut:"No",carried:"No",bladeCondition:"Factory edge",owners:"1",centering:"Perfect",lockup:"Solid",lockupNotes:"",issues:["None"],issuesOther:"",accessories:["None"],accessoriesOther:"",notes:"",inventoryId:null,prevPrice:"",photos:[],imgurLink:"",pending:false,priceHistory:[],comps:[],shippingClass:"Priority",shippingAddress:null,trackingNumber:null,trackingCarrier:"USPS",shippedAt:null,deliveredAt:null,confirmedAt:null,addonEnabled:false,addonPrice:"",soldElsewhere:false,soldElsewhereTrackShip:false,withdrawn:false});
 const EI=()=>({id:gid(),brand:"",model:"",steel:"",price:"",obo:false,knifeType:"WTS",tradeValue:"",usedCut:"No",carried:"No",bladeCondition:"Factory edge",owners:"1",centering:"Perfect",lockup:"Solid",lockupNotes:"",issues:["None"],issuesOther:"",accessories:["None"],accessoriesOther:"",notes:"",status:"available",addedAt:new Date().toISOString(),soldAt:null,photos:[],imgurLink:"",pending:false,priceHistory:[],comps:[],shippingClass:"Priority",shippingAddress:null,trackingNumber:null,trackingCarrier:"USPS",shippedAt:null,deliveredAt:null,confirmedAt:null,addonEnabled:false,addonPrice:""});
-const ENI=()=>({id:gid(),itemCategory:"other",description:"",condition:"Excellent",price:"",tradeValue:"",saleType:"WTS",photos:[],notes:"",status:"available",addedAt:new Date().toISOString(),soldAt:null,pending:false,soldTo:null,soldPrice:"",shippingAddress:null,trackingNumber:null,trackingCarrier:"USPS",shippedAt:null,deliveredAt:null,confirmedAt:null});
+const ENI=()=>({id:gid(),itemCategory:"other",description:"",condition:"Excellent",owners:"1",price:"",tradeValue:"",saleType:"WTS",photos:[],notes:"",status:"available",addedAt:new Date().toISOString(),soldAt:null,pending:false,soldTo:null,soldPrice:"",shippingAddress:null,trackingNumber:null,trackingCarrier:"USPS",shippedAt:null,deliveredAt:null,confirmedAt:null});
 const isNI=item=>!!item.itemCategory;
 const ICONS={
   settings:`<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>`,
@@ -1237,8 +1237,31 @@ function reconcileInventory(){
 async function initSupabase(){
   if(!SUPABASE_URL||SUPABASE_URL.includes("YOUR_PROJECT")||!SUPABASE_ANON_KEY||SUPABASE_ANON_KEY.includes("YOUR_ANON")){S.authLoading=false;return;}
   try{
-    _sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,storageKey:"ks_sb_session",flowType:'implicit',detectSessionInUrl:true}});
-    const {data:{session}}=await _sb.auth.getSession();
+    // Read hash tokens BEFORE createClient — Supabase's detectSessionInUrl may clear the hash
+    // during init. _STARTUP_HASH is captured synchronously at page load (top of script).
+    const _hp=new URLSearchParams(_STARTUP_HASH);
+    const _at=_hp.get('access_token'),_rt=_hp.get('refresh_token');
+    console.log('[auth] startup hash tokens present:',!!_at,!!_rt);
+
+    // detectSessionInUrl:false — we handle token extraction manually to avoid conflicts
+    _sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,storageKey:"ks_sb_session",flowType:'implicit',detectSessionInUrl:false}});
+
+    let session=null;
+    if(_at&&_rt){
+      console.log('[auth] magic link detected — calling setSession');
+      try{
+        const {data:sd,error:se}=await _sb.auth.setSession({access_token:_at,refresh_token:_rt});
+        if(se)throw se;
+        session=sd?.session||null;
+        console.log('[auth] setSession result:',session?'OK ('+session.user?.email+')':'null session');
+      }catch(e){console.warn('[auth] setSession failed:',e.message||e);}
+      // Remove tokens from URL so they are not in browser history or replayed
+      try{history.replaceState(null,'',location.pathname+location.search);}catch(e){}
+    } else {
+      const {data:gd}=await _sb.auth.getSession();
+      session=gd?.session||null;
+      console.log('[auth] getSession result:',session?'signed in':'no session');
+    }
     if(session){
       currentUser=session.user;
       S.authStatus="signed_in";
@@ -1331,7 +1354,10 @@ async function _sbSaveSettings(){
 async function sendMagicLink(email){
   if(!_sb){S.err="Cloud sync is not configured for this deployment.";render();return;}
   try{
-    const {error}=await _sb.auth.signInWithOtp({email,options:{emailRedirectTo:location.href}});
+    // Use the canonical production URL — never location.href, which may carry a hash
+    // or path that isn't in Supabase's redirect URL allowlist
+    const _redirectTo='https://smashedllama.github.io/bladeflow/';
+    const {error}=await _sb.auth.signInWithOtp({email,options:{emailRedirectTo:_redirectTo}});
     if(error)throw error;
     S.authStatus="pending";S.authEmail=email;render();
   }catch(e){S.err=e.message||"Failed to send link.";render();}
@@ -1681,6 +1707,24 @@ function knifeDetails(k){
     notes:k.notes||""
   };
 }
+function gearItemGalleryUrl(x){
+  const imgs=(x.photos||[]).filter(u=>u&&u.includes("res.cloudinary.com"));
+  if(imgs.length){
+    try{
+      const price=x.saleType!=="WTT"&&x.price?`$${x.price}`:x.saleType!=="WTS"&&x.tradeValue?`TV: $${x.tradeValue}`:"";
+      const d=btoa(unescape(encodeURIComponent(JSON.stringify({
+        knife:x.description||(NI_LABELS[x.itemCategory||"other"]||"Gear"),
+        price,
+        user:SETTINGS.username||"",
+        imgs
+      }))));
+      return`https://smashedllama.github.io/bladeflow/gallery.html?d=${d}`;
+    }catch(e){}
+  }
+  if(x.imgurLink)return x.imgurLink;
+  return null;
+}
+
 function galleryUrl(k){
   const imgs=(k.photos||[]).filter(Boolean);
   const cdnImgs=imgs.filter(u=>u.includes("res.cloudinary.com"));
@@ -1712,10 +1756,24 @@ function buildPostGalleryUrl(post, knifeIdx){
     imgs:(k.photos||[]).filter(Boolean),
     details:knifeDetails(k)
   }));
+  // Build gear sections sorted by category order
+  const CAT_ORDER=["watch","sunglasses","flashlight","multi-tool","bag","clothing","other"];
+  const gearItems=(post.items||[]).slice().sort((a,b)=>CAT_ORDER.indexOf(a.itemCategory||"other")-CAT_ORDER.indexOf(b.itemCategory||"other"));
+  const gearData=gearItems.map(x=>{
+    const price=x.saleType!=="WTT"&&x.price?`$${x.price}`:x.saleType!=="WTS"&&x.tradeValue?`TV: $${x.tradeValue}`:"";
+    return{
+      name:x.description||(NI_LABELS[x.itemCategory||"other"]||"Gear"),
+      price,
+      imgs:(x.photos||[]).filter(u=>u&&u.includes("res.cloudinary.com")),
+      details:null,
+      isGear:true
+    };
+  }).filter(g=>g.imgs.length>0);
   const hasKnifePhotos=knifeData.some(k=>k.imgs.length>0);
-  if(!hasKnifePhotos&&!timestampPhotos.length)return null;
-  // Only build gallery when at least one Cloudinary image is present; external URLs fall back to direct links
-  const allImgs=[...timestampPhotos,...knifeData.flatMap(k=>k.imgs)];
+  const hasGearPhotos=gearData.length>0;
+  if(!hasKnifePhotos&&!timestampPhotos.length&&!hasGearPhotos)return null;
+  // Only build gallery when at least one Cloudinary image is present
+  const allImgs=[...timestampPhotos,...knifeData.flatMap(k=>k.imgs),...gearData.flatMap(g=>g.imgs)];
   if(!allImgs.some(u=>u.includes("res.cloudinary.com")))return null;
   const hasTs=timestampPhotos.length>0;
   let startAt=0;
@@ -1727,7 +1785,7 @@ function buildPostGalleryUrl(post, knifeIdx){
   try{
     const d=btoa(unescape(encodeURIComponent(JSON.stringify({
       user:SETTINGS.username||"",
-      knives:knifeData,
+      knives:[...knifeData,...gearData],
       timestamp:timestampPhotos,
       startAt
     }))));
@@ -1763,21 +1821,24 @@ function buildAddonsSection(addonKnives,carrier,v){
 
 function buildItemsSection(post){
   if(!(post.items||[]).length)return"";
-  const cats=[...new Set(post.items.map(x=>x.itemCategory||"other"))];
   const CAT_ORDER=["watch","sunglasses","flashlight","multi-tool","bag","clothing","other"];
+  const NI_PLURAL={watch:"Watches",sunglasses:"Sunglasses",flashlight:"Flashlights","multi-tool":"Multi-tools",bag:"Bags / Cases",clothing:"Clothing",other:"Other Gear"};
+  const cats=[...new Set(post.items.map(x=>x.itemCategory||"other"))];
   cats.sort((a,b)=>CAT_ORDER.indexOf(a)-CAT_ORDER.indexOf(b));
-  const blocks=cats.flatMap(cat=>
-    post.items.filter(x=>(x.itemCategory||"other")===cat).map(x=>{
-      const label=NI_LABELS[cat]||"Other";
+  const sections=cats.map(cat=>{
+    const header=`**${NI_PLURAL[cat]||"Other Gear"}:**`;
+    const rows=post.items.filter(x=>(x.itemCategory||"other")===cat).map(x=>{
       const price=x.saleType!=="WTT"&&x.price?`SV: $${x.price}`:"";
       const tv=x.saleType!=="WTS"&&x.tradeValue?`TV: $${x.tradeValue}`:"";
       const priceStr=[price,tv].filter(Boolean).join(" | ")||"$TBD";
-      const photoLink=(x.photos||[]).filter(Boolean)[0];
-      const nameStr=photoLink?`[${label}: ${x.description||label}](${photoLink})`:`**${label}: ${x.description||""}**`;
-      return`${nameStr} | ${priceStr}\nCondition: ${x.condition||"N/A"}${x.notes?". "+x.notes:""}`;
-    })
-  );
-  return`\n\n---\n\n**Gear & Extras:**\n\n${blocks.join("\n\n")}`;
+      const gurl=gearItemGalleryUrl(x);
+      const desc=x.description||(NI_LABELS[cat]||"Item");
+      const nameStr=gurl?`[${desc}](${gurl})`:`**${desc}**`;
+      return`${nameStr} | ${priceStr}\nCondition: ${x.condition||"N/A"} | Owners: ${x.owners||"1"}${x.notes?". "+x.notes:""}`;
+    });
+    return`${header}\n\n${rows.join("\n\n")}`;
+  });
+  return`\n\n---\n\n**Gear & Extras:**\n\n${sections.join("\n\n")}`;
 }
 
 // ─── DATA NERD ANALYTICS ──────────────────────────────────────
@@ -2620,13 +2681,17 @@ function renderNIForm(){
   const f=S.ni;if(!f)return"";
   const catChips=NI_CATS.map(c=>`<button class="chip sm${f.itemCategory===c?" on":""}" onclick="S.ni.itemCategory='${c}';S._skipRollAnim=true;render()">${NI_ICONS[c]||icon("package",13)} ${NI_LABELS[c]}</button>`).join("");
   const condChips=["Mint","Excellent","Good","Fair"].map(c=>`<button class="chip sm${f.condition===c?" on":""}" onclick="S.ni.condition='${c}';S._skipRollAnim=true;render()">${c}</button>`).join("");
+  const ownersChips=["1","2","3+"].map(c=>`<button class="chip sm${(f.owners||"1")===c?" on":""}" onclick="S.ni.owners='${c}';S._skipRollAnim=true;render()">${c}</button>`).join("");
   const stChips=["WTS","WTT","WTS/WTT"].map(c=>`<button class="chip sm${f.saleType===c?" on":""}" onclick="S.ni.saleType='${c}';S._skipRollAnim=true;render()">${c}</button>`).join("");
   const priceFields=(f.saleType!=="WTT"?`<div class="field" style="flex:1;min-width:120px"><label>Sale Price ($)</label><input type="number" min="0" value="${esc(String(f.price||""))}" placeholder="e.g. 150" oninput="S.ni.price=this.value"/></div>`:"")+
     (f.saleType!=="WTS"?`<div class="field" style="flex:1;min-width:120px"><label>Trade Value ($)</label><input type="number" min="0" value="${esc(String(f.tradeValue||""))}" placeholder="e.g. 150" oninput="S.ni.tradeValue=this.value"/></div>`:"");
   return`<div class="kf" style="margin-top:10px"><div class="kf-hdr"><div class="kf-title">${S.niIdx===-1?"Add Item":"Edit Item"}</div></div>
     <div class="field" style="margin-bottom:10px"><label>Category</label><div class="chips" style="margin-top:4px">${catChips}</div></div>
     <div class="field" style="margin-bottom:10px"><label>Item</label><input type="text" value="${esc(f.description)}" placeholder="e.g. Seiko SKX007" oninput="S.ni.description=stripNL(this.value)"/></div>
-    <div class="field" style="margin-bottom:10px"><label>Condition</label><div class="chips" style="margin-top:4px">${condChips}</div></div>
+    <div class="fr2" style="margin-bottom:10px;gap:16px">
+      <div class="field"><label>Condition</label><div class="chips" style="margin-top:4px">${condChips}</div></div>
+      <div class="field"><label>Owners</label><div class="chips" style="margin-top:4px">${ownersChips}</div></div>
+    </div>
     <div class="kf-type-sel" style="margin-bottom:10px">${stChips}</div>
     <div class="fr2" style="margin-bottom:10px">${priceFields}</div>
     <div class="field" style="margin-bottom:10px"><label>Details <span style="font-weight:400;color:var(--t4);font-size:11px">(optional)</span></label><input type="text" value="${esc(f.notes||"")}" placeholder="e.g. black dial, box and papers included" oninput="S.ni.notes=stripNL(this.value)"/></div>
@@ -4890,28 +4955,69 @@ function renderSold(){
   const completedSection=completedPosts.length?`<div style="margin-bottom:20px">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><span class="sec-lbl" style="margin:0">Completed Listings</span><span style="font-size:11px;color:var(--t4);background:rgba(0,0,0,.07);padding:1px 8px;border-radius:10px;font-weight:600">${completedPosts.length}</span></div>
     ${completedPosts.map(p=>{
+      const CARRIERS=["USPS","UPS","FedEx","DHL","Other"];
+      const bt=p.postType.includes("WTT")?"wtt":"wts";
       const kRows=p.knives.map((k,i)=>{
         const ccKey="cc_"+p.id+"_"+i;
         const ccCopied=S.copied===ccKey;
-        const addrHtmlS=k.shippingAddress?addrDisplayHtml(p.id,i):"";
         const isTrackingFlow=S.trackingFlow?.pid===p.id&&S.trackingFlow?.ki===i;
         const tUrl=k.trackingNumber?trackingUrl(k.trackingCarrier||"USPS",k.trackingNumber):null;
-        const urlCopiedS=S.copied===`trkurl_${p.id}_${i}`;
-        const trkInfoHtml=k.trackingNumber&&!isTrackingFlow?`<div class="addr-block" style="background:var(--bluebg);border-top:.5px solid rgba(0,113,227,.12)"><div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:6px"><span style="font-size:12px;font-weight:600;background:rgba(0,113,227,.12);color:var(--bluet);padding:3px 9px;border-radius:20px;font-family:monospace">${esc(k.trackingCarrier||"USPS")} · ${esc(k.trackingNumber)}</span>${tUrl?`<a href="${tUrl}" target="_blank" rel="noopener" class="btn btn-sec btn-sm" style="text-decoration:none">${icon('link',13)} Track</a>`:""}<button class="btn btn-sec btn-sm" onclick="startTracking('${p.id}',${i})">${icon('pencil',12)} Edit</button></div>${tUrl?`<button class="btn btn-sm${urlCopiedS?" btn-gn":" btn-sec"}" onclick="copyTrackingLink('${p.id}',${i})">${urlCopiedS?"✓ Copied!":`${icon('clipboard',13)} Copy Link for Buyer`}</button>`:""}</div>`:"";
-        const CARRIERS=["USPS","UPS","FedEx","DHL","Other"];
-        const trkFlowHtml=isTrackingFlow?`<div class="sold-flow" style="background:var(--bluebg);border-top:.5px solid rgba(0,113,227,.15)"><div style="font-size:12px;font-weight:700;color:var(--bluet);margin-bottom:9px;display:flex;align-items:center;gap:5px">${icon('truck',12,'var(--bluet)')} Shipping Info</div><div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap"><select id="st-carr-${p.id}-${i}" style="font-size:13px;padding:6px 9px;border:.5px solid var(--b2);border-radius:8px;background:var(--surf);color:var(--t1);font-family:var(--font)">${CARRIERS.map(c=>`<option${(k.trackingCarrier||"USPS")===c?" selected":""}>${c}</option>`).join("")}</select><input id="st-trk-${p.id}-${i}" type="text" placeholder="Tracking number" value="${esc(k.trackingNumber||"")}" style="flex:1;min-width:150px;font-size:13px;padding:6px 10px;border:.5px solid var(--b2);border-radius:8px;background:var(--surf);color:var(--t1);font-family:var(--font)"/><button class="btn btn-pri btn-sm" onclick="saveTracking('${p.id}',${i})">Save</button><button class="btn btn-sec btn-sm" onclick="cancelTracking()">Cancel</button></div></div>`:"";
-        const addTrkBtn=!k.trackingNumber&&!isTrackingFlow?`<button class="btn btn-sec btn-sm" onclick="startTracking('${p.id}',${i})">${icon('package',12)} Add Tracking</button>`:"";
-        return`<div class="krow sold"><div class="krow-info" onclick="openKnifeDetail('${p.id}',${i})" style="cursor:pointer;display:flex;align-items:flex-start;gap:9px">${k.photos&&k.photos[0]?`<img src="${esc(cdnImg(k.photos[0],100,100,'fill'))}" data-orig="${esc(k.photos[0])}" style="width:42px;height:42px;border-radius:7px;object-fit:cover;flex-shrink:0" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none'"/>`:""}<div style="flex:1;min-width:0"><div class="krow-name s">${esc(k.brand)} ${esc(k.model)}</div><div class="krow-meta">${esc(k.steel||"N/A")} · ${esc(k.bladeCondition)}${k.soldAt?" · Sold "+fmtD(k.soldAt):""}${k.soldTo?" · Buyer: u/"+esc(k.soldTo):""}</div></div></div><span class="krow-price s">${knifePrice(k)}</span><span class="sold-chip">Sold</span>${addTrkBtn}<button class="btn btn-sm${ccCopied?" btn-gn":" btn-pu"}" onclick="copyConfirmComment('${p.id}',${i})">${ccCopied?"Copied!":"Confirm Comment"}</button></div>${addrHtmlS}${trkInfoHtml}${trkFlowHtml}`;
+        const urlCopied=S.copied===`trkurl_${p.id}_${i}`;
+        const thumb=k.photos&&k.photos[0]?`<img src="${esc(cdnImg(k.photos[0],100,100,'fill'))}" data-orig="${esc(k.photos[0])}" style="width:44px;height:44px;border-radius:8px;object-fit:cover;flex-shrink:0" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none'"/>`:
+          `<div style="width:44px;height:44px;border-radius:8px;background:var(--surf3);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--t4)">${icon('image',18)}</div>`;
+        // Tracking row: pill + actions OR add-tracking button
+        const trkRow=isTrackingFlow
+          ?`<div style="padding:11px 14px 13px;border-top:.5px solid var(--b2);background:var(--bluebg)">
+              <div style="font-size:11px;font-weight:700;color:var(--bluet);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Shipping Info</div>
+              <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
+                <select id="st-carr-${p.id}-${i}" style="font-size:13px;padding:6px 9px;border:.5px solid var(--b2);border-radius:8px;background:var(--surf);color:var(--t1);font-family:var(--font)">${CARRIERS.map(c=>`<option${(k.trackingCarrier||"USPS")===c?" selected":""}>${c}</option>`).join("")}</select>
+                <input id="st-trk-${p.id}-${i}" type="text" placeholder="Tracking number" value="${esc(k.trackingNumber||"")}" style="flex:1;min-width:140px;font-size:13px;padding:6px 10px;border:.5px solid var(--b2);border-radius:8px;background:var(--surf);color:var(--t1);font-family:var(--font)"/>
+                <button class="btn btn-pri btn-sm" onclick="saveTracking('${p.id}',${i})">Save</button>
+                <button class="btn btn-sec btn-sm" onclick="cancelTracking()">Cancel</button>
+              </div>
+            </div>`
+          :k.trackingNumber
+          ?`<div style="padding:10px 14px 12px;border-top:.5px solid var(--b2);display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <span style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--bluet);background:var(--bluebg);padding:4px 10px;border-radius:20px">${icon('package',12,'var(--bluet)')} ${esc(k.trackingCarrier||"USPS")} &middot; ${esc(k.trackingNumber)}</span>
+              ${tUrl?`<a href="${tUrl}" target="_blank" rel="noopener" class="btn btn-sec btn-sm" style="text-decoration:none">${icon('external-link',12)} Track</a>`:""}
+              <button class="btn btn-sec btn-sm" onclick="startTracking('${p.id}',${i})">${icon('pencil',11)} Edit</button>
+              <div style="flex:1"></div>
+              ${tUrl?`<button class="btn btn-sm${urlCopied?" btn-gn":" btn-sec"}" onclick="copyTrackingLink('${p.id}',${i})">${urlCopied?`${icon('check',12)} Copied`:`${icon('clipboard',12)} Copy Link`}</button>`:""}
+            </div>`
+          :``;
+        const actionsRow=`<div style="padding:0 14px 13px;display:flex;gap:7px;flex-wrap:wrap;align-items:center">
+            ${!k.trackingNumber&&!isTrackingFlow?`<button class="btn btn-sec btn-sm" onclick="startTracking('${p.id}',${i})">${icon('package',12)} Add Tracking</button>`:""}
+            <div style="flex:1"></div>
+            <button class="btn btn-sm${ccCopied?" btn-gn":" btn-pu"}" onclick="copyConfirmComment('${p.id}',${i})">${ccCopied?`${icon('check',13)} Copied`:`${icon('clipboard',13)} Confirm Comment`}</button>
+          </div>`;
+        return`<div style="border-top:.5px solid var(--b2)">
+          <div style="display:flex;gap:11px;align-items:flex-start;padding:13px 14px 11px;cursor:pointer" onclick="openKnifeDetail('${p.id}',${i})">
+            ${thumb}
+            <div style="flex:1;min-width:0">
+              <div style="font-size:14px;font-weight:600;color:var(--t1);line-height:1.3">${esc(k.brand)} ${esc(k.model)}</div>
+              <div style="font-size:12px;color:var(--t3);margin-top:3px;line-height:1.5">${esc(k.steel||"N/A")} &middot; ${esc(k.bladeCondition)}${k.soldAt?" &middot; "+fmtD(k.soldAt):""}${k.soldTo?` &middot; u/${esc(k.soldTo)}`:""}</div>
+            </div>
+            <div style="flex-shrink:0;text-align:right">
+              <div style="font-size:15px;font-weight:700;color:var(--t1)">${knifePrice(k)}</div>
+              <span class="sold-chip" style="margin-top:4px;display:inline-block">Sold</span>
+            </div>
+          </div>
+          ${actionsRow}${trkRow}
+        </div>`;
       }).join("");
-      const bt=p.postType.includes("WTT")?"wtt":"wts";
       return`<div class="pc" style="padding:0;overflow:hidden;margin-bottom:12px">
-        <div style="display:flex;align-items:center;gap:8px;padding:11px 14px 9px;border-bottom:.5px solid var(--b2)">
+        <div style="display:flex;align-items:center;gap:8px;padding:11px 14px 10px">
           <span class="pc-badge ${bt}">${esc(p.postType)}</span>
-          <span style="font-size:13px;font-weight:500;color:var(--t2);flex:1">${esc(p.knives.map(k=>k.brand+" "+k.model).join(", "))}</span>
-          <span style="font-size:11px;color:var(--t4)">${fmtD(p.createdAt)}</span>
+          <span style="font-size:13px;font-weight:600;color:var(--t1);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.knives.map(k=>k.brand+" "+k.model).join(", "))}</span>
+          <span style="font-size:11px;color:var(--t4);flex-shrink:0">${fmtD(p.createdAt)}</span>
         </div>
         ${kRows}
-        <div style="padding:9px 14px 10px;font-size:11px;color:var(--t3);border-top:.5px solid var(--b2);line-height:1.5">Post each sale in the <a href="https://www.reddit.com/r/Knife_Swap/search/?q=Confirmed+Trade+Thread&restrict_sr=1&sort=new&type=link" target="_blank" rel="noopener" style="color:var(--blue);font-weight:600;text-decoration:none">r/Knife_Swap Confirmed Trade Thread</a> - click "Confirm Comment" above to copy your comment, then the buyer replies "Confirmed".</div>
+        <div style="padding:9px 14px 10px;border-top:.5px solid var(--b2);display:flex;align-items:center;gap:6px">
+          ${icon('message-circle',13,'var(--t4)')}
+          <span style="font-size:11px;color:var(--t3)">Post in the</span>
+          <a href="https://www.reddit.com/r/Knife_Swap/search/?q=Confirmed+Trade+Thread&restrict_sr=1&sort=new&type=link" target="_blank" rel="noopener" style="font-size:11px;color:var(--blue);font-weight:600;text-decoration:none">Confirmed Trade Thread</a>
+          <span style="font-size:11px;color:var(--t3)">after each sale.</span>
+        </div>
       </div>`;
     }).join("")}
   </div>`:"";
