@@ -5498,6 +5498,21 @@ function renderSettings(){
     <div class="srow"><div><div class="srow-lbl">Knife Roll Animation</div><div class="srow-sub">Play an unrolling animation when viewing The Roll</div></div><div class="srow-ctrl"><button class="roll-anim-btn${sv.rollAnim?' on':''}" onclick="SETTINGS.rollAnim=!SETTINGS.rollAnim;saveSettings();render()">${sv.rollAnim?'On':'Off'}</button></div></div>
     <div class="srow"><div><div class="srow-lbl">Export Roll to CSV</div><div class="srow-sub">Download your full knife inventory as a spreadsheet</div></div><div class="srow-ctrl"><button class="btn btn-sec btn-sm" onclick="exportRollCSV()">↓ Export CSV</button></div></div>
   </div>
+  <div class="settings-section-lbl">Data Backup</div>
+  <div class="sgroup">
+    <div class="srow" style="flex-direction:column;align-items:flex-start;gap:6px">
+      <div><div class="srow-lbl">Export All Data</div><div class="srow-sub">Download everything (posts, inventory, settings) as a single JSON file. Use this to back up your data or move it to a different browser or device without needing an account.</div></div>
+      <button class="btn btn-sec btn-sm" onclick="exportAllData()">${icon('download',13)} Export Backup (.json)</button>
+    </div>
+    <div class="srow" style="flex-direction:column;align-items:flex-start;gap:6px">
+      <div><div class="srow-lbl">Import Data</div><div class="srow-sub">Restore from a BladeFlow backup file. This replaces all current posts, inventory, and settings with the contents of the file.</div></div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-sec btn-sm" onclick="importAllData()">${icon('upload',13)} Import Backup (.json)</button>
+        ${S.importSuccess?`<span style="font-size:12px;font-weight:600;color:var(--greent);display:flex;align-items:center;gap:4px">${icon('check-circle',13,'var(--greent)')} Imported successfully</span>`:""}
+        ${S.err&&S.err.startsWith("Import")?`<span style="font-size:12px;color:var(--redt)">${esc(S.err)}</span>`:""}
+      </div>
+    </div>
+  </div>
   <div class="settings-section-lbl">Cloud Sync</div>
   <div class="sgroup">
     <div class="srow">
@@ -5690,6 +5705,58 @@ function exportSoldCSV(){
   a.click();
 }
 window.exportSoldCSV=exportSoldCSV;
+
+// ─── FULL DATA EXPORT / IMPORT ────────────────────────────
+function exportAllData(){
+  const payload={
+    _bladeflow:true,
+    version:1,
+    exportedAt:new Date().toISOString(),
+    posts:S.posts.filter(p=>!p._tourDemo),
+    inventory:S.inventory.filter(k=>!k._tourDemo),
+    settings:SETTINGS
+  };
+  const json=JSON.stringify(payload,null,2);
+  const a=document.createElement("a");
+  a.href="data:application/json;charset=utf-8,"+encodeURIComponent(json);
+  a.download="bladeflow-backup-"+new Date().toISOString().slice(0,10)+".json";
+  a.click();
+}
+window.exportAllData=exportAllData;
+
+function importAllData(){
+  const input=document.createElement("input");
+  input.type="file";input.accept=".json,application/json";
+  input.onchange=async(e)=>{
+    const file=e.target.files?.[0];if(!file)return;
+    try{
+      const text=await file.text();
+      const data=JSON.parse(text);
+      if(!data._bladeflow){S.err="This doesn't look like a BladeFlow backup file.";render();return;}
+      if(data.posts){
+        S.posts=data.posts;
+        await window.storage.set("ks_v4",JSON.stringify(data.posts));
+      }
+      if(data.inventory){
+        S.inventory=data.inventory;
+        await window.storage.set("ks_inv_v1",JSON.stringify(data.inventory));
+      }
+      if(data.settings){
+        Object.assign(SETTINGS,data.settings);
+        try{localStorage.setItem("ks_settings",JSON.stringify(SETTINGS));}catch(e){}
+      }
+      S.err="";
+      S.importSuccess=true;
+      render();
+      setTimeout(()=>{S.importSuccess=false;render();},3000);
+    }catch(err){
+      S.err="Import failed: "+(err.message||"Could not read file.");
+      render();
+    }
+  };
+  input.click();
+}
+window.importAllData=importAllData;
 
 // ─── PHOTO REORDER ────────────────────────────────────────
 function reorderUpload(idx,dir){
