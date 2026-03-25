@@ -5708,13 +5708,14 @@ window.exportSoldCSV=exportSoldCSV;
 
 // ─── FULL DATA EXPORT / IMPORT ────────────────────────────
 function exportAllData(){
+  const {saveNotice:_,...exportSettings}=SETTINGS; // strip UI-only flag
   const payload={
     _bladeflow:true,
     version:1,
     exportedAt:new Date().toISOString(),
     posts:S.posts.filter(p=>!p._tourDemo),
     inventory:S.inventory.filter(k=>!k._tourDemo),
-    settings:SETTINGS
+    settings:exportSettings
   };
   const json=JSON.stringify(payload,null,2);
   const a=document.createElement("a");
@@ -5742,12 +5743,17 @@ function importAllData(){
         await window.storage.set("ks_inv_v1",JSON.stringify(data.inventory));
       }
       if(data.settings){
-        Object.assign(SETTINGS,data.settings);
-        try{localStorage.setItem("ks_settings",JSON.stringify(SETTINGS));}catch(e){}
+        // Merge over defaults so any new fields added since backup was made still get their defaults
+        const imported={...data.settings};
+        delete imported.saveNotice; // UI flag, never restore
+        Object.assign(SETTINGS,imported);
+        await saveSettings();
       }
       S.err="";
       S.importSuccess=true;
       render();
+      // If signed in, push imported data to cloud immediately
+      if(currentUser&&_sb)_scheduleSbSync(true);
       setTimeout(()=>{S.importSuccess=false;render();},3000);
     }catch(err){
       S.err="Import failed: "+(err.message||"Could not read file.");
