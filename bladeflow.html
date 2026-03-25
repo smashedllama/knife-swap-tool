@@ -4339,11 +4339,11 @@ function kfFormHtml(){
             </button>
             ${s.vidBwTip?`<div style="background:#fffbeb;border:.5px solid #f59e0b;border-radius:9px;padding:11px 13px;font-size:11px;color:#78350f;line-height:1.6">
               <strong style="display:block;margin-bottom:5px">⚠ Before you upload a video, read this</strong>
-              Videos are served from your Cloudinary account. The free tier includes 25GB of bandwidth per month. At ~10MB per 30-second clip that can add up quickly for active sellers, especially if listings get heavy traffic.
+              Videos are served from your own Cloudinary free tier, which includes <strong>25GB of bandwidth per month</strong>. Each ~30-second clip uploaded here is about <strong>10MB</strong> — meaning your account can handle roughly <strong>2,500 total plays</strong> before it hits the cap.
               <br><br>
-              If you hit the limit, everything stops loading for every viewer until the month resets. Videos consume far more bandwidth than photos: a single 10MB video uses as much as ~200 photos. Keep videos short and use them selectively.
+              In practice that looks like: <strong>5 active video listings each viewed 50 times = 2.5GB used</strong>. That's fine. But a busy month with <strong>20+ listings each getting 100+ views</strong> can push you to 20GB fast — and if you hit the cap, <strong>every photo and video on every listing stops loading</strong> for all buyers until the month resets.
               <br><br>
-              If you hit your limit, paste an <strong>Imgur link</strong> into any photo slot instead. That uses Imgur's bandwidth, not yours.
+              Keep videos short (under 30s), use them selectively on your best listings, and check your usage before a busy posting week. If you're running low, switch to pasting an <strong>Imgur link</strong> instead — that uses Imgur's bandwidth, not yours.
               <br><br>
               <a href="https://console.cloudinary.com" target="_blank" rel="noopener" style="color:#7c3aed;font-weight:600;text-decoration:none">Check your Cloudinary usage ↗</a>
               <div style="margin-top:10px">${activePhotoService()==='cloudinary'?`<button class="btn btn-sm" onclick="triggerKnifeVideoUpload()" type="button" style="background:#7c3aed;color:#fff;border:none;font-weight:600">${icon('video',13,'#fff')} Upload Video</button>`:`<button class="btn btn-sm" style="opacity:.4;cursor:default;background:var(--bg);border:.5px solid var(--b2);color:var(--t4)" disabled>Configure Cloudinary to upload</button>`}</div>
