@@ -5775,11 +5775,7 @@ document.addEventListener("keydown",e=>{
     if(S.view==="compose"){e.preventDefault();syncDraft();return;}
     return;
   }
-  // N (bare) - new listing from list view when not typing
-  if(e.key==="n"&&!inInput&&!e.metaKey&&!e.ctrlKey){
-    if(S.view==="list"&&!S.kfOpen){e.preventDefault();startCompose();return;}
-    return;
-  }
+
   // ? - open the help guide when not typing
   if(e.key==="?"&&!inInput){
     e.preventDefault();S.view="guide";render();return;
