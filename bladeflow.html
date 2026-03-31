@@ -5362,15 +5362,10 @@ function composeChecklist(d){
     const st=it.saleType||"WTS";
     if((st==="WTS"||st==="WTS/WTT")&&!(parseFloat(it.price)>0)) gearProblems.push(`${lbl}: missing price`);
   });
-  const gr=gearRatioCheck(d);
   const items=[
     {ok:d.knives.length>0,label:"At least one knife added"},
     {ok:knifeProblems.length===0,label:knifeProblems.length===0?"All knife details complete":knifeProblems[0]+(knifeProblems.length>1?` (+${knifeProblems.length-1} more)`:"")},
     ...(gearProblems.length||((d.items||[]).length>0)?[{ok:gearProblems.length===0,label:gearProblems.length===0?"All gear items complete":gearProblems[0]+(gearProblems.length>1?` (+${gearProblems.length-1} more)`:"")}]:[]),
-    ...((d.items||[]).length>0?[
-      {ok:gr.countOk,label:gr.countOk?`Gear count OK (${gr.knifeCount} knife${gr.knifeCount!==1?"s":""}, ${gr.gearCount} gear)`:`Too many gear items: ${gr.gearCount} gear vs ${gr.knifeCount} knife${gr.knifeCount!==1?"s":""} — knives must be more than 50% of all items`},
-      ...(gr.valueCheckable?[{ok:gr.valueOk,label:gr.valueOk?`Gear value OK ($${gr.knifeValue} knives vs $${gr.gearValue} gear)`:`Gear value $${gr.gearValue} exceeds knife value $${gr.knifeValue} — knives must be more than 50% of total listing value`}]:[]),
-    ]:[]),
     {ok:(d.photos||[]).filter(Boolean).length>0,label:(()=>{const n=(d.photos||[]).filter(Boolean).length;return n>1?`${n} timestamp photos linked`:"Timestamp photo linked";})()},
     {ok:d.payment.length>0,label:"Payment method selected"},
     {ok:!!d.rulesConfirmed,label:"r/Knife_Swap rules confirmed"},
@@ -5769,16 +5764,6 @@ document.addEventListener("keydown",e=>{
     if(S.view==="compose"&&!S.kfOpen){openKF(-1,"draft");return;}
     if(S.view==="roll"&&!S.kfOpen){openKF(-1,"locker");return;}
     return;
-  }
-  // Cmd/Ctrl+S - save draft when composing
-  if((e.metaKey||e.ctrlKey)&&e.key==="s"){
-    if(S.view==="compose"){e.preventDefault();syncDraft();return;}
-    return;
-  }
-
-  // ? - open the help guide when not typing
-  if(e.key==="?"&&!inInput){
-    e.preventDefault();S.view="guide";render();return;
   }
 });
 
