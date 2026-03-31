@@ -5770,6 +5770,20 @@ document.addEventListener("keydown",e=>{
     if(S.view==="roll"&&!S.kfOpen){openKF(-1,"locker");return;}
     return;
   }
+  // Cmd/Ctrl+S - save draft when composing
+  if((e.metaKey||e.ctrlKey)&&e.key==="s"){
+    if(S.view==="compose"){e.preventDefault();syncDraft();return;}
+    return;
+  }
+  // N (bare) - new listing from list view when not typing
+  if(e.key==="n"&&!inInput&&!e.metaKey&&!e.ctrlKey){
+    if(S.view==="list"&&!S.kfOpen){e.preventDefault();startCompose();return;}
+    return;
+  }
+  // ? - open the help guide when not typing
+  if(e.key==="?"&&!inInput){
+    e.preventDefault();S.view="guide";render();return;
+  }
 });
 
 // ─── CSV EXPORT ───────────────────────────────────────────
