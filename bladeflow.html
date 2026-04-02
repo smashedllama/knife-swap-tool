@@ -3126,8 +3126,11 @@ async function openRedditPost(pid){
 }
 async function copyPost(pid){
   const p=S.posts.find(x=>x.id===pid);if(!p)return;
-  try{await navigator.clipboard.writeText(p.postText);}catch(e){}
-  S.copied=pid;render();setTimeout(()=>{S.copied=null;render();},2000);
+  let copied=false;try{await navigator.clipboard.writeText(p.postText);copied=true;}catch(e){}
+  S.copied=pid;
+  S.flairToast=copied?`${icon('clipboard',13)} Post text copied. On Reddit: switch to Markdown editor (bottom-right of the text box), then paste.`:`${icon('alert-triangle',13,'var(--oranget)')} Couldn't auto-copy. On Reddit: switch to Markdown editor first, then paste your post text.`;
+  clearTimeout(S._flairTid);S._flairTid=setTimeout(()=>{S.flairToast=null;render();},9000);
+  render();setTimeout(()=>{S.copied=null;render();},2000);
 }
 function updateModelList(){
   const el=document.getElementById("kf-brand");
@@ -3346,9 +3349,11 @@ function addTimestampInline(pid){
 }
 async function copyFromPreflight(pid){
   const p=S.posts.find(x=>x.id===pid);if(!p)return;
-  try{await navigator.clipboard.writeText(p.postText||"");}catch(e){}
-  S.copied=pid;S.modal=null;S.preflight=null;S.rulesConfirmed=false;render();
-  setTimeout(()=>{if(S.copied===pid){S.copied=null;render();}},2000);
+  let copied=false;try{await navigator.clipboard.writeText(p.postText||"");copied=true;}catch(e){}
+  S.copied=pid;S.modal=null;S.preflight=null;S.rulesConfirmed=false;
+  S.flairToast=copied?`${icon('clipboard',13)} Post text copied. On Reddit: switch to Markdown editor (bottom-right of the text box), then paste.`:`${icon('alert-triangle',13,'var(--oranget)')} Couldn't auto-copy. On Reddit: switch to Markdown editor first, then paste your post text.`;
+  clearTimeout(S._flairTid);S._flairTid=setTimeout(()=>{S.flairToast=null;render();},9000);
+  render();setTimeout(()=>{if(S.copied===pid){S.copied=null;render();}},2000);
 }
 async function openRedditFromPreflight(pid){
   S.modal=null;S.preflight=null;S.rulesConfirmed=false;render();
