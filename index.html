@@ -3110,11 +3110,11 @@ async function openRedditPost(pid){
   // Show paste reminder (overrides flair toast if both apply)
   let msg;
   if(!copied){
-    msg=`${icon('alert-triangle',13,'var(--oranget)')} Couldn't auto-copy. Paste the post text manually into Reddit.`;
+    msg=`${icon('alert-triangle',13,'var(--oranget)')} Couldn't auto-copy. On Reddit: switch to Markdown editor first, then paste your post text.`;
   } else if(p.repost){
-    msg=`${icon('clipboard',13)} Post text copied. Paste into body, then select 'Price Reduced' flair.`;
+    msg=`${icon('clipboard',13)} Post text copied. On Reddit: switch to Markdown editor, paste, then select 'Price Reduced' flair.`;
   } else {
-    msg=`${icon('clipboard',13)} Post text copied to clipboard. Paste it into the Reddit body.`;
+    msg=`${icon('clipboard',13)} Post text copied. On Reddit: switch to Markdown editor (bottom-right of the text box), then paste.`;
   }
   S.flairToast=msg;
   clearTimeout(S._flairTid);
