@@ -3077,7 +3077,14 @@ function buildAddressRequest(pid,ki){
   const k=p.knives[ki];if(!k||!k.sold)return"";
   const kName=`${k.brand} ${k.model}`.trim()||"the knife";
   const buyer=k.soldTo?`u/${k.soldTo.replace(/^@/,"").replace(/^\/?u\//i,"")} — thanks`:"Thanks";
-  return`${buyer} for picking up the ${kName}! 🙌\n\nCould you drop me your shipping address? Please include:\n• Full name\n• Street address (+ apt/unit if applicable)\n• City, State, ZIP\n\nI'll get it packed up and out the door right away once I have it!`;
+  const price=k.soldPrice||k.price;
+  const priceStr=price?`$${price}`:"[price]";
+  const methods=(p.payment||[]).map(m=>m==="Other"&&p.paymentOther?p.paymentOther:m);
+  const links=SETTINGS.paymentLinks||{};
+  const methodLines=methods.map(m=>{const l=links[m];return l?`• ${m}: ${l}`:`• ${m}`;}).join("\n")||"• [configure payment links in Settings]";
+  const noNotesServices=methods.filter(m=>["Venmo","PayPal F&F","Cash App","Zelle","Apple Pay"].some(s=>m.includes(s.split(" ")[0])));
+  const noNotesLine=noNotesServices.length?`\n⚠️ Please do NOT add any notes to your payment. Mentioning goods/knives in payment notes can flag accounts on ${noNotesServices.slice(0,2).join(" and ")}.\n`:"";
+  return`${buyer} for picking up the ${kName}! 🙌\n\nPlease send ${priceStr} via:\n${methodLines}\n${noNotesLine}\nOnce payment clears, please drop me your shipping address:\n• Full name\n• Street address (+ apt/unit if applicable)\n• City, State, ZIP\n\nI'll get it packed up and out the door right away!`;
 }
 async function copyAddressRequest(pid,ki){
   const txt=buildAddressRequest(pid,ki);if(!txt)return;
