@@ -3104,7 +3104,7 @@ function startSamePriceRepost(pid){
 async function openRedditPost(pid){
   const p=S.posts.find(x=>x.id===pid);if(!p)return;
   const title=buildTitleStr(p.knives,p.postType,300,p.items);
-  let url="https://www.reddit.com/r/Knife_Swap/submit?selftext=true&title="+encodeURIComponent(title)+"&text="+encodeURIComponent(p.postText||"");
+  let url="https://www.reddit.com/r/Knife_Swap/submit?selftext=true&title="+encodeURIComponent(title);
   if(p.repost)url+="&flair_text="+encodeURIComponent("Price Reduced");
   // Also copy to clipboard — new Reddit ignores &text= but old Reddit uses it; clipboard covers both
   let copied=false;
