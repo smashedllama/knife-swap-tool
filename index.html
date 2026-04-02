@@ -1126,7 +1126,8 @@ async function _doSbSync(){
   // Pre-flight: user_id must exist or Supabase rejects rows silently
   if(!currentUser?.id)throw new Error('No user ID — cannot sync');
 
-  const postsPayload=posts.map(p=>({id:p.id,user_id:currentUser.id,data:p,updated_at:now}));
+  // Strip postText — it's derived from buildPost() and can be large; rebuild on load
+  const postsPayload=posts.map(p=>{const{postText:_,...rest}=p;return{id:p.id,user_id:currentUser.id,data:rest,updated_at:now};});
   const invPayload=inv.map(k=>({id:k.id,user_id:currentUser.id,data:k,updated_at:now}));
 
   // Log payload sizes — catches accidental base64-photo inflation
@@ -1345,7 +1346,7 @@ async function _sbLoad(){
     }
     if(prof?.settings&&Object.keys(prof.settings).length)SETTINGS={...DS(),...prof.settings};
     const {data:posts}=await _sb.from("posts").select("data").eq("user_id",currentUser.id);
-    if(posts&&posts.length)S.posts=posts.map(r=>r.data).filter(p=>!p._tourDemo).sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));
+    if(posts&&posts.length)S.posts=posts.map(r=>r.data).filter(p=>!p._tourDemo).sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||"")).map(p=>{if(!p.postText)p.postText=buildPost(p);return p;});
     const {data:inv}=await _sb.from("inventory").select("data").eq("user_id",currentUser.id);
     if(inv&&inv.length)S.inventory=inv.map(r=>r.data).filter(k=>!k._tourDemo);
     S.loaded=true;
@@ -1357,7 +1358,7 @@ async function _sbLoad(){
 }
 async function _sbUpsertPost(post){
   if(!_sb||!currentUser)return;
-  try{const{error}=await _sb.from("posts").upsert({id:post.id,user_id:currentUser.id,data:post,updated_at:new Date().toISOString()});if(error)console.warn("Post upsert error:",error);}catch(e){console.warn("Post upsert exception:",e);}
+  try{const{postText:_,...rest}=post;const{error}=await _sb.from("posts").upsert({id:post.id,user_id:currentUser.id,data:rest,updated_at:new Date().toISOString()});if(error)console.warn("Post upsert error:",error);}catch(e){console.warn("Post upsert exception:",e);}
 }
 async function _sbDeletePost(id){
   if(!_sb||!currentUser)return;
@@ -1432,7 +1433,7 @@ async function migrateToSupabase(){
   try{
     const now=new Date().toISOString();
     const posts=S.posts.filter(p=>!p._tourDemo);
-    if(posts.length)await _sb.from("posts").upsert(posts.map(p=>({id:p.id,user_id:currentUser.id,data:p,updated_at:now})));
+    if(posts.length)await _sb.from("posts").upsert(posts.map(p=>{const{postText:_,...rest}=p;return{id:p.id,user_id:currentUser.id,data:rest,updated_at:now};}));
     const inv=S.inventory.filter(k=>!k._tourDemo);
     if(inv.length)await _sb.from("inventory").upsert(inv.map(k=>({id:k.id,user_id:currentUser.id,data:k,updated_at:now})));
     await _sbSaveSettings();
