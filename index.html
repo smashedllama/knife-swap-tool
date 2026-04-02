@@ -1164,6 +1164,7 @@ function _scheduleSbSync(immediate){
     }catch(e){
       _syncStatus='error';_syncErrMsg=e.message||'Sync failed';
       console.warn('[sync] failed:',e.message);
+      if((e.message||'').includes('timed out'))_showSyncErrorToast();
     }
     _syncInFlight=false;
     if(_syncPending){_syncPending=false;_scheduleSbSync();}
@@ -1183,6 +1184,7 @@ async function manualSync(){
   }catch(e){
     _syncStatus='error';_syncErrMsg=e.message||'Sync failed';
     console.warn('[sync] manual failed:',e.message);
+    if((e.message||'').includes('timed out'))_showSyncErrorToast();
   }
   _syncInFlight=false;
   render();
@@ -1323,6 +1325,15 @@ async function initSupabase(){
       _showSyncOfflineToast();
     }
   }
+}
+function _showSyncErrorToast(){
+  if(document.getElementById("_syncErrToast"))return;
+  const t=document.createElement("div");
+  t.id="_syncErrToast";
+  t.style.cssText="position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1C1C1E;border:0.5px solid rgba(255,59,48,.3);border-radius:12px;padding:12px 16px;font-size:13px;color:#F2F2F7;line-height:1.5;max-width:320px;width:calc(100% - 40px);box-shadow:0 4px 24px rgba(0,0,0,.4);z-index:9999;text-align:center";
+  t.innerHTML=`<div style="margin-bottom:6px">Cloud sync is taking longer than expected.</div><a href="https://www.reddit.com/message/compose/?to=smashedllama&subject=BladeFlow+sync+timeout" target="_blank" style="color:#0A84FF;text-decoration:none;font-weight:500">Let u/smashedllama know</a><button onclick="this.parentNode.remove()" style="display:block;margin:8px auto 0;background:none;border:none;color:rgba(255,255,255,.4);font-size:12px;cursor:pointer">Dismiss</button>`;
+  document.body.appendChild(t);
+  setTimeout(()=>{if(t.parentNode)t.remove();},15000);
 }
 function _showSyncOfflineToast(){
   if(document.getElementById("_syncOfflineToast"))return;
