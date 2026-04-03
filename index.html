@@ -2395,11 +2395,11 @@ function compressImage(file){
     const img=new Image(),url=URL.createObjectURL(file);
     img.onload=()=>{
       URL.revokeObjectURL(url);
-      const MAX=1600;let w=img.width,h=img.height;
+      const MAX=1920;let w=img.width,h=img.height;
       if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX;}else{w=Math.round(w*MAX/h);h=MAX;}}
       const c=document.createElement("canvas");c.width=w;c.height=h;
       c.getContext("2d").drawImage(img,0,0,w,h);
-      c.toBlob(b=>resolve(b||file),"image/jpeg",0.82);
+      c.toBlob(b=>resolve(b||file),"image/jpeg",0.87);
     };
     img.onerror=()=>{URL.revokeObjectURL(url);resolve(file);};
     img.src=url;
