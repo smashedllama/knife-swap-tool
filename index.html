@@ -2228,8 +2228,8 @@ function renderDataNerdModal(){
 function buildTimestampLine(post){
   const ts=(post.photos||[]).filter(Boolean);
   if(!ts.length)return"[ paste your timestamp photo link here ]";
-  const url=ts[0];
-  return`[TIMESTAMP](${url})`;
+  const galleryLink=buildPostGalleryUrl(post,undefined)||ts[0];
+  return`[ ](${ts[0]})[TIMESTAMP](${galleryLink})`;
 }
 
 function buildPost(post,v){
