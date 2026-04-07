@@ -1076,7 +1076,7 @@ const NI_ICONS={watch:icon("watch",14),sunglasses:icon("glasses",14),flashlight:
 const NI_LABELS={watch:"Watch",sunglasses:"Sunglasses",flashlight:"Flashlight","multi-tool":"Multi-tool",bag:"Bag / Case",clothing:"Clothing",other:"Other"};
 const SYNC_SAYINGS=["Sharpening the sync edge…","Honing your data to a razor's edge…","Applying the Scary Sharp protocol…","Stropping your listings clean…","Deburring your inventory…","Heat treating your data for maximum retention…","Running a paper test on your posts…","Putting a hair-whittling edge on your backup…","Your collection is in good hands…","Checking the grind geometry…","Buffing out the data scratches…","No false edges on this backup…","Setting the bevel on your backup…","Full flat grind on your file transfer…","Convex-grinding your cloud storage…","Making sure your data has no microbevels…"];
 const ED=()=>({postType:"[WTS]",knives:[],items:[],payment:[...SETTINGS.payment],paymentOther:"",noShip:[...SETTINGS.noShip],noShipOther:"",repost:false,photos:[],notes:"",rulesConfirmed:false,bundleEnabled:false,bundlePrice:"",bundles:[],groupAddons:false,tradeInterests:SETTINGS.tradeInterests||"",shippingCarrier:SETTINGS.shippingCarrier||"USPS"});
-let S={posts:[],inventory:[],loaded:false,view:"list",expanded:null,copied:null,draft:ED(),kfOpen:false,kfIdx:-1,kf:EK(),kfMode:"draft",adv:false,err:"",saveNotice:false,lockerFilter:"all",lockerPicker:false,movingKnife:null,uploadFiles:[],kfUploads:[],kfPhotoTag:"other",niUploads:[],priceResearch:{status:"idle",results:[],query:""},modal:null,authStatus:"guest",authEmail:"",showMigrate:false,soldFlow:null,gearSoldFlow:null,delFlowEmail:null,authLoading:true,mdPreview:new Set(),undoStack:[],undoToast:null,_undoTid:null,flairToast:null,_flairTid:null,rollSort:"added",soldFilter:"all",listFilter:"all",shipFilter:"all",soldExpanded:new Set(),tutStep:0,aboutTab:"about",feedbackTab:"bug",acctPopover:false,trackingFlow:null,preflight:null,priceFilter:"sold",tour:null,bundlePicker:null,niOpen:false,ni:null,niIdx:-1,gearPicker:false,_skipRollAnim:false,rollKnivesOpen:true,rollGearOpen:true,emailChangeOpen:false,emailChangeNotice:false,accountDeleted:false,migrateConfirm:null,syncingScreen:false,syncMsg:0,vidBwTip:false,_sessionStart:Date.now(),_renderCount:0,_loadTime:null,_copyCount:0,_viewChanges:0,_lastView:""};
+let S={posts:[],inventory:[],loaded:false,view:"list",expanded:null,copied:null,draft:ED(),kfOpen:false,kfIdx:-1,kfPostId:null,kf:EK(),kfMode:"draft",adv:false,err:"",saveNotice:false,lockerFilter:"all",lockerPicker:false,movingKnife:null,uploadFiles:[],kfUploads:[],kfPhotoTag:"other",niUploads:[],priceResearch:{status:"idle",results:[],query:""},modal:null,authStatus:"guest",authEmail:"",showMigrate:false,soldFlow:null,gearSoldFlow:null,delFlowEmail:null,authLoading:true,mdPreview:new Set(),undoStack:[],undoToast:null,_undoTid:null,flairToast:null,_flairTid:null,rollSort:"added",soldFilter:"all",listFilter:"all",shipFilter:"all",soldExpanded:new Set(),tutStep:0,aboutTab:"about",feedbackTab:"bug",acctPopover:false,trackingFlow:null,preflight:null,priceFilter:"sold",tour:null,bundlePicker:null,niOpen:false,ni:null,niIdx:-1,gearPicker:false,_skipRollAnim:false,rollKnivesOpen:true,rollGearOpen:true,emailChangeOpen:false,emailChangeNotice:false,accountDeleted:false,migrateConfirm:null,syncingScreen:false,syncMsg:0,vidBwTip:false,_sessionStart:Date.now(),_renderCount:0,_loadTime:null,_copyCount:0,_viewChanges:0,_lastView:""};
 
 // ─── STORAGE ──────────────────────────────────────────────────
 async function load(){
@@ -2643,7 +2643,7 @@ function addKnifePhotoUrl(tag){
 async function copyText(txt){try{await navigator.clipboard.writeText(txt);}catch(e){}S._copyCount=(S._copyCount||0)+1;try{const _bfs=JSON.parse(localStorage.getItem('bf_stats')||'{}');_bfs.totalCopies=(_bfs.totalCopies||0)+1;localStorage.setItem('bf_stats',JSON.stringify(_bfs));}catch(e){}}
 
 // ─── KNIFE ACTIONS ────────────────────────────────────────────
-function startCompose(){S.view="compose";S.draft=ED();S.kfOpen=false;S.kfIdx=-1;S.kf=EK();S.kfMode="draft";S.adv=false;S.err="";S.lockerPicker=false;S.gearPicker=false;S.uploadFiles=[];render();}
+function startCompose(){S.view="compose";S.draft=ED();S.kfOpen=false;S.kfIdx=-1;S.kfPostId=null;S.kf=EK();S.kfMode="draft";S.adv=false;S.err="";S.lockerPicker=false;S.gearPicker=false;S.uploadFiles=[];render();}
 function cancelCompose(){
   S.draft.knives.forEach(k=>{
     if(k.inventoryId){
@@ -2656,10 +2656,13 @@ function cancelCompose(){
   });
   S.view="list";S.draft=ED();S.kfOpen=false;S.err="";S.uploadFiles=[];saveInv();render();
 }
-function openKF(idx,mode){
-  S.kfMode=mode||"draft";S.kfOpen=true;S.adv=false;S.err="";
+function openKF(idx,mode,postId){
+  S.kfMode=mode||"draft";S.kfOpen=true;S.adv=false;S.err="";S.kfPostId=postId||null;
   if(mode==="locker"){
     S.kfIdx=idx;S.kf=idx>=0?JSON.parse(JSON.stringify(S.inventory[idx])):EI();
+  }else if(mode==="post"){
+    const _ep=S.posts.find(p=>p.id===postId);
+    S.kfIdx=idx;S.kf=(idx>=0&&_ep)?JSON.parse(JSON.stringify(_ep.knives[idx])):EK();
   }else{
     S.kfIdx=idx;S.kf=idx>=0?JSON.parse(JSON.stringify(S.draft.knives[idx])):EK();
   }
@@ -2668,7 +2671,7 @@ function openKF(idx,mode){
   S.priceResearch={status:"idle",results:[],query:""};
   render();setTimeout(()=>document.getElementById("kf-brand")?.focus(),60);
 }
-function closeKF(){S.kfOpen=false;S.kfIdx=-1;S.err="";S.kfUploads=[];S.priceResearch={status:"idle",results:[],query:""};render();}
+function closeKF(){S.kfOpen=false;S.kfIdx=-1;S.kfPostId=null;S.err="";S.kfUploads=[];S.priceResearch={status:"idle",results:[],query:""};render();}
 function syncKF(){
   const g=id=>document.getElementById(id);const f=S.kf;
   ["brand","model","steel","price","tradeValue","lockupNotes","notes","addonPrice","issuesOther","accessoriesOther"].forEach(k=>{const e=g("kf-"+k);if(e)f[k]=e.value});
@@ -2696,12 +2699,16 @@ function saveKF(){
     }
     if(S.kfIdx>=0)S.inventory[S.kfIdx]=JSON.parse(JSON.stringify(f));
     else S.inventory.push(JSON.parse(JSON.stringify(f)));
-    S.kfOpen=false;S.kfIdx=-1;S.kfUploads=[];S.priceResearch={status:"idle",results:[],query:""};saveInv();render();
+    S.kfOpen=false;S.kfIdx=-1;S.kfPostId=null;S.kfUploads=[];S.priceResearch={status:"idle",results:[],query:""};saveInv();render();
+  }else if(S.kfMode==="post"){
+    const _pp=S.posts.find(p=>p.id===S.kfPostId);
+    if(_pp&&S.kfIdx>=0){_pp.knives[S.kfIdx]=JSON.parse(JSON.stringify(f));_pp.postText=buildPost(_pp);}
+    S.kfOpen=false;S.kfIdx=-1;S.kfPostId=null;S.kfUploads=[];S.priceResearch={status:"idle",results:[],query:""};save();render();
   }else{
     if(S.kfIdx>=0)S.draft.knives[S.kfIdx]=JSON.parse(JSON.stringify(f));
     else S.draft.knives.push(JSON.parse(JSON.stringify(f)));
     S.draft.postType=autoPostType(S.draft.knives);
-    S.kfOpen=false;S.kfIdx=-1;S.kfUploads=[];S.priceResearch={status:"idle",results:[],query:""};render();
+    S.kfOpen=false;S.kfIdx=-1;S.kfPostId=null;S.kfUploads=[];S.priceResearch={status:"idle",results:[],query:""};render();
   }
 }
 function removeKnife(i){
@@ -3236,7 +3243,7 @@ function startPriceDropRepost(pid){
   d.noShip=[...(p.noShip||SETTINGS.noShip)];d.noShipOther=p.noShipOther||"";
   d.notes=p.notes||"";
   d.knives=p.knives.filter(k=>!k.sold).map(k=>({...JSON.parse(JSON.stringify(k)),prevPrice:k.price}));
-  S.draft=d;S.view="compose";S.kfOpen=false;S.kfIdx=-1;S.kf=EK();S.kfMode="draft";S.adv=false;S.err="";S.lockerPicker=false;S.gearPicker=false;S.uploadFiles=[];render();
+  S.draft=d;S.view="compose";S.kfOpen=false;S.kfIdx=-1;S.kfPostId=null;S.kf=EK();S.kfMode="draft";S.adv=false;S.err="";S.lockerPicker=false;S.gearPicker=false;S.uploadFiles=[];render();
 }
 function startSamePriceRepost(pid){
   const p=S.posts.find(x=>x.id===pid);if(!p)return;
@@ -3246,7 +3253,7 @@ function startSamePriceRepost(pid){
   d.noShip=[...(p.noShip||SETTINGS.noShip)];d.noShipOther=p.noShipOther||"";
   d.notes=p.notes||"";
   d.knives=p.knives.filter(k=>!k.sold).map(k=>JSON.parse(JSON.stringify(k)));
-  S.draft=d;S.view="compose";S.kfOpen=false;S.kfIdx=-1;S.kf=EK();S.kfMode="draft";S.adv=false;S.err="";S.lockerPicker=false;S.gearPicker=false;S.uploadFiles=[];render();
+  S.draft=d;S.view="compose";S.kfOpen=false;S.kfIdx=-1;S.kfPostId=null;S.kf=EK();S.kfMode="draft";S.adv=false;S.err="";S.lockerPicker=false;S.gearPicker=false;S.uploadFiles=[];render();
 }
 async function openRedditPost(pid){
   const p=S.posts.find(x=>x.id===pid);if(!p)return;
@@ -4637,7 +4644,7 @@ function renderList(){
         const kDot=k.soldElsewhere?`<span class="sdot sdot-r"></span>`:k.withdrawn?`<span class="sdot sdot-x"></span>`:k.sold?`<span class="sdot sdot-r"></span>`:k.pending?`<span class="sdot sdot-y"></span>`:`<span class="sdot sdot-g"></span>`;
         const kRowClass=`krow${(k.sold||k.soldElsewhere)?" sold":k.withdrawn?" withdrawn-row":k.pending?" pending-row":""}${isMoving?" moving":""}`;
         const addrHtml="";
-        return`<div class="${kRowClass}"><div class="krow-top"><div class="krow-info"><div class="krow-name${(k.sold||k.soldElsewhere||k.withdrawn)?" s":""}">${kDot} ${esc(k.brand)} ${esc(k.model)}${k.pending&&!k.sold&&!k.soldElsewhere&&!k.withdrawn?` <span class="pending-tag">PENDING</span>`:""}${kPhotoCount?` <span class="photo-tag">${icon('camera',11)} ${kPhotoCount}</span>`:""}</div><div class="krow-meta">${esc(k.steel||"N/A")} · ${esc(k.bladeCondition)}${(k.sold||k.soldElsewhere)&&k.soldAt?" · "+(k.soldElsewhere?"Elsewhere":"Sold")+" "+fmtD(k.soldAt):""}${k.withdrawn?" · Withdrawn":""}${soldToMeta}</div></div><span class="krow-price${(k.sold||k.soldElsewhere||k.withdrawn)?" s":""}">${knifePrice(k)}</span></div><div class="krow-acts">${k.soldElsewhere?`<span class="elsewhere-chip">Sold Elsewhere</span>${!k.shippedAt&&!k.confirmedAt?`<button class="btn btn-sm btn-sec" onclick="markSold('${p.id}',${i})">Relist</button>`:``}`:k.withdrawn?`<span class="withdrawn-chip">Withdrawn</span>${!k.shippedAt&&!k.confirmedAt?`<button class="btn btn-sm btn-sec" onclick="readdKnife('${p.id}',${i})">Re-add</button>`:""}`:k.sold?`<span class="sold-chip">Sold</span><button class="btn btn-sm${ccCopied?" btn-gn":" btn-pu"}" onclick="copyConfirmComment('${p.id}',${i})">${ccCopied?"Copied!":"Confirm Comment"}</button><button class="btn btn-sm${addrReqCopied?" btn-gn":" btn-sec"}" onclick="copyAddressRequest('${p.id}',${i})" title="Copy payment message">${addrReqCopied?"Copied!":"Payment Message"}</button>${!k.trackingNumber&&!isTrackingFlow?`<button class="btn btn-sec btn-sm" onclick="startTracking('${p.id}',${i})">${icon('package',12)} Add Tracking</button>`:``}${!k.shippedAt&&!k.confirmedAt?`<button class="btn btn-sm btn-sec" onclick="markSold('${p.id}',${i})">Relist</button>`:``}`:`<button class="btn btn-sm${dibsCopied?" btn-gn":" btn-pu"}" onclick="copyDibsMessage('${p.id}',${i})" title="Copy payment confirmation message">${dibsCopied?"Copied!":`${icon('mail',13)} Payment Info`}</button><button class="btn btn-sm${k.pending?" btn-am":" btn-sec"}" onclick="markPending('${p.id}',${i})">${k.pending?`<span class="sdot sdot-y"></span> Pending`:`<span class="sdot sdot-y"></span> Pending?`}</button><button class="btn btn-sm btn-gn" onclick="markSold('${p.id}',${i})"><span class="sdot sdot-g"></span>→<span class="sdot sdot-r"></span> Sold</button><button class="btn btn-sm btn-rd" onclick="markSoldElsewhere('${p.id}',${i})" title="Sold on eBay, FB Marketplace, etc.">Sold Elsewhere</button><button class="btn btn-sm btn-sec" onclick="markWithdrawn('${p.id}',${i})" title="Remove from listing, return to The Roll">Withdraw</button>`}${!k.sold&&!k.soldElsewhere&&!k.withdrawn&&s.posts.length>1?`<button class="btn btn-sm btn-pu" onclick="startMove('${p.id}',${i})">Transfer</button>`:""}</div>${addrHtml}${trkHtml}${sfHtml}${picker}</div>`;
+        return`<div class="${kRowClass}"><div class="krow-top"><div class="krow-info"><div class="krow-name${(k.sold||k.soldElsewhere||k.withdrawn)?" s":""}">${kDot} ${esc(k.brand)} ${esc(k.model)}${k.pending&&!k.sold&&!k.soldElsewhere&&!k.withdrawn?` <span class="pending-tag">PENDING</span>`:""}${kPhotoCount?` <span class="photo-tag">${icon('camera',11)} ${kPhotoCount}</span>`:""}</div><div class="krow-meta">${esc(k.steel||"N/A")} · ${esc(k.bladeCondition)}${(k.sold||k.soldElsewhere)&&k.soldAt?" · "+(k.soldElsewhere?"Elsewhere":"Sold")+" "+fmtD(k.soldAt):""}${k.withdrawn?" · Withdrawn":""}${soldToMeta}</div></div><span class="krow-price${(k.sold||k.soldElsewhere||k.withdrawn)?" s":""}">${knifePrice(k)}</span></div><div class="krow-acts">${k.soldElsewhere?`<span class="elsewhere-chip">Sold Elsewhere</span>${!k.shippedAt&&!k.confirmedAt?`<button class="btn btn-sm btn-sec" onclick="markSold('${p.id}',${i})">Relist</button>`:``}`:k.withdrawn?`<span class="withdrawn-chip">Withdrawn</span>${!k.shippedAt&&!k.confirmedAt?`<button class="btn btn-sm btn-sec" onclick="readdKnife('${p.id}',${i})">Re-add</button>`:""}`:k.sold?`<span class="sold-chip">Sold</span><button class="btn btn-sm${ccCopied?" btn-gn":" btn-pu"}" onclick="copyConfirmComment('${p.id}',${i})">${ccCopied?"Copied!":"Confirm Comment"}</button><button class="btn btn-sm${addrReqCopied?" btn-gn":" btn-sec"}" onclick="copyAddressRequest('${p.id}',${i})" title="Copy payment message">${addrReqCopied?"Copied!":"Payment Message"}</button>${!k.trackingNumber&&!isTrackingFlow?`<button class="btn btn-sec btn-sm" onclick="startTracking('${p.id}',${i})">${icon('package',12)} Add Tracking</button>`:``}${!k.shippedAt&&!k.confirmedAt?`<button class="btn btn-sm btn-sec" onclick="markSold('${p.id}',${i})">Relist</button>`:``}`:`<button class="btn btn-sm${dibsCopied?" btn-gn":" btn-pu"}" onclick="copyDibsMessage('${p.id}',${i})" title="Copy payment confirmation message">${dibsCopied?"Copied!":`${icon('mail',13)} Payment Info`}</button><button class="btn btn-sm${k.pending?" btn-am":" btn-sec"}" onclick="markPending('${p.id}',${i})">${k.pending?`<span class="sdot sdot-y"></span> Pending`:`<span class="sdot sdot-y"></span> Pending?`}</button><button class="btn btn-sm btn-gn" onclick="markSold('${p.id}',${i})"><span class="sdot sdot-g"></span>→<span class="sdot sdot-r"></span> Sold</button><button class="btn btn-sm btn-rd" onclick="markSoldElsewhere('${p.id}',${i})" title="Sold on eBay, FB Marketplace, etc.">Sold Elsewhere</button><button class="btn btn-sm btn-sec" onclick="markWithdrawn('${p.id}',${i})" title="Remove from listing, return to The Roll">Withdraw</button><button class="btn btn-sm btn-sec" onclick="openKF(${i},'post','${p.id}')" title="Edit knife details, photos, price">Edit</button>`}${!k.sold&&!k.soldElsewhere&&!k.withdrawn&&s.posts.length>1?`<button class="btn btn-sm btn-pu" onclick="startMove('${p.id}',${i})">Transfer</button>`:""}</div>${addrHtml}${trkHtml}${sfHtml}${picker}</div>`;
       }).join("");
       const da2=daysAgo(p.createdAt);
       const repostSection=pA>0?`<div class="repost-track">
@@ -4676,10 +4683,11 @@ function renderList(){
         }).join("");
         return`<div class="krows-hdr" style="margin-top:10px">Gear &amp; Extras</div>${gearItemRows}`;
       })():"";
+      const postKfForm=s.kfOpen&&s.kfMode==="post"&&s.kfPostId===p.id?kfFormHtml():"";
       const titleVal=esc(getPostTitle(p));
       const ttlCopied=s.copied==="ttl_"+p.id;
       const titleRow=`<div class="title-row"><input class="title-field" value="${titleVal}" oninput="updateTitle('${p.id}',this.value)" placeholder="Post title"/><button class="btn btn-sm${ttlCopied?" btn-gn":" btn-sec"}" onclick="copyTitle('${p.id}')">${ttlCopied?"✓ Copied!":"Copy Title"}</button></div>`;
-      body=`<div class="pc-body"><div class="pc-meta"><span class="pmeta"${charColor?` style="color:${charColor};font-weight:600"`:""}>${charLen.toLocaleString()} chars${charLen>38000?` ${icon('alert-triangle',11,'var(--redt)')}`:charLen>30000?` ${icon('zap',11,'var(--oranget)')}`:""}</span><span class="pmeta"> · ${fmtD(p.createdAt)}</span><span class="pmeta${hasPhotos?" ok":""}">${hasPhotos?" · "+p.photos.length+" photo"+(p.photos.length>1?"s":"")+" linked":" · No timestamp"}</span><span class="pmeta"> · ${TMPL[Math.min(p.variant||0,TMPL.length-1)]}</span></div>${titleRow}${postBox}<div class="pc-acts"><button class="btn btn-pri btn-sm" onclick="openPreflight('${p.id}')"${s.copied===p.id?` style="background:var(--green)"`:""} title="${!hasPhotos?"Add your timestamp in the pre-flight check":"Copy post text"}">${s.copied===p.id?"✓ Copied!":"Copy Post"}</button><button class="btn btn-gn btn-sm" onclick="openPreflight('${p.id}')" title="Post to Reddit">Post to Reddit &#8599;</button><button class="btn btn-sec btn-sm" onclick="cycleTmpl('${p.id}')">Switch: ${TMPL[(Math.min(p.variant||0,TMPL.length-1)+1)%TMPL.length]}</button>${hasPhotos?`<button class="btn btn-sec btn-sm" onclick="toggleMdPreview('${p.id}')">${isRaw?`${icon('eye',13)} Preview`:"&lt;/&gt; Raw"}</button>`:""}${(()=>{const hasSold=p.knives.some(k=>k.sold||k.soldElsewhere)||(p.items||[]).some(it=>it.sold);const scCopied=s.copied==="sc_"+p.id;const scPlainCopied=s.copied==="sc_plain_"+p.id;return hasSold?`<button class="btn btn-sm${scCopied?" btn-gn":" btn-sec"}" onclick="copySoldComment('${p.id}')" title="Copy sold comment with markdown formatting">${scCopied?"✓ Copied!":"Sold Comment MD"}</button><button class="btn btn-sm${scPlainCopied?" btn-gn":" btn-sec"}" onclick="copySoldComment('${p.id}',true)" title="Copy sold comment as plain text">${scPlainCopied?"✓ Copied!":"Sold Comment Plain"}</button>`:"";})()}<button class="btn btn-rd btn-sm" onclick="deletePost('${p.id}')">Delete</button></div><div class="rule-tags">${checkPostRules(p.id).map(c=>`<span class="rule-tag ${c.ok?'ok':'fail'}">${c.ok?"✓":"✗"} ${esc(c.msg)}</span>`).join("")}</div>${repostSection}<div class="krows-hdr">Knives in this post</div>${krows}${gearRows}</div>`;
+      body=`<div class="pc-body"><div class="pc-meta"><span class="pmeta"${charColor?` style="color:${charColor};font-weight:600"`:""}>${charLen.toLocaleString()} chars${charLen>38000?` ${icon('alert-triangle',11,'var(--redt)')}`:charLen>30000?` ${icon('zap',11,'var(--oranget)')}`:""}</span><span class="pmeta"> · ${fmtD(p.createdAt)}</span><span class="pmeta${hasPhotos?" ok":""}">${hasPhotos?" · "+p.photos.length+" photo"+(p.photos.length>1?"s":"")+" linked":" · No timestamp"}</span><span class="pmeta"> · ${TMPL[Math.min(p.variant||0,TMPL.length-1)]}</span></div>${titleRow}${postBox}<div class="pc-acts"><button class="btn btn-pri btn-sm" onclick="openPreflight('${p.id}')"${s.copied===p.id?` style="background:var(--green)"`:""} title="${!hasPhotos?"Add your timestamp in the pre-flight check":"Copy post text"}">${s.copied===p.id?"✓ Copied!":"Copy Post"}</button><button class="btn btn-gn btn-sm" onclick="openPreflight('${p.id}')" title="Post to Reddit">Post to Reddit &#8599;</button><button class="btn btn-sec btn-sm" onclick="cycleTmpl('${p.id}')">Switch: ${TMPL[(Math.min(p.variant||0,TMPL.length-1)+1)%TMPL.length]}</button>${hasPhotos?`<button class="btn btn-sec btn-sm" onclick="toggleMdPreview('${p.id}')">${isRaw?`${icon('eye',13)} Preview`:"&lt;/&gt; Raw"}</button>`:""}${(()=>{const hasSold=p.knives.some(k=>k.sold||k.soldElsewhere)||(p.items||[]).some(it=>it.sold);const scCopied=s.copied==="sc_"+p.id;const scPlainCopied=s.copied==="sc_plain_"+p.id;return hasSold?`<button class="btn btn-sm${scCopied?" btn-gn":" btn-sec"}" onclick="copySoldComment('${p.id}')" title="Copy sold comment with markdown formatting">${scCopied?"✓ Copied!":"Sold Comment MD"}</button><button class="btn btn-sm${scPlainCopied?" btn-gn":" btn-sec"}" onclick="copySoldComment('${p.id}',true)" title="Copy sold comment as plain text">${scPlainCopied?"✓ Copied!":"Sold Comment Plain"}</button>`:"";})()}<button class="btn btn-rd btn-sm" onclick="deletePost('${p.id}')">Delete</button></div><div class="rule-tags">${checkPostRules(p.id).map(c=>`<span class="rule-tag ${c.ok?'ok':'fail'}">${c.ok?"✓":"✗"} ${esc(c.msg)}</span>`).join("")}</div>${repostSection}<div class="krows-hdr">Knives in this post</div>${postKfForm}${krows}${gearRows}</div>`;
     }
     const da=daysAgo(p.createdAt);
     const ageBadge=!allSold?(da>=7?`<span class="repost-day-badge rdy">Repost ready</span>`:`<span class="repost-day-badge wait">${da}d old</span>`):"";
