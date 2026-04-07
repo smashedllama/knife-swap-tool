@@ -2444,10 +2444,10 @@ function buildPost(post,v){
 }
 
 // ─── UPLOAD ───────────────────────────────────────────────────
-// Compress images client-side before upload: max 1600px, JPEG 82%
-// Skips non-image files and files already under 300 KB
+// Compress images client-side before upload: max 1920px, JPEG 92%
+// Skips non-image files and files already under 200 KB
 function compressImage(file){
-  if(!file.type.startsWith("image/")||file.size<300000)return Promise.resolve(file);
+  if(!file.type.startsWith("image/")||file.size<200000)return Promise.resolve(file);
   return new Promise(resolve=>{
     const img=new Image(),url=URL.createObjectURL(file);
     img.onload=()=>{
@@ -2456,7 +2456,7 @@ function compressImage(file){
       if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX;}else{w=Math.round(w*MAX/h);h=MAX;}}
       const c=document.createElement("canvas");c.width=w;c.height=h;
       c.getContext("2d").drawImage(img,0,0,w,h);
-      c.toBlob(b=>resolve(b||file),"image/jpeg",0.87);
+      c.toBlob(b=>resolve(b||file),"image/jpeg",0.92);
     };
     img.onerror=()=>{URL.revokeObjectURL(url);resolve(file);};
     img.src=url;
@@ -2473,7 +2473,7 @@ function activePhotoService(){
   return null;
 }
 // Compress a video file in-browser using canvas capture + MediaRecorder.
-// Scales to max 1280px wide, targets 2.5Mbps — turns 88MB 4K → ~10MB for a 30s clip.
+// Scales to max 1280px wide, targets 4Mbps — turns 88MB 4K → ~15MB for a 30s clip.
 // onProgress(0-1) is called each frame so the UI can show a live bar.
 async function compressVideoForUpload(file,onProgress){
   return new Promise((resolve,reject)=>{
@@ -2500,7 +2500,7 @@ async function compressVideoForUpload(file,onProgress){
                  MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')?'video/webm;codecs=vp8,opus':'video/webm';
       const chunks=[];
       let rec;
-      try{rec=new MediaRecorder(combined,{mimeType:mime,videoBitsPerSecond:2_500_000,audioBitsPerSecond:128_000});}
+      try{rec=new MediaRecorder(combined,{mimeType:mime,videoBitsPerSecond:4_000_000,audioBitsPerSecond:128_000});}
       catch(e){URL.revokeObjectURL(objUrl);reject(new Error('Video compression not supported in this browser. Try a shorter/smaller video or paste an Imgur link instead.'));return;}
       rec.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
       rec.onstop=()=>{URL.revokeObjectURL(objUrl);resolve(new Blob(chunks,{type:'video/webm'}));};
@@ -4770,7 +4770,7 @@ function renderKnifeDetailModal(){
   if(!k)return"";
   const d=knifeDetails(k);
   const photos=(k.photos||[]).filter(Boolean);
-  const photoHtml=photos.length?`<div style="display:flex;gap:8px;overflow-x:auto;padding:14px 20px 2px;flex-shrink:0;scrollbar-width:none;-webkit-overflow-scrolling:touch">${photos.map(url=>`<img src="${esc(cdnImg(url,800,0,'limit'))}" data-orig="${esc(url)}" style="height:130px;width:auto;border-radius:10px;object-fit:cover;flex-shrink:0;cursor:pointer;border:.5px solid var(--b2)" onclick="window.open('${esc(url)}','_blank')" loading="lazy" referrerpolicy="no-referrer" onerror="imgFallback(this)"/>`).join("")}</div>`:"";
+  const photoHtml=photos.length?`<div style="display:flex;gap:8px;overflow-x:auto;padding:14px 20px 2px;flex-shrink:0;scrollbar-width:none;-webkit-overflow-scrolling:touch">${photos.map(url=>`<img src="${esc(cdnImg(url,1400,0,'limit'))}" data-orig="${esc(url)}" style="height:130px;width:auto;border-radius:10px;object-fit:cover;flex-shrink:0;cursor:pointer;border:.5px solid var(--b2)" onclick="window.open('${esc(url)}','_blank')" loading="lazy" referrerpolicy="no-referrer" onerror="imgFallback(this)"/>`).join("")}</div>`:"";
   const row=(label,val)=>val?`<div style="display:flex;gap:8px;padding:7px 0;border-bottom:.5px solid var(--b2)"><div style="font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;min-width:88px;flex-shrink:0;padding-top:1px">${label}</div><div style="font-size:13px;color:var(--t1);flex:1;line-height:1.5">${val}</div></div>`:"";
   const condLine=[d.condition,d.steel].filter(Boolean).join(" · ");
   const useLine=[d.carried==="Yes"?"Carried":"",d.cut==="Yes"?"Used to cut":""].filter(Boolean).join(", ");
@@ -5074,7 +5074,7 @@ function renderRoll(){
     const _fp=(k.photos||[]).find(Boolean);
     const _cdnFp=(k.photos||[]).find(u=>u&&u.includes('res.cloudinary.com'));
     const _extFp=k.imgurLink||null;
-    const _covImg=_cdnFp?`<div style="border-radius:10px;overflow:hidden;background:var(--bg);margin-bottom:8px;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative" onclick="openKnifeDetail(null,null,'${k.id}')"><img src="${esc(cdnImg(_cdnFp,500,375,'limit'))}" style="width:100%;height:100%;object-fit:contain;display:block" loading="lazy"/>${lkPc>1?`<span style="position:absolute;bottom:7px;right:8px;background:rgba(0,0,0,.52);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);color:#fff;font-size:10px;font-weight:700;padding:2px 7px 2px 6px;border-radius:9px;line-height:1.4;display:flex;align-items:center;gap:3px">${icon('camera',10,'#fff')} ${lkPc}</span>`:""}</div>`:"";
+    const _covImg=_cdnFp?`<div style="border-radius:10px;overflow:hidden;background:var(--bg);margin-bottom:8px;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative" onclick="openKnifeDetail(null,null,'${k.id}')"><img src="${esc(cdnImg(_cdnFp,900,675,'limit'))}" style="width:100%;height:100%;object-fit:contain;display:block" loading="lazy"/>${lkPc>1?`<span style="position:absolute;bottom:7px;right:8px;background:rgba(0,0,0,.52);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);color:#fff;font-size:10px;font-weight:700;padding:2px 7px 2px 6px;border-radius:9px;line-height:1.4;display:flex;align-items:center;gap:3px">${icon('camera',10,'#fff')} ${lkPc}</span>`:""}</div>`:"";
     const _extLink=_extFp?`<a href="${esc(_extFp)}" target="_blank" rel="noopener" style="display:block;font-size:11px;font-weight:600;color:var(--blue);margin-bottom:8px;text-decoration:none">${icon('external-link',11,'var(--blue)')} ${_cdnFp?"Imgur Link":"View photo"} ↗</a>`:"";
     const _cov=_cdnFp?_covImg+_extLink:_extFp?`<div style="border-radius:10px;background:var(--surf);margin-bottom:8px;padding:12px;display:flex;align-items:center;justify-content:center">${_extLink}</div>`:"";
     const _pickIssues=k.status!=="sold"?knifePickerIssues(k):[];
