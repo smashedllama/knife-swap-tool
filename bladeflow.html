@@ -2332,7 +2332,7 @@ function buildPost(post,v){
       const inlineAddon=k.addonEnabled&&!post.groupAddons&&k.addonPrice?` | Add-on: $${k.addonPrice}`:"";
       const pl=knifePrice(k)+inlineAddon;
       const kphotos=(k.photos||[]).filter(Boolean);
-      const nameLinked=kphotos.length?`[${k.brand} ${k.model}](${buildPostGalleryUrl(post,i)||galleryUrl(k)||kphotos[0]})`:(`${k.brand} ${k.model}`);
+      const nameLinked=(kphotos.length||k.imgurLink)?`[${k.brand} ${k.model}](${buildPostGalleryUrl(post,i)||galleryUrl(k)||kphotos[0]})`:(`${k.brand} ${k.model}`);
       const statusLabel=k.soldElsewhere?"[SOLD ELSEWHERE]":k.withdrawn?"[WITHDRAWN]":k.sold?"[SOLD]":k.pending?"[PENDING]":"";
       const soldLabel=k.soldElsewhere?(k.soldPrice?`[SOLD ELSEWHERE @ $${k.soldPrice}]`:"[SOLD ELSEWHERE]"):k.withdrawn?"[WITHDRAWN]":k.sold?(k.soldPrice?`[SOLD @ $${k.soldPrice}]`:"[SOLD]"):"";
       const num=i+1;
@@ -2374,7 +2374,7 @@ function buildPost(post,v){
       const iss=k.issues.filter(x=>x!=="None").map(x=>x==="Other"&&k.issuesOther?k.issuesOther:x).join(", ")||"None";
       const ac=k.accessories.filter(x=>x!=="None").map(x=>x==="Other"&&k.accessoriesOther?k.accessoriesOther:x).join(", ")||"None";
       const kphotos=(k.photos||[]).filter(Boolean);
-      const nameLinked=kphotos.length?`[${k.brand} ${k.model}](${buildPostGalleryUrl(post,i)||galleryUrl(k)||kphotos[0]})`:(`${k.brand} ${k.model}`);
+      const nameLinked=(kphotos.length||k.imgurLink)?`[${k.brand} ${k.model}](${buildPostGalleryUrl(post,i)||galleryUrl(k)||kphotos[0]})`:(`${k.brand} ${k.model}`);
       const statusLabel=k.soldElsewhere?(k.soldPrice?` [SOLD ELSEWHERE @ $${k.soldPrice}]`:" [SOLD ELSEWHERE]"):k.withdrawn?" [WITHDRAWN]":k.sold?(k.soldPrice?` [SOLD @ $${k.soldPrice}]`:" [SOLD]"):k.pending?" [PENDING]":"";
       const inlineAddon=k.addonEnabled&&!post.groupAddons&&k.addonPrice?` | Add-on: $${k.addonPrice}`:"";
       let block=`**${i+1}. ${nameLinked}**${statusLabel} | ${knifePrice(k)}${inlineAddon}`;
@@ -2414,7 +2414,7 @@ function buildPost(post,v){
     const rows=mainKnives3.map((k)=>{
       const i=post.knives.indexOf(k);
       const kphotos3=(k.photos||[]).filter(Boolean);
-      const gurl3=kphotos3.length?(buildPostGalleryUrl(post,i)||galleryUrl(k)||kphotos3[0]):null;
+      const gurl3=(kphotos3.length||k.imgurLink)?(buildPostGalleryUrl(post,i)||galleryUrl(k)||kphotos3[0]):null;
       const soldTag3=k.soldElsewhere?(k.soldPrice?` \\[SOLD ELSEWHERE @ $${k.soldPrice}\\]`:" \\[SOLD ELSEWHERE\\]"):k.withdrawn?" \\[WITHDRAWN\\]":k.sold?(k.soldPrice?` \\[SOLD @ $${k.soldPrice}\\]`:" \\[SOLD\\]"):k.pending?" \\[PENDING\\]":"";
       const nameCell=gurl3
         ?`[${k.brand} ${k.model}](${gurl3})${soldTag3}`
@@ -2738,7 +2738,8 @@ function knifePickerIssues(k){
   const photos=(k.photos||[]).filter(Boolean);
   const kpVid=photos.filter(u=>isCdnVideo(u));
   const kpImg=photos.filter(u=>u.includes("res.cloudinary.com")&&!isCdnVideo(u));
-  const kpOk=!!(k.imgurLink)||kpVid.length>=1||kpImg.length>=2;
+  const kpExt=photos.filter(u=>!u.includes("res.cloudinary.com"));
+  const kpOk=!!(k.imgurLink)||kpVid.length>=1||kpImg.length>=2||kpExt.length>=1;
   if(!kpOk)issues.push(kpImg.length===1?"needs a 2nd Cloudinary photo":"needs photos (2 Cloudinary, 1 video, or Imgur gallery link)");
   return issues;
 }
@@ -4431,7 +4432,8 @@ function kfFormHtml(){
         const _all=(f.photos||[]).filter(Boolean);
         const _vid=_all.filter(u=>isCdnVideo(u));
         const _img=_all.filter(u=>u.includes('res.cloudinary.com')&&!isCdnVideo(u));
-        const _ok=!!(f.imgurLink)||_vid.length>=1||_img.length>=2;
+        const _ext=_all.filter(u=>!u.includes('res.cloudinary.com'));
+        const _ok=!!(f.imgurLink)||_vid.length>=1||_img.length>=2||_ext.length>=1;
         const row=(check,text,sub)=>`<div style="display:flex;align-items:flex-start;gap:7px;padding:5px 0;border-bottom:.5px solid var(--b2)"><span style="font-size:13px;flex-shrink:0;margin-top:1px">${check}</span><div><div style="font-size:12px;font-weight:500;color:var(--t1)">${text}</div>${sub?`<div style="font-size:10.5px;color:var(--t3);margin-top:1px">${sub}</div>`:''}</div></div>`;
         const opt1done=_img.length>=2,opt2done=_vid.length>=1,opt3done=!!(f.imgurLink);
         return`<div style="background:${_ok?'var(--greenbg)':'var(--orangebg)'};border:.5px solid ${_ok?'var(--greent)':'var(--oranget)'};border-radius:9px;padding:10px 12px;margin-bottom:10px">
@@ -5498,7 +5500,8 @@ function kfChecklist(f){
   const _kpAll=(f.photos||[]).filter(Boolean);
   const _kpVid=_kpAll.filter(u=>isCdnVideo(u));
   const _kpImg=_kpAll.filter(u=>u.includes("res.cloudinary.com")&&!isCdnVideo(u));
-  const _kpOk=!!(f.imgurLink)||_kpVid.length>=1||_kpImg.length>=2;
+  const _kpExt=_kpAll.filter(u=>!u.includes("res.cloudinary.com"));
+  const _kpOk=!!(f.imgurLink)||_kpVid.length>=1||_kpImg.length>=2||_kpExt.length>=1;
   const _kpLabel=!_kpOk?(_kpImg.length===1?"Need one more Cloudinary photo":"Photos required: 2 Cloudinary uploads, 1 video, or an Imgur gallery link"):"Photos";
   items.push({ok:_kpOk,label:_kpLabel});
   const allOk=items.every(i=>i.ok);
@@ -5533,7 +5536,8 @@ function composeChecklist(d){
     const kphotos=(k.photos||[]).filter(Boolean);
     const kpVid=kphotos.filter(u=>isCdnVideo(u));
     const kpImg=kphotos.filter(u=>u.includes("res.cloudinary.com")&&!isCdnVideo(u));
-    const kpOk=!!(k.imgurLink)||kpVid.length>=1||kpImg.length>=2;
+    const kpExt=kphotos.filter(u=>!u.includes("res.cloudinary.com"));
+    const kpOk=!!(k.imgurLink)||kpVid.length>=1||kpImg.length>=2||kpExt.length>=1;
     if(!kpOk) knifeProblems.push(kpImg.length===1?`${n}: needs a second Cloudinary photo`:`${n}: needs photos (2 Cloudinary, 1 video, or Imgur gallery link)`);
   });
   const gearProblems=[];
