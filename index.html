@@ -2535,8 +2535,10 @@ async function uploadToHost(file){
     const isVideo=file.type.startsWith("video/");
     let body,endpoint;
     if(isVideo){
-      // Upload video directly — Cloudinary transcodes on delivery via URL params
+      // Upload raw video — request eager server-side transcode to 1080p H.264 at upload time
+      // so the pre-generated version is ready immediately (no choppy on-demand transcoding for buyers)
       const fd=new FormData();fd.append("file",file);fd.append("upload_preset",preset);
+      fd.append("eager","w_1920,h_1080,c_limit,q_auto,vc_h264,f_mp4");
       body=fd;endpoint=`https://api.cloudinary.com/v1_1/${encodeURIComponent(cloud)}/video/upload`;
     } else {
       const compressed=await compressImage(file);
@@ -2548,6 +2550,9 @@ async function uploadToHost(file){
     const data=await res.json();
     if(data.error)throw new Error(data.error.message||"Cloudinary upload failed");
     if(data.bytes){try{SETTINGS.cdnBytes=(SETTINGS.cdnBytes||0)+data.bytes;SETTINGS.cdnCount=(SETTINGS.cdnCount||0)+1;window.storage.set("ks_settings",JSON.stringify(SETTINGS));if(currentUser&&_sb)_sbSaveSettings();}catch(e){}}
+    // For videos, prefer the eager pre-generated 1080p URL — it's already encoded,
+    // plays immediately without on-demand transcoding, and is bandwidth-friendly
+    if(isVideo&&data.eager&&data.eager[0]&&data.eager[0].secure_url)return data.eager[0].secure_url;
     return data.secure_url;
   }
   throw new Error("Cloudinary is not configured. Set up your Cloud Name and Upload Preset in Settings, or paste a direct image URL (e.g. i.imgur.com/xxx.jpg) instead.");
