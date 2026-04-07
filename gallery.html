@@ -503,7 +503,7 @@ function gico(name, size=16) {
 function cdnImg(url,w,h,fit){if(!url||!url.includes("res.cloudinary.com"))return url;const t=`w_${w}${h?",h_"+h:""},c_${fit||"limit"},q_auto,f_auto`;return url.replace("/upload/",`/upload/${t}/`)}
 function isCdnVideo(url){return url&&url.includes("res.cloudinary.com")&&(url.includes("/video/")||/\.(mp4|mov|avi|webm|mkv)$/i.test(url));}
 function cdnVideoThumb(url,w,h){if(!url||!url.includes("res.cloudinary.com"))return null;const t=`so_0,w_${w||80},h_${h||55},c_fill,f_jpg`;return url.replace("/upload/",`/upload/${t}/`).replace(/\.[^.]+$/,".jpg");}
-function cdnVideoMp4(url){if(!url||!url.includes("res.cloudinary.com"))return null;const t=`vc_h264,q_auto:good,f_mp4`;return url.replace("/upload/",`/upload/${t}/`).replace(/\.[^.]+$/,".mp4");}
+function cdnVideoMp4(url){if(!url||!url.includes("res.cloudinary.com"))return null;const t=`vc_h264,q_auto,f_mp4`;return url.replace("/upload/",`/upload/${t}/`).replace(/\.[^.]+$/,".mp4");}
 const _galVidWasPlaying={};
 function galVidPlayPause(id){const v=document.getElementById(id);if(!v)return;v.paused?v.play():v.pause();}
 function galVidSkipBack(id){const v=document.getElementById(id);if(!v)return;v.currentTime=Math.max(0,v.currentTime-10);}
@@ -839,7 +839,7 @@ function loadSection(idx, animate) {
       if (i === curSlide) document.getElementById('spinner').style.display = 'none';
     } else {
       const img = document.createElement('img');
-      const optimized = cdnImg(url, 900, 0, 'limit');
+      const optimized = cdnImg(url, 2400, 0, 'limit');
       img.dataset.src = optimized;
       if (i === 0) img.src = optimized;
       img.alt = `${s.label} photo ${i + 1}`;
