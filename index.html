@@ -995,7 +995,7 @@ function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").
 function stripNL(v){return String(v||"").replace(/[\r\n\t]+/g," ");}
 function imgFallback(el){const url=el.getAttribute('data-orig')||el.src;const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener';a.style.cssText='display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:var(--blue);font-size:11px;font-weight:600;text-decoration:none;gap:4px;padding:8px;box-sizing:border-box';a.textContent='View photo ↗';el.replaceWith(a);}
 function cdnImg(url,w,h,fit){if(!url||!url.includes("res.cloudinary.com"))return url;const t=`w_${w}${h?",h_"+h:""},c_${fit||"limit"},q_auto,f_auto`;return url.replace("/upload/",`/upload/${t}/`)}
-function cdnVideo(url,w){if(!url||!url.includes("res.cloudinary.com"))return url;const t=`w_${w||1280},c_limit,q_auto,vc_h264,f_mp4`;return url.replace("/upload/",`/upload/${t}/`).replace(/\.[^.]+$/,".mp4");}
+function cdnVideo(url,w){if(!url||!url.includes("res.cloudinary.com"))return url;const t=`w_${w||1280},c_limit,q_auto:best,vc_h264,f_mp4`;return url.replace("/upload/",`/upload/${t}/`).replace(/\.[^.]+$/,".mp4");}
 function isCdnVideo(url){return url&&url.includes("res.cloudinary.com")&&(url.includes("/video/")||/\.(mp4|mov|avi|webm|mkv)$/i.test(url));}
 function cdnVideoThumb(url,w,h){if(!url||!url.includes("res.cloudinary.com"))return null;const t=`so_0,w_${w||220},h_${h||130},c_fill,f_jpg`;return url.replace("/upload/",`/upload/${t}/`).replace(/\.[^.]+$/,".jpg");}
 function tm(a,v){return a.includes(v)?a.filter(x=>x!==v):[...a,v]}
@@ -2551,9 +2551,10 @@ async function uploadToHost(file){
     if(data.bytes){try{SETTINGS.cdnBytes=(SETTINGS.cdnBytes||0)+data.bytes;SETTINGS.cdnCount=(SETTINGS.cdnCount||0)+1;window.storage.set("ks_settings",JSON.stringify(SETTINGS));if(currentUser&&_sb)_sbSaveSettings();}catch(e){}}
     if(isVideo&&data.secure_url){
       // Build the 1080p H.264 delivery URL and immediately warm Cloudinary's cache
-      // so it's pre-generated before any buyer hits play (avoids first-play choppiness)
+      // via a real GET request (HEAD doesn't trigger video transcoding) so the
+      // pre-generated version is ready before any buyer hits play
       const xcodedUrl=cdnVideo(data.secure_url,1920);
-      fetch(xcodedUrl,{method:'HEAD',mode:'no-cors'}).catch(()=>{});
+      fetch(xcodedUrl).catch(()=>{});
       return xcodedUrl;
     }
     return data.secure_url;
