@@ -523,7 +523,7 @@ function galVidActivate(vid_id,url,mp4,thumb){
       onplay="galVidState('${vid_id}',true)"
       onpause="galVidState('${vid_id}',false)"
       onended="galVidState('${vid_id}',false)">
-      <source src="${url}" type="video/webm">
+      <source src="${url}" type="${/\.webm($|\?)/i.test(url)?'video/webm':'video/mp4'}">
       ${mp4?`<source src="${mp4}" type="video/mp4">`:''}
     </video>
     <div class="vid-ctrl">
