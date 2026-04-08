@@ -1076,7 +1076,7 @@ const NI_ICONS={watch:icon("watch",14),sunglasses:icon("glasses",14),flashlight:
 const NI_LABELS={watch:"Watch",sunglasses:"Sunglasses",flashlight:"Flashlight","multi-tool":"Multi-tool",bag:"Bag / Case",clothing:"Clothing",other:"Other"};
 const SYNC_SAYINGS=["Sharpening the sync edge…","Honing your data to a razor's edge…","Applying the Scary Sharp protocol…","Stropping your listings clean…","Deburring your inventory…","Heat treating your data for maximum retention…","Running a paper test on your posts…","Putting a hair-whittling edge on your backup…","Your collection is in good hands…","Checking the grind geometry…","Buffing out the data scratches…","No false edges on this backup…","Setting the bevel on your backup…","Full flat grind on your file transfer…","Convex-grinding your cloud storage…","Making sure your data has no microbevels…"];
 const ED=()=>({postType:"[WTS]",knives:[],items:[],payment:[...SETTINGS.payment],paymentOther:"",noShip:[...SETTINGS.noShip],noShipOther:"",repost:false,photos:[],notes:"",rulesConfirmed:false,bundleEnabled:false,bundlePrice:"",bundles:[],groupAddons:false,tradeInterests:SETTINGS.tradeInterests||"",shippingCarrier:SETTINGS.shippingCarrier||"USPS"});
-let S={posts:[],inventory:[],loaded:false,view:"list",expanded:null,copied:null,draft:ED(),kfOpen:false,kfIdx:-1,kfPostId:null,kf:EK(),kfMode:"draft",tsUploads:{},vidQuality:"compressed",adv:false,err:"",saveNotice:false,lockerFilter:"all",lockerPicker:false,movingKnife:null,uploadFiles:[],kfUploads:[],kfPhotoTag:"other",niUploads:[],priceResearch:{status:"idle",results:[],query:""},modal:null,authStatus:"guest",authEmail:"",showMigrate:false,soldFlow:null,gearSoldFlow:null,delFlowEmail:null,authLoading:true,mdPreview:new Set(),undoStack:[],undoToast:null,_undoTid:null,flairToast:null,_flairTid:null,rollSort:"added",soldFilter:"all",listFilter:"all",shipFilter:"all",soldExpanded:new Set(),tutStep:0,aboutTab:"about",feedbackTab:"bug",acctPopover:false,trackingFlow:null,preflight:null,priceFilter:"sold",tour:null,bundlePicker:null,niOpen:false,ni:null,niIdx:-1,gearPicker:false,_skipRollAnim:false,rollKnivesOpen:true,rollGearOpen:true,emailChangeOpen:false,emailChangeNotice:false,accountDeleted:false,migrateConfirm:null,syncingScreen:false,syncMsg:0,vidBwTip:false,_sessionStart:Date.now(),_renderCount:0,_loadTime:null,_copyCount:0,_viewChanges:0,_lastView:""};
+let S={posts:[],inventory:[],loaded:false,view:"list",expanded:null,copied:null,draft:ED(),kfOpen:false,kfIdx:-1,kfPostId:null,kf:EK(),kfMode:"draft",tsUploads:{},adv:false,err:"",saveNotice:false,lockerFilter:"all",lockerPicker:false,movingKnife:null,uploadFiles:[],kfUploads:[],kfPhotoTag:"other",niUploads:[],priceResearch:{status:"idle",results:[],query:""},modal:null,authStatus:"guest",authEmail:"",showMigrate:false,soldFlow:null,gearSoldFlow:null,delFlowEmail:null,authLoading:true,mdPreview:new Set(),undoStack:[],undoToast:null,_undoTid:null,flairToast:null,_flairTid:null,rollSort:"added",soldFilter:"all",listFilter:"all",shipFilter:"all",soldExpanded:new Set(),tutStep:0,aboutTab:"about",feedbackTab:"bug",acctPopover:false,trackingFlow:null,preflight:null,priceFilter:"sold",tour:null,bundlePicker:null,niOpen:false,ni:null,niIdx:-1,gearPicker:false,_skipRollAnim:false,rollKnivesOpen:true,rollGearOpen:true,emailChangeOpen:false,emailChangeNotice:false,accountDeleted:false,migrateConfirm:null,syncingScreen:false,syncMsg:0,vidBwTip:false,_sessionStart:Date.now(),_renderCount:0,_loadTime:null,_copyCount:0,_viewChanges:0,_lastView:""};
 
 // ─── STORAGE ──────────────────────────────────────────────────
 async function load(){
@@ -2586,14 +2586,7 @@ function handleKnifeVideoInput(e){[...e.target.files].forEach(f=>{uploadKnifePho
 async function uploadKnifePhoto(file,tag){
   const uid=gid();
   const isVideo=file.type.startsWith('video/');
-  const needsCompress=isVideo&&(S.vidQuality!=='native'); // compress unless user chose native
-  // Native videos over 95MB will hit Cloudinary's 100MB free-tier limit — catch early
-  const CLOUDINARY_MAX=95*1024*1024;
-  if(isVideo&&!needsCompress&&file.size>CLOUDINARY_MAX){
-    const mb=(file.size/1024/1024).toFixed(0);
-    S.kfUploads.push({uid,name:file.name,url:null,uploading:false,error:`File is ${mb} MB — Cloudinary's free plan limits video uploads to ~100 MB. Switch to Compressed mode or trim your clip to under 30 seconds.`,tag:tag||"other",status:null});
-    render();return;
-  }
+  const needsCompress=isVideo; // always compress videos before upload
   S.kfUploads.push({uid,name:file.name,url:null,uploading:true,error:null,tag:tag||"other",status:needsCompress?'Compressing 0%…':'Uploading…'});
   render();
   try{
@@ -4590,20 +4583,7 @@ function kfFormHtml(){
               Keep videos short (under 30s), use them selectively on your best listings, and check your usage before a busy posting week. If you're running low, switch to pasting an <strong>Imgur link</strong> instead; that uses Imgur's bandwidth, not yours.
               <br><br>
               <a href="https://console.cloudinary.com" target="_blank" rel="noopener" style="color:#7c3aed;font-weight:600;text-decoration:none">Check your Cloudinary usage ↗</a>
-              <div style="margin-top:12px;border-top:.5px solid #e9d5ff;padding-top:10px">
-                <div style="font-size:11px;font-weight:700;color:#5b21b6;margin-bottom:7px">Upload Quality</div>
-                <div style="display:flex;gap:7px;margin-bottom:8px">
-                  <button type="button" onclick="S.vidQuality='compressed';render()" style="flex:1;padding:7px 10px;border-radius:8px;border:1.5px solid ${s.vidQuality!=='native'?'#7c3aed':'#ddd6fe'};background:${s.vidQuality!=='native'?'#ede9fe':'#fff'};cursor:pointer;text-align:left;transition:all .15s">
-                    <div style="font-size:11px;font-weight:700;color:${s.vidQuality!=='native'?'#5b21b6':'#78350f'}">${s.vidQuality!=='native'?'✓ ':''}Compressed</div>
-                    <div style="font-size:10px;color:#6d28d9;margin-top:2px;line-height:1.4">~15 MB per 30s · 720p · <strong>Recommended</strong><br>Re-encoded at 4 Mbps. Saves bandwidth; buyers stream up to 1080p via Cloudinary.</div>
-                  </button>
-                  <button type="button" onclick="S.vidQuality='native';render()" style="flex:1;padding:7px 10px;border-radius:8px;border:1.5px solid ${s.vidQuality==='native'?'#7c3aed':'#ddd6fe'};background:${s.vidQuality==='native'?'#ede9fe':'#fff'};cursor:pointer;text-align:left;transition:all .15s">
-                    <div style="font-size:11px;font-weight:700;color:${s.vidQuality==='native'?'#5b21b6':'#78350f'}">${s.vidQuality==='native'?'✓ ':''}Native</div>
-                    <div style="font-size:10px;color:#6d28d9;margin-top:2px;line-height:1.4">~50–300 MB per 30s · original res<br>Uploads as-is. Best quality but burns significantly more of your 25 GB/month.</div>
-                  </button>
-                </div>
-                <div style="margin-top:4px">${activePhotoService()==='cloudinary'?`<button class="btn btn-sm" onclick="triggerKnifeVideoUpload()" type="button" style="background:#7c3aed;color:#fff;border:none;font-weight:600">${icon('video',13,'#fff')} Upload ${s.vidQuality==='native'?'Native ':''}Video</button>`:`<button class="btn btn-sm" style="opacity:.4;cursor:default;background:var(--bg);border:.5px solid var(--b2);color:var(--t4)" disabled>Configure Cloudinary to upload</button>`}</div>
-              </div>
+              <div style="margin-top:10px">${activePhotoService()==='cloudinary'?`<button class="btn btn-sm" onclick="triggerKnifeVideoUpload()" type="button" style="background:#7c3aed;color:#fff;border:none;font-weight:600">${icon('video',13,'#fff')} Upload Video</button>`:`<button class="btn btn-sm" style="opacity:.4;cursor:default;background:var(--bg);border:.5px solid var(--b2);color:var(--t4)" disabled>Configure Cloudinary to upload</button>`}</div>
             </div>`:``}
           </div>`:''}
         </div>`;
