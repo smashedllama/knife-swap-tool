@@ -2704,7 +2704,7 @@ function saveKF(){
   if(kt!=="WTS"&&!f.tradeValue){S.err="Trade value required for WTT listings.";render();return;}
   if(BANNED_LINK_RE.test(f.notes||"")){S.err="External platform links (eBay, Etsy, Amazon, etc.) are not allowed in posts per r/Knife_Swap rules. Remove the link from Notes.";render();return;}
   S.err="";
-  f.photos=S.kfUploads.filter(x=>x.url).map(x=>x.url);
+  f.photos=kfUploadsToPhotos(S.kfUploads);
   if(S.kfMode==="locker"){
     if(!f.id)f.id=gid();
     // Track price history when editing Roll knife with price change
