@@ -1076,7 +1076,7 @@ const NI_ICONS={watch:icon("watch",14),sunglasses:icon("glasses",14),flashlight:
 const NI_LABELS={watch:"Watch",sunglasses:"Sunglasses",flashlight:"Flashlight","multi-tool":"Multi-tool",bag:"Bag / Case",clothing:"Clothing",other:"Other"};
 const SYNC_SAYINGS=["Sharpening the sync edge…","Honing your data to a razor's edge…","Applying the Scary Sharp protocol…","Stropping your listings clean…","Deburring your inventory…","Heat treating your data for maximum retention…","Running a paper test on your posts…","Putting a hair-whittling edge on your backup…","Your collection is in good hands…","Checking the grind geometry…","Buffing out the data scratches…","No false edges on this backup…","Setting the bevel on your backup…","Full flat grind on your file transfer…","Convex-grinding your cloud storage…","Making sure your data has no microbevels…"];
 const ED=()=>({postType:"[WTS]",knives:[],items:[],payment:[...SETTINGS.payment],paymentOther:"",noShip:[...SETTINGS.noShip],noShipOther:"",repost:false,photos:[],notes:"",rulesConfirmed:false,bundleEnabled:false,bundlePrice:"",bundles:[],groupAddons:false,tradeInterests:SETTINGS.tradeInterests||"",shippingCarrier:SETTINGS.shippingCarrier||"USPS"});
-let S={posts:[],inventory:[],loaded:false,view:"list",expanded:null,copied:null,draft:ED(),kfOpen:false,kfIdx:-1,kfPostId:null,kf:EK(),kfMode:"draft",tsUploads:{},adv:false,err:"",saveNotice:false,lockerFilter:"all",lockerPicker:false,movingKnife:null,uploadFiles:[],kfUploads:[],kfPhotoTag:"other",niUploads:[],priceResearch:{status:"idle",results:[],query:""},modal:null,authStatus:"guest",authEmail:"",showMigrate:false,soldFlow:null,gearSoldFlow:null,delFlowEmail:null,authLoading:true,mdPreview:new Set(),undoStack:[],undoToast:null,_undoTid:null,flairToast:null,_flairTid:null,rollSort:"added",soldFilter:"all",listFilter:"all",shipFilter:"all",soldExpanded:new Set(),tutStep:0,aboutTab:"about",feedbackTab:"bug",acctPopover:false,trackingFlow:null,preflight:null,priceFilter:"sold",tour:null,bundlePicker:null,niOpen:false,ni:null,niIdx:-1,gearPicker:false,_skipRollAnim:false,rollKnivesOpen:true,rollGearOpen:true,emailChangeOpen:false,emailChangeNotice:false,accountDeleted:false,migrateConfirm:null,syncingScreen:false,syncMsg:0,vidBwTip:false,_sessionStart:Date.now(),_renderCount:0,_loadTime:null,_copyCount:0,_viewChanges:0,_lastView:""};
+let S={posts:[],inventory:[],loaded:false,view:"list",expanded:null,copied:null,draft:ED(),kfOpen:false,kfIdx:-1,kfPostId:null,kf:EK(),kfMode:"draft",tsUploads:{},kfExtraSlots:0,adv:false,err:"",saveNotice:false,lockerFilter:"all",lockerPicker:false,movingKnife:null,uploadFiles:[],kfUploads:[],kfPhotoTag:"other",niUploads:[],priceResearch:{status:"idle",results:[],query:""},modal:null,authStatus:"guest",authEmail:"",showMigrate:false,soldFlow:null,gearSoldFlow:null,delFlowEmail:null,authLoading:true,mdPreview:new Set(),undoStack:[],undoToast:null,_undoTid:null,flairToast:null,_flairTid:null,rollSort:"added",soldFilter:"all",listFilter:"all",shipFilter:"all",soldExpanded:new Set(),tutStep:0,aboutTab:"about",feedbackTab:"bug",acctPopover:false,trackingFlow:null,preflight:null,priceFilter:"sold",tour:null,bundlePicker:null,niOpen:false,ni:null,niIdx:-1,gearPicker:false,_skipRollAnim:false,rollKnivesOpen:true,rollGearOpen:true,emailChangeOpen:false,emailChangeNotice:false,accountDeleted:false,migrateConfirm:null,syncingScreen:false,syncMsg:0,vidBwTip:false,_sessionStart:Date.now(),_renderCount:0,_loadTime:null,_copyCount:0,_viewChanges:0,_lastView:""};
 
 // ─── STORAGE ──────────────────────────────────────────────────
 async function load(){
@@ -2583,7 +2583,8 @@ async function uploadFile(file){
 function removeUpload(uid){S.uploadFiles=S.uploadFiles.filter(x=>x.uid!==uid);S.draft.photos=S.uploadFiles.filter(x=>x.url).map(x=>x.url);render();}
 
 // Per-knife photo uploads
-const PHOTO_SLOT_ORDER=["show","clip","centering","other","video"];
+const EXTRA_SLOTS_MAX=11; // 4 fixed + 11 extra = 15 total photo slots
+const PHOTO_SLOT_ORDER=["show","clip","centering","other",...Array.from({length:EXTRA_SLOTS_MAX},(_,i)=>`extra_${i}`),"video"];
 function kfUploadsToPhotos(uploads){const result=[];PHOTO_SLOT_ORDER.forEach(tag=>{uploads.filter(x=>x.url&&x.tag===tag).forEach(x=>result.push(x.url));});uploads.filter(x=>x.url&&!x.tag).forEach(x=>result.push(x.url));return result;}
 function triggerKnifeUpload(tag){S.kfPhotoTag=tag||"other";const el=document.getElementById("kf-photo-input-hidden");if(el){el.value="";el.click();}}
 function triggerKnifeVideoUpload(){const el=document.getElementById("kf-video-input-hidden");if(el){el.value="";el.click();}}
@@ -2677,10 +2678,12 @@ function openKF(idx,mode,postId){
   }
   // Pre-populate kfUploads from existing photos — assign slot tags by position
   S.kfUploads=(S.kf.photos||[]).map((url,i)=>({uid:gid(),name:url.split("/").pop()||"photo",url,uploading:false,error:null,tag:PHOTO_SLOT_ORDER[i]||"other"}));
+  const _usedExtra=S.kfUploads.filter(x=>x.tag&&x.tag.startsWith("extra_")).map(x=>parseInt(x.tag.split("_")[1]));
+  S.kfExtraSlots=_usedExtra.length?Math.min(Math.max(..._usedExtra)+1,EXTRA_SLOTS_MAX):0;
   S.priceResearch={status:"idle",results:[],query:""};
   render();setTimeout(()=>document.getElementById("kf-brand")?.focus(),60);
 }
-function closeKF(){S.kfOpen=false;S.kfIdx=-1;S.kfPostId=null;S.err="";S.kfUploads=[];S.priceResearch={status:"idle",results:[],query:""};render();}
+function closeKF(){S.kfOpen=false;S.kfIdx=-1;S.kfPostId=null;S.kfExtraSlots=0;S.err="";S.kfUploads=[];S.priceResearch={status:"idle",results:[],query:""};render();}
 function syncKF(){
   const g=id=>document.getElementById(id);const f=S.kf;
   ["brand","model","steel","price","tradeValue","lockupNotes","notes","addonPrice","issuesOther","accessoriesOther"].forEach(k=>{const e=g("kf-"+k);if(e)f[k]=e.value});
@@ -2708,16 +2711,16 @@ function saveKF(){
     }
     if(S.kfIdx>=0)S.inventory[S.kfIdx]=JSON.parse(JSON.stringify(f));
     else S.inventory.push(JSON.parse(JSON.stringify(f)));
-    S.kfOpen=false;S.kfIdx=-1;S.kfPostId=null;S.kfUploads=[];S.priceResearch={status:"idle",results:[],query:""};saveInv();render();
+    S.kfOpen=false;S.kfIdx=-1;S.kfPostId=null;S.kfExtraSlots=0;S.kfUploads=[];S.priceResearch={status:"idle",results:[],query:""};saveInv();render();
   }else if(S.kfMode==="post"){
     const _pp=S.posts.find(p=>p.id===S.kfPostId);
     if(_pp&&S.kfIdx>=0){_pp.knives[S.kfIdx]=JSON.parse(JSON.stringify(f));_pp.postText=buildPost(_pp);}
-    S.kfOpen=false;S.kfIdx=-1;S.kfPostId=null;S.kfUploads=[];S.priceResearch={status:"idle",results:[],query:""};save();render();
+    S.kfOpen=false;S.kfIdx=-1;S.kfPostId=null;S.kfExtraSlots=0;S.kfUploads=[];S.priceResearch={status:"idle",results:[],query:""};save();render();
   }else{
     if(S.kfIdx>=0)S.draft.knives[S.kfIdx]=JSON.parse(JSON.stringify(f));
     else S.draft.knives.push(JSON.parse(JSON.stringify(f)));
     S.draft.postType=autoPostType(S.draft.knives);
-    S.kfOpen=false;S.kfIdx=-1;S.kfPostId=null;S.kfUploads=[];S.priceResearch={status:"idle",results:[],query:""};render();
+    S.kfOpen=false;S.kfIdx=-1;S.kfPostId=null;S.kfExtraSlots=0;S.kfUploads=[];S.priceResearch={status:"idle",results:[],query:""};render();
   }
 }
 function removeKnife(i){
@@ -4486,7 +4489,7 @@ function kfFormHtml(){
       })()}
       <!-- Photo slots -->
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-top:8px">
-        ${[{tag:"show",label:"Show Side",hint:"Recommended"},{tag:"clip",label:"Clip Side",hint:"Recommended"},{tag:"centering",label:"Centering",hint:"Optional"},{tag:"other",label:"Other",hint:"Optional"}].map(({tag,label,hint})=>{
+        ${[{tag:"show",label:"Show Side",hint:"Recommended"},{tag:"clip",label:"Clip Side",hint:"Recommended"},{tag:"centering",label:"Centering",hint:"Optional"},{tag:"other",label:"Other",hint:"Optional"},...Array.from({length:s.kfExtraSlots},(_,i)=>({tag:`extra_${i}`,label:`Photo ${i+5}`,hint:"Optional"}))].map(({tag,label,hint})=>{
           const tagItems=s.kfUploads.filter(x=>x.tag===tag);
           const single=tag!=="other";
           const hasPhoto=tagItems.some(x=>x.url&&!x.uploading);
@@ -4513,6 +4516,15 @@ function kfFormHtml(){
             `:""}
           </div>`;
         }).join("")}
+        ${(()=>{
+          const totalSlots=4+s.kfExtraSlots;
+          const totalPhotos=s.kfUploads.filter(x=>x.url&&x.tag!=="video").length;
+          const atMax=totalSlots>=15;
+          return`<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 2px">
+            <span style="font-size:11px;color:var(--t4)">${totalPhotos} photo${totalPhotos!==1?"s":""} · ${totalSlots}/15 slots</span>
+            ${atMax?`<span style="font-size:11px;color:var(--t4)">Max 15 photos</span>`:`<button type="button" onclick="S.kfExtraSlots=Math.min(S.kfExtraSlots+1,${EXTRA_SLOTS_MAX});render()" style="display:inline-flex;align-items:center;gap:5px;background:none;border:.5px solid var(--b2);border-radius:7px;padding:4px 10px;cursor:pointer;font-size:12px;font-weight:600;color:var(--t2)">${icon('plus',12)} Add Photo</button>`}
+          </div>`;
+        })()}
       </div>
       <!-- Imgur gallery link — single field, full width -->
       <div style="margin-top:10px;border:.5px solid var(--b2);border-radius:9px;padding:9px 11px;background:var(--surf)">
