@@ -2478,7 +2478,7 @@ function activePhotoService(){
   return null;
 }
 // Compress a video file in-browser using canvas capture + MediaRecorder.
-// Scales to max 1280px wide, targets 4Mbps — only triggers for files over 100MB.
+// Always compresses before upload. Caps at 720p, bitrate auto-scaled to stay under 95MB.
 // onProgress(0-1) is called each frame so the UI can show a live bar.
 async function compressVideoForUpload(file,onProgress){
   return new Promise((resolve,reject)=>{
@@ -4209,8 +4209,8 @@ function renderGuide(){
         </div>
         <div style="background:var(--bluebg);border:.5px solid rgba(0,113,227,.2);border-radius:10px;padding:12px 14px">
           <div style="font-size:13px;font-weight:700;color:var(--bluet);margin-bottom:4px">Option 2: One Cloudinary video (drag and drop)</div>
-          <div style="font-size:12.5px;color:var(--t2);line-height:1.6">Upload a video using the <strong>Upload Video</strong> button in the knife form. The tool automatically compresses it in your browser at 2.5 Mbps before upload, so a 30-second clip is roughly 10MB. Videos give buyers the best look at action, blade finish, and any wear. Keep clips short: 15 to 30 seconds is ideal.</div>
-          ${warn("Videos burn through Cloudinary's 25GB monthly bandwidth much faster than photos. At ~10MB per clip, your account handles roughly 2,500 total plays per month. Read the bandwidth note in the video upload panel before going heavy on video listings.")}
+          <div style="font-size:12.5px;color:var(--t2);line-height:1.6">Upload a video using the <strong>Upload Video</strong> button in the knife form. Videos are automatically compressed in your browser before upload — capped at 720p with bitrate auto-scaled to always stay under 100 MB. A 30-second clip is roughly 15 MB. Videos give buyers the best look at action, blade finish, and any wear. Keep clips short: 15 to 30 seconds is ideal.</div>
+          ${warn("Videos burn through Cloudinary's 25GB monthly bandwidth much faster than photos. At ~15 MB per 30-second clip, your account handles roughly 1,600 total plays per month. Read the bandwidth note in the video upload panel before going heavy on video listings.")}
         </div>
         <div style="background:var(--surf3);border:.5px solid var(--b2);border-radius:10px;padding:12px 14px">
           <div style="font-size:13px;font-weight:700;color:var(--t1);margin-bottom:4px">Option 3: One Imgur gallery link</div>
@@ -4552,7 +4552,7 @@ function kfFormHtml(){
             return`<div style="position:relative;margin-bottom:6px">
               ${u.uploading?`<div style="background:rgba(255,255,255,.7);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:6px">
                 <div style="display:flex;align-items:center;gap:8px"><span class="up-spin"></span><span style="font-size:12px;font-weight:700;color:#5b21b6">${isCompressing?'Compressing video…':'Uploading video…'}</span></div>
-                ${isCompressing?`<div style="font-size:10.5px;color:#6d28d9">Re-encoding at 2.5 Mbps. Takes about as long as the clip. Don't close this tab.</div>`:''}
+                ${isCompressing?`<div style="font-size:10.5px;color:#6d28d9">Re-encoding at up to 720p — bitrate auto-scaled so the file stays under 100 MB. Takes about as long as the clip. Don't close this tab.</div>`:''}
                 ${pct!==null?`<div style="display:flex;align-items:center;gap:8px"><div style="flex:1;height:5px;background:#ddd6fe;border-radius:3px;overflow:hidden"><div style="height:100%;background:#7c3aed;border-radius:3px;width:${pct}%;transition:width .25s"></div></div><span style="font-size:11px;font-weight:600;color:#7c3aed;flex-shrink:0">${pct}%</span></div>`:''}
               </div>`:
               u.error?`<div style="font-size:10px;color:var(--redt);padding:4px 0">${esc(u.error)}</div>`:
@@ -4587,11 +4587,11 @@ function kfFormHtml(){
             </button>
             ${s.vidBwTip?`<div style="background:#fffbeb;border:.5px solid #f59e0b;border-radius:9px;padding:11px 13px;font-size:11px;color:#78350f;line-height:1.6">
               <strong style="display:block;margin-bottom:5px">⚠ Before you upload a video, read this</strong>
-              Videos are served from your own Cloudinary free tier, which includes <strong>25GB of bandwidth per month</strong>. Each ~30-second clip uploaded here is about <strong>10MB</strong>, meaning your account can handle roughly <strong>2,500 total plays</strong> before it hits the cap.
+              Videos are compressed in your browser before upload — capped at <strong>720p</strong>, with bitrate automatically scaled so the file always stays <strong>under 100 MB</strong> regardless of clip length. A 30-second clip is roughly <strong>15 MB</strong>; longer clips are scaled down further. Videos are served from your Cloudinary free tier, which includes <strong>25 GB of bandwidth per month</strong> — that's roughly <strong>1,600 total plays</strong> of a 15 MB clip before hitting the cap.
               <br><br>
-              In practice that looks like: <strong>5 active video listings each viewed 50 times = 2.5GB used</strong>. That's fine. But a busy month with <strong>20+ listings each getting 100+ views</strong> can push you to 20GB fast. If you hit the cap, <strong>every photo and video on every listing stops loading</strong> for all buyers until the month resets.
+              In practice: <strong>5 active video listings each viewed 50 times = ~3.75 GB used</strong>. That's fine. But a busy month with <strong>20+ listings getting 100+ views each</strong> can push you over fast. If you hit the cap, <strong>every photo and video on every listing stops loading</strong> for all buyers until the month resets.
               <br><br>
-              Keep videos short (under 30s), use them selectively on your best listings, and check your usage before a busy posting week. If you're running low, switch to pasting an <strong>Imgur link</strong> instead; that uses Imgur's bandwidth, not yours.
+              Keep clips short (under 30s), use video selectively on your best listings, and check your usage before a busy week. If you're running low, paste an <strong>Imgur link</strong> instead — that uses Imgur's bandwidth, not yours.
               <br><br>
               <a href="https://console.cloudinary.com" target="_blank" rel="noopener" style="color:#7c3aed;font-weight:600;text-decoration:none">Check your Cloudinary usage ↗</a>
               <div style="margin-top:10px">${activePhotoService()==='cloudinary'?`<button class="btn btn-sm" onclick="triggerKnifeVideoUpload()" type="button" style="background:#7c3aed;color:#fff;border:none;font-weight:600">${icon('video',13,'#fff')} Upload Video</button>`:`<button class="btn btn-sm" style="opacity:.4;cursor:default;background:var(--bg);border:.5px solid var(--b2);color:var(--t4)" disabled>Configure Cloudinary to upload</button>`}</div>
