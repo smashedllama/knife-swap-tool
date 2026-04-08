@@ -2498,14 +2498,20 @@ async function compressVideoForUpload(file,onProgress){
       const combined=new MediaStream([...canvasStream.getVideoTracks(),...audioTracks]);
       const mime=MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')?'video/webm;codecs=vp9,opus':
                  MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')?'video/webm;codecs=vp8,opus':'video/webm';
+      // Dynamically calculate bitrate to stay under 95MB regardless of clip length
+      const dur=vid.duration||30;
+      const TARGET_BYTES=95*1024*1024;
+      const AUDIO_BPS=128_000;
+      const audioBudget=AUDIO_BPS*dur;
+      const videoBudget=Math.max((TARGET_BYTES*8-audioBudget)/dur,500_000); // min 500kbps
+      const videoBitsPerSecond=Math.min(videoBudget,4_000_000); // cap at 4 Mbps for short clips
       const chunks=[];
       let rec;
-      try{rec=new MediaRecorder(combined,{mimeType:mime,videoBitsPerSecond:4_000_000,audioBitsPerSecond:128_000});}
+      try{rec=new MediaRecorder(combined,{mimeType:mime,videoBitsPerSecond,audioBitsPerSecond:AUDIO_BPS});}
       catch(e){URL.revokeObjectURL(objUrl);reject(new Error('Video compression not supported in this browser. Try a shorter/smaller video or paste an Imgur link instead.'));return;}
       rec.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
       rec.onstop=()=>{URL.revokeObjectURL(objUrl);resolve(new Blob(chunks,{type:'video/webm'}));};
       rec.onerror=e=>{URL.revokeObjectURL(objUrl);reject(e.error||new Error('Compression failed'));};
-      const dur=vid.duration||1;
       const drawFrame=()=>{
         if(vid.ended||vid.paused){rec.stop();return;}
         ctx.drawImage(vid,0,0,w,h);
