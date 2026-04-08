@@ -2626,6 +2626,8 @@ function triggerKnifeVideoUpload(){const el=document.getElementById("kf-video-in
 function handleKnifeFileInput(e){const tag=S.kfPhotoTag||"other";[...e.target.files].forEach(f=>{uploadKnifePhoto(f,tag);});}
 function handleKnifeVideoInput(e){[...e.target.files].forEach(f=>{uploadKnifePhoto(f,"video");});}
 async function uploadKnifePhoto(file,tag){
+  // Clear any prior failed upload for this slot so the error doesn't persist when the user retries
+  S.kfUploads=S.kfUploads.filter(x=>!(x.tag===(tag||"other")&&x.error&&!x.url));
   const uid=gid();
   const isVideo=file.type.startsWith('video/');
   const needsCompress=isVideo; // always compress videos before upload
@@ -2690,11 +2692,22 @@ async function copyText(txt){try{await navigator.clipboard.writeText(txt);}catch
 // ─── KNIFE ACTIONS ────────────────────────────────────────────
 function startCompose(){S.view="compose";S.draft=ED();S.kfOpen=false;S.kfIdx=-1;S.kfPostId=null;S.kf=EK();S.kfMode="draft";S.adv=false;S.err="";S.lockerPicker=false;S.gearPicker=false;S.uploadFiles=[];render();}
 function cancelCompose(){
+  // Restore knife inventory statuses
   S.draft.knives.forEach(k=>{
     if(k.inventoryId){
       const inv=S.inventory.find(x=>x.id===k.inventoryId);
       if(inv){
         const inActive=S.posts.some(p=>p.knives.some(pk=>pk.inventoryId===k.inventoryId&&!pk.sold));
+        if(!inActive)inv.status="available";
+      }
+    }
+  });
+  // Restore gear/non-knife inventory statuses
+  (S.draft.items||[]).forEach(it=>{
+    if(it.inventoryId){
+      const inv=S.inventory.find(x=>x.id===it.inventoryId);
+      if(inv){
+        const inActive=S.posts.some(p=>(p.items||[]).some(pi=>pi.inventoryId===it.inventoryId&&!pi.sold));
         if(!inActive)inv.status="available";
       }
     }
@@ -3061,12 +3074,12 @@ function confirmGearSoldFlow(){
   const buyer=raw.replace(/^@/,"").replace(/^\/?u\//i,"");
   const soldPrice=(g("gsold-price-input")?.value||"").trim().replace(/^\$/,"");
   pushUndo("Item marked sold");
-  up(s=>{const p=s.posts.find(x=>x.id===sf.pid);if(!p)return;const it=p.items[sf.gi];it.sold=true;it.soldAt=new Date().toISOString();it.soldTo=buyer||null;it.soldPrice=soldPrice||null;it.shippingAddress=null;it.pending=false;if(it.inventoryId){const inv=s.inventory.find(x=>x.id===it.inventoryId);if(inv){inv.status="sold";inv.archived=true;}}p.postText=buildPost(p);});
+  up(s=>{const p=s.posts.find(x=>x.id===sf.pid);if(!p||!p.items||p.items[sf.gi]==null)return;const it=p.items[sf.gi];it.sold=true;it.soldAt=new Date().toISOString();it.soldTo=buyer||null;it.soldPrice=soldPrice||null;it.shippingAddress=null;it.pending=false;if(it.inventoryId){const inv=s.inventory.find(x=>x.id===it.inventoryId);if(inv){inv.status="sold";inv.archived=true;}}p.postText=buildPost(p);});
   saveInvNow();S.gearSoldFlow=null;render();
 }
 function cancelGearSoldFlow(){S.gearSoldFlow=null;render();}
 function markGearPending(pid,gi){
-  up(s=>{const p=s.posts.find(x=>x.id===pid);if(!p)return;const it=p.items[gi];it.pending=!it.pending;p.postText=buildPost(p);});
+  up(s=>{const p=s.posts.find(x=>x.id===pid);if(!p||!p.items||p.items[gi]==null)return;const it=p.items[gi];it.pending=!it.pending;p.postText=buildPost(p);});
 }
 async function lookupZipGear(zip){
   if(!/^\d{5}$/.test(zip))return;
@@ -3085,18 +3098,18 @@ function saveGearTracking(pid,gi){
   if(!trk){alert("Please enter a tracking number.");return;}
   pushUndo("Gear tracking added");
   S.trackingFlow=null;
-  upPost(s=>{const p=s.posts.find(x=>x.id===pid);if(!p)return;const it=p.items[gi];it.trackingNumber=trk;it.trackingCarrier=carr;it.shippedAt=it.shippedAt||new Date().toISOString();it.shippingAddress=null;},pid);
+  upPost(s=>{const p=s.posts.find(x=>x.id===pid);if(!p||!p.items||p.items[gi]==null)return;const it=p.items[gi];it.trackingNumber=trk;it.trackingCarrier=carr;it.shippedAt=it.shippedAt||new Date().toISOString();it.shippingAddress=null;},pid);
 }
 function markGearShipped(pid,gi){
   const trk=(document.getElementById(`gtrk-${pid}-${gi}`)?.value||"").trim();
   const carr=document.getElementById(`gcarr-${pid}-${gi}`)?.value||"USPS";
   if(!trk){alert("Please enter a tracking number first.");return;}
   pushUndo("Gear marked shipped");
-  upPost(s=>{const p=s.posts.find(x=>x.id===pid);if(!p)return;const it=p.items[gi];it.trackingNumber=trk;it.trackingCarrier=carr;it.shippedAt=new Date().toISOString();it.shippingAddress=null;},pid);
+  upPost(s=>{const p=s.posts.find(x=>x.id===pid);if(!p||!p.items||p.items[gi]==null)return;const it=p.items[gi];it.trackingNumber=trk;it.trackingCarrier=carr;it.shippedAt=new Date().toISOString();it.shippingAddress=null;},pid);
 }
 function markGearDelivered(pid,gi){
   pushUndo("Gear marked delivered");
-  upPost(s=>{const p=s.posts.find(x=>x.id===pid);if(!p)return;p.items[gi].deliveredAt=new Date().toISOString();},pid);
+  upPost(s=>{const p=s.posts.find(x=>x.id===pid);if(!p||!p.items||p.items[gi]==null)return;p.items[gi].deliveredAt=new Date().toISOString();},pid);
 }
 function markGearConfirmed(pid,gi){
   pushUndo("Gear trade confirmed");
@@ -3467,7 +3480,7 @@ function render(){
   }
   // Track whether this render is the first time we're landing on Roll — used to gate the unfurl animation
   S._rollJustEntered=(S.view==='roll'&&S._lastView!=='roll');
-  if(S.loaded&&S._lastView!==S.view){S._viewChanges=(S._viewChanges||0)+1;S._lastView=S.view;
+  if(S.loaded&&S._lastView!==S.view){if(S.soldFlow||S.gearSoldFlow){S.soldFlow=null;S.gearSoldFlow=null;}S._viewChanges=(S._viewChanges||0)+1;S._lastView=S.view;
     const _hv=['list','roll','sold','shipping','guide','settings','sales'];
     if(_hv.includes(S.view))history.replaceState(null,'',location.pathname+'#'+S.view);
   }
@@ -6008,7 +6021,7 @@ function renderCompose(){
     <label class="cblk"><input type="checkbox" ${d.rulesConfirmed?"checked":""} onchange="S.draft.rulesConfirmed=this.checked;render()"/> I have read all r/Knife_Swap rules</label>
     ${(()=>{const cl=composeChecklist(d);return cl.html+(s.err&&d.knives.length>0?`<div class="err">${esc(s.err)}</div>`:"")+`<div class="gen-row"><button class="btn-gen"${cl.canPost?"":" disabled"} onclick="syncDraft();submitPost()">Generate Post</button><button class="btn btn-sec" onclick="cancelCompose()">Cancel</button></div>`;})()}
   </div>`:"";
-  const hdr=`<div class="hdr"><div class="hdr-logo" onclick="S.view='list';render()"><img src="/bladeflow/icon.svg" width="44" height="44" style="flex-shrink:0" alt="BladeFlow"/><div><div class="hdr-title">New Listing</div><div class="hdr-sub">${d.knives.length===0?"Add knives below":d.knives.length===1?"1 knife":d.knives.length+" knives"}</div></div></div><div class="hdr-r"><button class="btn-hdr-ghost" onclick="cancelCompose()">Cancel</button></div></div>`;
+  const hdr=`<div class="hdr"><div class="hdr-logo" onclick="cancelCompose()"><img src="/bladeflow/icon.svg" width="44" height="44" style="flex-shrink:0" alt="BladeFlow"/><div><div class="hdr-title">New Listing</div><div class="hdr-sub">${d.knives.length===0?"Add knives below":d.knives.length===1?"1 knife":d.knives.length+" knives"}</div></div></div><div class="hdr-r"><button class="btn-hdr-ghost" onclick="cancelCompose()">Cancel</button></div></div>`;
   return`<div class="app">${hdr}<div class="cmp-main"><div class="sec-lbl">Knives</div>${knivesList}${addBtns}${kfHtml}${detHtml}</div></div>`;
 }
 

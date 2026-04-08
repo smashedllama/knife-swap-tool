@@ -1113,6 +1113,8 @@ function showError(msg) {
   document.getElementById('spinner').style.display = 'none';
   document.getElementById('knife-nav').classList.add('single');
   document.getElementById('mob-menu-btn').style.display = 'none';
+  document.getElementById('hdr-title').textContent = 'Gallery unavailable';
+  document.getElementById('hdr-sub').textContent = '';
   document.getElementById('viewer').innerHTML = `
     <div class="err-wrap">
       <div class="err-icon">📷</div>
