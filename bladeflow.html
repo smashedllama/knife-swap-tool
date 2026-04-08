@@ -2540,7 +2540,10 @@ async function uploadToHost(file){
       body=fd;endpoint=`https://api.cloudinary.com/v1_1/${encodeURIComponent(cloud)}/image/upload`;
     }
     const res=await fetch(endpoint,{method:"POST",body});
-    if(!res.ok)throw new Error("Cloudinary error "+res.status);
+    if(!res.ok){
+      if(res.status===413)throw new Error("File too large for Cloudinary (max ~100 MB on free plan). Switch to Compressed mode or use a shorter clip.");
+      throw new Error("Cloudinary error "+res.status);
+    }
     const data=await res.json();
     if(data.error)throw new Error(data.error.message||"Cloudinary upload failed");
     if(data.bytes){try{SETTINGS.cdnBytes=(SETTINGS.cdnBytes||0)+data.bytes;SETTINGS.cdnCount=(SETTINGS.cdnCount||0)+1;window.storage.set("ks_settings",JSON.stringify(SETTINGS));if(currentUser&&_sb)_sbSaveSettings();}catch(e){}}
@@ -2584,6 +2587,13 @@ async function uploadKnifePhoto(file,tag){
   const uid=gid();
   const isVideo=file.type.startsWith('video/');
   const needsCompress=isVideo&&(S.vidQuality!=='native'); // compress unless user chose native
+  // Native videos over 95MB will hit Cloudinary's 100MB free-tier limit — catch early
+  const CLOUDINARY_MAX=95*1024*1024;
+  if(isVideo&&!needsCompress&&file.size>CLOUDINARY_MAX){
+    const mb=(file.size/1024/1024).toFixed(0);
+    S.kfUploads.push({uid,name:file.name,url:null,uploading:false,error:`File is ${mb} MB — Cloudinary's free plan limits video uploads to ~100 MB. Switch to Compressed mode or trim your clip to under 30 seconds.`,tag:tag||"other",status:null});
+    render();return;
+  }
   S.kfUploads.push({uid,name:file.name,url:null,uploading:true,error:null,tag:tag||"other",status:needsCompress?'Compressing 0%…':'Uploading…'});
   render();
   try{
