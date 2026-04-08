@@ -232,6 +232,20 @@ textarea{resize:vertical;line-height:1.55}
 .demo-banner{display:flex;align-items:center;justify-content:center;gap:10px;padding:7px 16px;background:rgba(255,149,0,.11);border-bottom:1px solid rgba(255,149,0,.25);font-size:12px;color:var(--oranget);font-weight:500}
 .demo-rm-btn{font-size:11.5px;font-weight:700;padding:4px 12px;border-radius:20px;border:1.5px solid var(--oranget);background:transparent;color:var(--oranget);cursor:pointer;font-family:var(--font);animation:demoPulse 2s ease-in-out infinite}
 @keyframes demoPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,149,0,.5)}60%{box-shadow:0 0 0 6px rgba(255,149,0,0)}}
+/* ─── Setup Guide Card (real-data walkthrough) ─── */
+.guide-card{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);width:min(480px,92vw);background:var(--card);border:.5px solid rgba(52,199,89,.35);border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,.22),0 0 0 3px rgba(52,199,89,.08);padding:20px 22px 16px;z-index:9999;animation:tourIn .25s cubic-bezier(.34,1.56,.64,1) both}
+.guide-real-badge{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;background:var(--greenbg);color:var(--greent);border-radius:20px;padding:3px 10px;margin-bottom:10px;border:.5px solid rgba(52,199,89,.25)}
+.guide-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.guide-steps{font-size:10.5px;font-weight:700;color:var(--t4);letter-spacing:.06em;text-transform:uppercase}
+.guide-end{font-size:11px;color:var(--t4);background:none;border:none;cursor:pointer;padding:0;font-family:var(--font)}
+.guide-end:hover{color:var(--redt)}
+.guide-progress{height:3px;background:var(--b2);border-radius:3px;margin-bottom:14px;overflow:hidden}
+.guide-fill{height:100%;background:linear-gradient(90deg,var(--green),#34d26e);border-radius:3px;transition:width .3s ease}
+.guide-icon{font-size:26px;margin-bottom:6px}
+.guide-title{font-size:15px;font-weight:700;color:var(--t1);margin-bottom:8px;line-height:1.3}
+.guide-body{font-size:13px;color:var(--t2);line-height:1.6;margin-bottom:16px}
+.guide-acts{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.guide-hint{font-size:11px;color:var(--t3);background:var(--greenbg);border-radius:8px;padding:7px 11px;margin-bottom:14px;line-height:1.4;border:.5px solid rgba(52,199,89,.2)}
 /* ─── App-wide animations ─── */
 /* View slide-up when switching tabs - class added via JS only on tab change */
 @keyframes viewIn{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
@@ -1091,7 +1105,7 @@ const NI_ICONS={watch:icon("watch",14),sunglasses:icon("glasses",14),flashlight:
 const NI_LABELS={watch:"Watch",sunglasses:"Sunglasses",flashlight:"Flashlight","multi-tool":"Multi-tool",bag:"Bag / Case",clothing:"Clothing",other:"Other"};
 const SYNC_SAYINGS=["Sharpening the sync edge…","Honing your data to a razor's edge…","Applying the Scary Sharp protocol…","Stropping your listings clean…","Deburring your inventory…","Heat treating your data for maximum retention…","Running a paper test on your posts…","Putting a hair-whittling edge on your backup…","Your collection is in good hands…","Checking the grind geometry…","Buffing out the data scratches…","No false edges on this backup…","Setting the bevel on your backup…","Full flat grind on your file transfer…","Convex-grinding your cloud storage…","Making sure your data has no microbevels…"];
 const ED=()=>({postType:"[WTS]",knives:[],items:[],payment:[...SETTINGS.payment],paymentOther:"",noShip:[...SETTINGS.noShip],noShipOther:"",repost:false,photos:[],notes:"",rulesConfirmed:false,bundleEnabled:false,bundlePrice:"",bundles:[],groupAddons:false,tradeInterests:SETTINGS.tradeInterests||"",shippingCarrier:SETTINGS.shippingCarrier||"USPS"});
-let S={posts:[],inventory:[],loaded:false,view:"list",expanded:null,copied:null,draft:ED(),kfOpen:false,kfIdx:-1,kfPostId:null,kf:EK(),kfMode:"draft",tsUploads:{},kfExtraSlots:0,adv:false,err:"",saveNotice:false,lockerFilter:"all",lockerPicker:false,movingKnife:null,uploadFiles:[],kfUploads:[],kfPhotoTag:"other",niUploads:[],priceResearch:{status:"idle",results:[],query:""},modal:null,authStatus:"guest",authEmail:"",showMigrate:false,soldFlow:null,gearSoldFlow:null,delFlowEmail:null,authLoading:true,mdPreview:new Set(),undoStack:[],undoToast:null,_undoTid:null,flairToast:null,_flairTid:null,rollSort:"added",soldFilter:"all",listFilter:"all",shipFilter:"all",soldExpanded:new Set(),tutStep:0,aboutTab:"about",feedbackTab:"bug",acctPopover:false,trackingFlow:null,preflight:null,priceFilter:"sold",tour:null,bundlePicker:null,niOpen:false,ni:null,niIdx:-1,gearPicker:false,_skipRollAnim:false,rollKnivesOpen:true,rollGearOpen:true,emailChangeOpen:false,emailChangeNotice:false,accountDeleted:false,migrateConfirm:null,syncingScreen:false,syncMsg:0,vidBwTip:false,onboarding:false,onboardStep:0,_sessionStart:Date.now(),_renderCount:0,_loadTime:null,_copyCount:0,_viewChanges:0,_lastView:""};
+let S={posts:[],inventory:[],loaded:false,view:"list",expanded:null,copied:null,draft:ED(),kfOpen:false,kfIdx:-1,kfPostId:null,kf:EK(),kfMode:"draft",tsUploads:{},kfExtraSlots:0,adv:false,err:"",saveNotice:false,lockerFilter:"all",lockerPicker:false,movingKnife:null,uploadFiles:[],kfUploads:[],kfPhotoTag:"other",niUploads:[],priceResearch:{status:"idle",results:[],query:""},modal:null,authStatus:"guest",authEmail:"",showMigrate:false,soldFlow:null,gearSoldFlow:null,delFlowEmail:null,authLoading:true,mdPreview:new Set(),undoStack:[],undoToast:null,_undoTid:null,flairToast:null,_flairTid:null,rollSort:"added",soldFilter:"all",listFilter:"all",shipFilter:"all",soldExpanded:new Set(),tutStep:0,aboutTab:"about",feedbackTab:"bug",acctPopover:false,trackingFlow:null,preflight:null,priceFilter:"sold",tour:null,bundlePicker:null,niOpen:false,ni:null,niIdx:-1,gearPicker:false,_skipRollAnim:false,rollKnivesOpen:true,rollGearOpen:true,emailChangeOpen:false,emailChangeNotice:false,accountDeleted:false,migrateConfirm:null,syncingScreen:false,syncMsg:0,vidBwTip:false,onboarding:false,onboardStep:0,guide:null,guideCounts:null,_sessionStart:Date.now(),_renderCount:0,_loadTime:null,_copyCount:0,_viewChanges:0,_lastView:""};
 
 // ─── STORAGE ──────────────────────────────────────────────────
 async function load(){
@@ -1244,6 +1258,8 @@ function up(fn){fn(S);save();render();}
 function upInv(fn){fn(S);saveInv();render();}
 function upNow(fn){fn(S);saveNow();render();}
 function upInvNow(fn){fn(S);saveInvNow();render();}
+// For tracking/shipping ops that only change one post — saves to localStorage and
+// does a targeted single-post Supabase sync without ever scheduling a full sync.
 function upPost(fn,pid){fn(S);if(S.loaded){try{localStorage.setItem("ks_dirty","1");}catch(e){}try{window.storage.set("ks_v4",JSON.stringify(S.posts.filter(p=>!p._tourDemo)));}catch(e){}}render();_syncPostOnly(pid);}
 
 // ─── UNDO ─────────────────────────────────────────────────────
@@ -1279,7 +1295,6 @@ function reconcileInventory(){
 // ─── SUPABASE FUNCTIONS ───────────────────────────────────────
 async function initSupabase(){
   if(!SUPABASE_URL||SUPABASE_URL.includes("YOUR_PROJECT")||!SUPABASE_ANON_KEY||SUPABASE_ANON_KEY.includes("YOUR_ANON")){S.authLoading=false;return;}
-  if(typeof window.supabase==="undefined"){console.warn("[auth] Supabase SDK not loaded — CDN script may be blocked or unavailable");S.authLoading=false;return;}
   try{
     // Read hash tokens BEFORE createClient — Supabase's detectSessionInUrl may clear the hash
     // during init. _STARTUP_HASH is captured synchronously at page load (top of script).
@@ -1388,11 +1403,13 @@ async function _sbLoad(){
       return;
     }
     if(prof?.settings&&Object.keys(prof.settings).length)SETTINGS={...DS(),...prof.settings};
+    // If local data is dirty (unsaved changes), merge instead of overwrite so nothing is lost
     const _dirty=localStorage.getItem("ks_dirty")==="1";
     const {data:posts}=await _sb.from("posts").select("data").eq("user_id",currentUser.id);
     if(posts&&posts.length){
       const sbPosts=posts.map(r=>r.data).filter(p=>!p._tourDemo);
       if(_dirty){
+        // Prefer local for existing posts; only add posts that exist in Supabase but not locally
         const localMap=new Map(S.posts.map(p=>[p.id,p]));
         const newFromSb=sbPosts.filter(p=>!localMap.has(p.id)).map(p=>{if(!p.postText)p.postText=buildPost(p);return p;});
         if(newFromSb.length)S.posts=[...S.posts,...newFromSb].sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));
@@ -1415,6 +1432,7 @@ async function _sbLoad(){
     _syncStatus='synced';_syncLastAt=Date.now();_syncErrMsg='';
     // Mirror to localStorage and mark this device as synced for this user
     try{localStorage.setItem("ks_v4",JSON.stringify(S.posts));localStorage.setItem("ks_inv_v1",JSON.stringify(S.inventory));localStorage.setItem("ks_settings",JSON.stringify(SETTINGS));localStorage.setItem("ks_synced_uid",currentUser.id);}catch(e){}
+    // If dirty, push the merged local data up to Supabase now
     if(_dirty){_scheduleSbSync(true);}
   }catch(e){console.warn("Supabase load failed:",e);S.loaded=true;_syncStatus='error';_syncErrMsg='Could not load cloud data';}
 }
@@ -1441,6 +1459,7 @@ async function _syncPostOnly(pid){
       clearTimeout(tid);
       if(error)throw new Error(error.message||error.code);
       _syncStatus='synced';_syncLastAt=Date.now();_syncErrMsg='';
+      // Cancel any full-sync timer set by save() during the async gap — prevents spurious full sync
       if(_sbSyncTid){clearTimeout(_sbSyncTid);_sbSyncTid=null;}
     }catch(e){
       clearTimeout(tid);
@@ -2570,7 +2589,8 @@ async function uploadToHost(file){
     if(data.bytes){try{SETTINGS.cdnBytes=(SETTINGS.cdnBytes||0)+data.bytes;SETTINGS.cdnCount=(SETTINGS.cdnCount||0)+1;window.storage.set("ks_settings",JSON.stringify(SETTINGS));if(currentUser&&_sb)_sbSaveSettings();}catch(e){}}
     if(isVideo&&data.secure_url){
       // Build the 1080p H.264 delivery URL and immediately warm Cloudinary's cache
-      // so it's pre-generated before any buyer hits play (avoids first-play choppiness)
+      // via a real GET request (HEAD doesn't trigger video transcoding) so the
+      // pre-generated version is ready before any buyer hits play
       const xcodedUrl=cdnVideo(data.secure_url,1920);
       fetch(xcodedUrl).catch(()=>{});
       return xcodedUrl;
@@ -2693,6 +2713,7 @@ function openKF(idx,mode,postId){
   }
   // Pre-populate kfUploads from existing photos — assign slot tags by position
   S.kfUploads=(S.kf.photos||[]).map((url,i)=>({uid:gid(),name:url.split("/").pop()||"photo",url,uploading:false,error:null,tag:PHOTO_SLOT_ORDER[i]||"other"}));
+  // Restore extra slot count from existing photos (how many extra_N tags are used)
   const _usedExtra=S.kfUploads.filter(x=>x.tag&&x.tag.startsWith("extra_")).map(x=>parseInt(x.tag.split("_")[1]));
   S.kfExtraSlots=_usedExtra.length?Math.min(Math.max(..._usedExtra)+1,EXTRA_SLOTS_MAX):0;
   S.priceResearch={status:"idle",results:[],query:""};
@@ -2974,7 +2995,7 @@ function markSold(pid,ki){
   const p=S.posts.find(x=>x.id===pid);if(!p)return;
   if(p.knives[ki]?.sold||p.knives[ki]?.soldElsewhere){
     // Relist — blocked only if both delivered AND confirmed
-    if(p.knives[ki]?.shippedAt||p.knives[ki]?.confirmedAt)return;
+    if(p.knives[ki]?.confirmedAt&&p.knives[ki]?.deliveredAt)return;
     up(s=>{const p=s.posts.find(x=>x.id===pid);if(!p)return;const k=p.knives[ki];k.sold=false;k.soldElsewhere=false;k.soldAt=null;k.soldTo=null;k.pending=false;if(k.inventoryId){const inv=s.inventory.find(x=>x.id===k.inventoryId);if(inv)inv.status="listed";}p.postText=buildPost(p);});
     saveInv();return;
   }
@@ -3027,7 +3048,7 @@ function markGearSold(pid,gi){
   const p=S.posts.find(x=>x.id===pid);if(!p)return;
   const item=p.items?.[gi];if(!item)return;
   if(item.sold){
-    if(item.shippedAt||item.confirmedAt)return;
+    if(item.confirmedAt&&item.deliveredAt)return;
     up(s=>{const p=s.posts.find(x=>x.id===pid);if(!p)return;const it=p.items[gi];it.sold=false;it.soldAt=null;it.soldTo=null;it.pending=false;if(it.inventoryId){const inv=s.inventory.find(x=>x.id===it.inventoryId);if(inv)inv.status="listed";}p.postText=buildPost(p);});
     saveInvNow();return;
   }
@@ -3130,8 +3151,6 @@ function markWithdrawn(pid,ki){
   saveInv();render();
 }
 function readdKnife(pid,ki){
-  const _p=S.posts.find(x=>x.id===pid);const _k=_p?.knives[ki];
-  if(_k?.shippedAt||_k?.confirmedAt)return;
   pushUndo("Knife re-added to listing");
   up(s=>{const p=s.posts.find(x=>x.id===pid);if(!p)return;const k=p.knives[ki];k.withdrawn=false;if(k.inventoryId){const inv=s.inventory.find(x=>x.id===k.inventoryId);if(inv)inv.status="listed";}p.postText=buildPost(p);});
   saveInvNow();render();
@@ -3435,6 +3454,17 @@ function renderLoading(){
 }
 function render(){
   S._renderCount=(S._renderCount||0)+1;
+  // Auto-advance guide if condition met (e.g. knife saved, post generated)
+  if(S.guide!=null&&S.guide<GUIDE_STEPS.length){
+    const _gs=GUIDE_STEPS[S.guide];
+    const _gc=S.guideCounts||{inv:0,posts:0};
+    if(_gs?.autoCheck&&!_gs._triggered&&_gs.autoCheck(S,_gc)){
+      _gs._triggered=true; // prevent double-fire
+      const _next=S.guide+1;
+      if(_next>=GUIDE_STEPS.length){S.guide=null;try{localStorage.setItem('ks-guide-done','1');}catch(e){}}
+      else{S.guide=_next;}
+    }
+  }
   // Track whether this render is the first time we're landing on Roll — used to gate the unfurl animation
   S._rollJustEntered=(S.view==='roll'&&S._lastView!=='roll');
   if(S.loaded&&S._lastView!==S.view){S._viewChanges=(S._viewChanges||0)+1;S._lastView=S.view;
@@ -3459,7 +3489,7 @@ function render(){
     renderList();
   const toastHtml=S.undoToast?`<div class="undo-toast">↩ ${esc(S.undoToast)} <button class="undo-toast-btn" onclick="undoLast()">Undo</button></div>`:"";
   const flairToastHtml=S.flairToast?`<div class="flair-toast">${S.flairToast}</div>`:"";
-  document.getElementById("root").innerHTML=view+(S.modal&&!S.syncingScreen&&!S.showMigrate?renderModal(S.modal):"")+toastHtml+flairToastHtml+(S.tour!=null?renderTourCard():"")+(S.onboarding?renderOnboarding():"");
+  document.getElementById("root").innerHTML=view+(S.modal&&!S.syncingScreen&&!S.showMigrate?renderModal(S.modal):"")+toastHtml+flairToastHtml+(S.tour!=null?renderTourCard():"")+(S.guide!=null?renderGuideCard():"")+(S.onboarding?renderOnboarding():"");
   S._skipRollAnim=false; // reset after DOM update so next non-chip render gets animation back
   // Animate main content when switching views
   if(S._prevView!==S.view){
@@ -3691,7 +3721,7 @@ function renderAuthModal(){
       ${S.err?`<div class="err" style="margin-bottom:12px">${esc(S.err)}</div>`:""}
       <button class="btn btn-pri" style="width:100%;padding:11px 16px;font-size:14px" onclick="S.err='';sendMagicLink(document.getElementById('auth-email-input').value)">Send Magic Link</button>
       <div style="text-align:center;margin-top:13px;font-size:11px;color:var(--t4);line-height:1.7">No password required · No account setup · 100% free<br>Syncs across all your devices automatically</div>`
-      :`<div style="text-align:center;padding:8px 0 4px;font-size:13px;color:var(--t3)">Cloud sync is unavailable right now. Your data is still saved locally. Try refreshing, or check your connection.</div>`}
+      :`<div style="text-align:center;padding:8px 0 4px;font-size:13px;color:var(--t3)">Cloud sync is not available in this deployment.</div>`}
     </div>`;
   }
   return`<div class="modal-overlay" onclick="S.modal=null;S.err='';render()">
@@ -3887,10 +3917,12 @@ function renderOnboarding(){
       icon:"🎉",
       label:"You're ready",
       title:"You're all set",
-      body:"Head to <strong>The Roll</strong> to add your first knife, or take the interactive tour to see the full workflow with demo data first.",
-      cta:"Take the Interactive Tour",
-      ctaAction:"tour",
-      skip:"Go straight to the app"
+      body:"Want a quick walkthrough? The setup guide walks you through adding your first real knife and creating your first listing — step by step in the actual app.",
+      cta:"Guide me through it →",
+      ctaAction:"guide",
+      ctaSecondary:"Take the demo tour instead",
+      ctaSecondaryAction:"tour",
+      skip:"I'll figure it out on my own"
     }
   ];
   const step=steps[st];
@@ -3904,6 +3936,7 @@ function renderOnboarding(){
     <div class="ob-body">${step.body}</div>
     <div class="ob-acts">
       <button class="ob-btn-pri" onclick="obNext(${st},'${step.ctaAction||''}')">${step.cta}</button>
+      ${step.ctaSecondary?`<button class="ob-btn-sec" onclick="obNext(${st},'${step.ctaSecondaryAction||''}')">${step.ctaSecondary}</button>`:''}
       <button class="ob-btn-skip" onclick="obSkip()">${step.skip}</button>
     </div>
   </div>
@@ -3913,6 +3946,7 @@ function obNext(st,action){
   if(action==='settings'){S.view='settings';S.onboardStep=st;render();return;}
   if(action==='cloudinary'){S.modal='cloudinary';render();return;}
   if(action==='tour'){obDone();S.view='list';startTour();return;}
+  if(action==='guide'){obDone();startGuide();return;}
   const nextSt=st+1;
   const totalSteps=4;
   if(nextSt>=totalSteps){obDone();return;}
@@ -4006,7 +4040,8 @@ function renderTutorialModal(){
        <li><strong>Detailed</strong>: full condition notes, issues, accessories</li>
        <li><strong>Compact</strong>: clean one-liner per knife</li>
        <li><strong>Table</strong>: markdown table layout</li>
-       </ul>
+       <li><strong>Minimal</strong>: bare essentials only</li>
+     </ul>
      Use the ${chip("Switch")} button on any listing to cycle between them anytime.
      <div style="margin-top:10px;padding:8px 10px;background:var(--orangebg);border-radius:8px;font-size:12px;color:var(--oranget)"><strong>Gear & Extras auto-grouping:</strong> Any non-knife items you add (watches, sunglasses, etc.) are automatically grouped into a labeled <strong>Gear & Extras</strong> section at the bottom of your post.</div>`)}
      <div class="tut-cta-row"><button class="btn btn-pri btn-sm" onclick="tutDone();startCompose()">${icon('pencil',13)} Start a New Listing</button></div>`},
@@ -4774,7 +4809,7 @@ function renderList(){
         const kDot=k.soldElsewhere?`<span class="sdot sdot-r"></span>`:k.withdrawn?`<span class="sdot sdot-x"></span>`:k.sold?`<span class="sdot sdot-r"></span>`:k.pending?`<span class="sdot sdot-y"></span>`:`<span class="sdot sdot-g"></span>`;
         const kRowClass=`krow${(k.sold||k.soldElsewhere)?" sold":k.withdrawn?" withdrawn-row":k.pending?" pending-row":""}${isMoving?" moving":""}`;
         const addrHtml="";
-        return`<div class="${kRowClass}"><div class="krow-top"><div class="krow-info"><div class="krow-name${(k.sold||k.soldElsewhere||k.withdrawn)?" s":""}">${kDot} ${esc(k.brand)} ${esc(k.model)}${k.pending&&!k.sold&&!k.soldElsewhere&&!k.withdrawn?` <span class="pending-tag">PENDING</span>`:""}${kPhotoCount?` <span class="photo-tag">${icon('camera',11)} ${kPhotoCount}</span>`:""}</div><div class="krow-meta">${esc(k.steel||"N/A")} · ${esc(k.bladeCondition)}${(k.sold||k.soldElsewhere)&&k.soldAt?" · "+(k.soldElsewhere?"Elsewhere":"Sold")+" "+fmtD(k.soldAt):""}${k.withdrawn?" · Withdrawn":""}${soldToMeta}</div></div><span class="krow-price${(k.sold||k.soldElsewhere||k.withdrawn)?" s":""}">${knifePrice(k)}</span></div><div class="krow-acts">${k.soldElsewhere?`<span class="elsewhere-chip">Sold Elsewhere</span>${!k.shippedAt&&!k.confirmedAt?`<button class="btn btn-sm btn-sec" onclick="markSold('${p.id}',${i})">Relist</button>`:``}`:k.withdrawn?`<span class="withdrawn-chip">Withdrawn</span>${!k.shippedAt&&!k.confirmedAt?`<button class="btn btn-sm btn-sec" onclick="readdKnife('${p.id}',${i})">Re-add</button>`:""}`:k.sold?`<span class="sold-chip">Sold</span><button class="btn btn-sm${ccCopied?" btn-gn":" btn-pu"}" onclick="copyConfirmComment('${p.id}',${i})">${ccCopied?"Copied!":"Confirm Comment"}</button><button class="btn btn-sm${addrReqCopied?" btn-gn":" btn-sec"}" onclick="copyAddressRequest('${p.id}',${i})" title="Copy payment message">${addrReqCopied?"Copied!":"Payment Message"}</button>${!k.trackingNumber&&!isTrackingFlow?`<button class="btn btn-sec btn-sm" onclick="startTracking('${p.id}',${i})">${icon('package',12)} Add Tracking</button>`:``}${!k.shippedAt&&!k.confirmedAt?`<button class="btn btn-sm btn-sec" onclick="markSold('${p.id}',${i})">Relist</button>`:``}`:`<button class="btn btn-sm${dibsCopied?" btn-gn":" btn-pu"}" onclick="copyDibsMessage('${p.id}',${i})" title="Copy payment confirmation message">${dibsCopied?"Copied!":`${icon('mail',13)} Payment Info`}</button><button class="btn btn-sm${k.pending?" btn-am":" btn-sec"}" onclick="markPending('${p.id}',${i})">${k.pending?`<span class="sdot sdot-y"></span> Pending`:`<span class="sdot sdot-y"></span> Pending?`}</button><button class="btn btn-sm btn-gn" onclick="markSold('${p.id}',${i})"><span class="sdot sdot-g"></span>→<span class="sdot sdot-r"></span> Sold</button><button class="btn btn-sm btn-rd" onclick="markSoldElsewhere('${p.id}',${i})" title="Sold on eBay, FB Marketplace, etc.">Sold Elsewhere</button><button class="btn btn-sm btn-sec" onclick="markWithdrawn('${p.id}',${i})" title="Remove from listing, return to The Roll">Withdraw</button><button class="btn btn-sm btn-sec" onclick="openKF(${i},'post','${p.id}')" title="Edit knife details, photos, price">Edit</button>`}${!k.sold&&!k.soldElsewhere&&!k.withdrawn&&s.posts.length>1?`<button class="btn btn-sm btn-pu" onclick="startMove('${p.id}',${i})">Transfer</button>`:""}</div>${addrHtml}${trkHtml}${sfHtml}${picker}</div>`;
+        return`<div class="${kRowClass}"><div class="krow-top"><div class="krow-info"><div class="krow-name${(k.sold||k.soldElsewhere||k.withdrawn)?" s":""}">${kDot} ${esc(k.brand)} ${esc(k.model)}${k.pending&&!k.sold&&!k.soldElsewhere&&!k.withdrawn?` <span class="pending-tag">PENDING</span>`:""}${kPhotoCount?` <span class="photo-tag">${icon('camera',11)} ${kPhotoCount}</span>`:""}</div><div class="krow-meta">${esc(k.steel||"N/A")} · ${esc(k.bladeCondition)}${(k.sold||k.soldElsewhere)&&k.soldAt?" · "+(k.soldElsewhere?"Elsewhere":"Sold")+" "+fmtD(k.soldAt):""}${k.withdrawn?" · Withdrawn":""}${soldToMeta}</div></div><span class="krow-price${(k.sold||k.soldElsewhere||k.withdrawn)?" s":""}">${knifePrice(k)}</span></div><div class="krow-acts">${k.soldElsewhere?`<span class="elsewhere-chip">Sold Elsewhere</span>${!(k.confirmedAt&&k.deliveredAt)?`<button class="btn btn-sm btn-sec" onclick="markSold('${p.id}',${i})">Relist</button>`:``}`:k.withdrawn?`<span class="withdrawn-chip">Withdrawn</span><button class="btn btn-sm btn-sec" onclick="readdKnife('${p.id}',${i})">Re-add</button>`:k.sold?`<span class="sold-chip">Sold</span><button class="btn btn-sm${ccCopied?" btn-gn":" btn-pu"}" onclick="copyConfirmComment('${p.id}',${i})">${ccCopied?"Copied!":"Confirm Comment"}</button><button class="btn btn-sm${addrReqCopied?" btn-gn":" btn-sec"}" onclick="copyAddressRequest('${p.id}',${i})" title="Copy payment message">${addrReqCopied?"Copied!":"Payment Message"}</button>${!k.trackingNumber&&!isTrackingFlow?`<button class="btn btn-sec btn-sm" onclick="startTracking('${p.id}',${i})">${icon('package',12)} Add Tracking</button>`:``}${!(k.confirmedAt&&k.deliveredAt)?`<button class="btn btn-sm btn-sec" onclick="markSold('${p.id}',${i})">Relist</button>`:``}`:`<button class="btn btn-sm${dibsCopied?" btn-gn":" btn-pu"}" onclick="copyDibsMessage('${p.id}',${i})" title="Copy payment confirmation message">${dibsCopied?"Copied!":`${icon('mail',13)} Payment Info`}</button><button class="btn btn-sm${k.pending?" btn-am":" btn-sec"}" onclick="markPending('${p.id}',${i})">${k.pending?`<span class="sdot sdot-y"></span> Pending`:`<span class="sdot sdot-y"></span> Pending?`}</button><button class="btn btn-sm btn-gn" onclick="markSold('${p.id}',${i})"><span class="sdot sdot-g"></span>→<span class="sdot sdot-r"></span> Sold</button><button class="btn btn-sm btn-rd" onclick="markSoldElsewhere('${p.id}',${i})" title="Sold on eBay, FB Marketplace, etc.">Sold Elsewhere</button><button class="btn btn-sm btn-sec" onclick="markWithdrawn('${p.id}',${i})" title="Remove from listing, return to The Roll">Withdraw</button><button class="btn btn-sm btn-sec" onclick="openKF(${i},'post','${p.id}')" title="Edit knife details, photos, price">Edit</button>`}${!k.sold&&!k.soldElsewhere&&!k.withdrawn&&s.posts.length>1?`<button class="btn btn-sm btn-pu" onclick="startMove('${p.id}',${i})">Transfer</button>`:""}</div>${addrHtml}${trkHtml}${sfHtml}${picker}</div>`;
       }).join("");
       const da2=daysAgo(p.createdAt);
       const repostSection=pA>0?`<div class="repost-track">
@@ -4808,7 +4843,7 @@ function renderList(){
           const gAddrHtml="";
           const gDot=item.sold?`<span class="sdot sdot-r"></span>`:item.pending?`<span class="sdot sdot-y"></span>`:`<span class="sdot sdot-g"></span>`;
           const gRowClass=`krow${item.sold?" sold":item.pending?" pending-row":""}`;
-          const gActsHtml=item.sold?(!item.shippedAt&&!item.confirmedAt?`<span class="sold-chip">Sold</span><button class="btn btn-sm btn-sec" onclick="markGearSold('${p.id}',${gi})">Relist</button>`:`<span class="sold-chip">Sold</span>`):(`<button class="btn btn-sm${item.pending?" btn-am":" btn-sec"}" onclick="markGearPending('${p.id}',${gi})">${item.pending?`<span class="sdot sdot-y"></span> Pending`:`<span class="sdot sdot-y"></span> Pending?`}</button><button class="btn btn-sm btn-gn" onclick="markGearSold('${p.id}',${gi})"><span class="sdot sdot-r"></span> Sold</button>`);
+          const gActsHtml=item.sold?(!(item.confirmedAt&&item.deliveredAt)?`<span class="sold-chip">Sold</span><button class="btn btn-sm btn-sec" onclick="markGearSold('${p.id}',${gi})">Relist</button>`:`<span class="sold-chip">Sold</span>`):(`<button class="btn btn-sm${item.pending?" btn-am":" btn-sec"}" onclick="markGearPending('${p.id}',${gi})">${item.pending?`<span class="sdot sdot-y"></span> Pending`:`<span class="sdot sdot-y"></span> Pending?`}</button><button class="btn btn-sm btn-gn" onclick="markGearSold('${p.id}',${gi})"><span class="sdot sdot-r"></span> Sold</button>`);
           return`<div class="${gRowClass}"><div class="krow-top"><div class="krow-info"><div class="krow-name${item.sold?" s":""}">${gDot} ${gicn} ${esc(glabel)}: ${esc(item.description||"")}${item.pending&&!item.sold?` <span class="pending-tag">PENDING</span>`:""}</div><div class="krow-meta">${esc(item.condition||"")} · ${gpriceStr}${item.sold&&item.soldAt?" · Sold "+fmtD(item.soldAt):""}${item.soldTo?" · Buyer: u/"+esc(item.soldTo):""}</div></div><span class="krow-price${item.sold?" s":""}">${gpriceStr}</span></div><div class="krow-acts">${gActsHtml}</div>${gAddrHtml}${gsfHtml}</div>`;
         }).join("");
         return`<div class="krows-hdr" style="margin-top:10px">Gear &amp; Extras</div>${gearItemRows}`;
@@ -5614,6 +5649,129 @@ function endTour(keepData){
   render();
 }
 
+// ─── SETUP GUIDE (real-data first-time walkthrough) ──────────────────────────
+const GUIDE_STEPS=[
+  {
+    icon:"🗡️",
+    label:"Setup — Step 1 of 3",
+    title:"Welcome to The Roll",
+    body:"This is your knife inventory — every knife you want to sell lives here first. Tap <strong>+ Add Knife</strong> at the top of the screen to open the knife form.",
+    hint:"💡 Tap the blue + Add Knife button above to get started.",
+    cta:"Got it, I'll tap it →",
+    autoCheck:(s)=>s.kfOpen===true,
+  },
+  {
+    icon:"✏️",
+    label:"Setup — Step 1 of 3",
+    title:"Fill in your knife details",
+    body:"Enter the <strong>brand, model, and asking price</strong> at minimum. The more info you add, the better your listing. Add a photo if you have one ready — photos close sales.",
+    hint:"💡 Price and brand are required. Photos are strongly recommended on r/Knife_Swap.",
+    cta:"Details filled in →",
+  },
+  {
+    icon:"💾",
+    label:"Setup — Step 1 of 3",
+    title:"Save your knife",
+    body:"Scroll to the bottom of the knife form and tap <strong>Save Knife</strong>. Your knife will appear in The Roll.",
+    hint:"💡 Scroll down in the knife form to find the Save Knife button.",
+    cta:"I saved it →",
+    autoCheck:(s,c)=>s.inventory.filter(k=>!k._tourDemo).length > (c.inv||0),
+  },
+  {
+    icon:"📋",
+    label:"Setup — Step 2 of 3",
+    title:"Create your first listing",
+    body:"Switch to the <strong>Listings</strong> tab above. Tap <strong>+ New Post</strong> to open the post builder, then add the knife you just saved.",
+    hint:"💡 Tap the Listings tab in the header, then tap the + New Post button.",
+    cta:"Go to Listings →",
+    ctaNav:"list",
+  },
+  {
+    icon:"⚡",
+    label:"Setup — Step 2 of 3",
+    title:"Build and generate your post",
+    body:"Add your knife to the post, choose your payment methods, and tap <strong>Generate Post</strong>. BladeFlow formats everything to r/Knife_Swap standards automatically.",
+    hint:"💡 You need at least one knife added and a timestamp photo to generate.",
+    cta:"I generated it →",
+    autoCheck:(s,c)=>s.posts.filter(p=>!p._tourDemo).length > (c.posts||0),
+  },
+  {
+    icon:"🎉",
+    label:"Setup complete!",
+    title:"You're ready to sell!",
+    body:"Your post is formatted and ready. Use the <strong>Copy Post</strong> button to grab the text, then paste it into a new r/Knife_Swap thread. Come back here to track sales, shipping, and payments.",
+    cta:"Finish setup →",
+    ctaNav:null,
+    last:true,
+  },
+];
+
+function startGuide(){
+  S.guide=0;
+  S.guideCounts={
+    inv:S.inventory.filter(k=>!k._tourDemo).length,
+    posts:S.posts.filter(p=>!p._tourDemo).length
+  };
+  // Reset any triggered flags from a previous run
+  GUIDE_STEPS.forEach(gs=>{ delete gs._triggered; });
+  S.onboarding=false;
+  try{localStorage.setItem('ks-onboarding-done','1');}catch(e){}
+  // Navigate to Roll so the user can start adding a knife
+  S.view='roll';
+  S.kfOpen=false;
+  S.modal=null;
+  render();
+}
+
+function nextGuideStep(){
+  if(S.guide==null)return;
+  const step=GUIDE_STEPS[S.guide];
+  // Perform nav side-effect if any
+  if(step.ctaNav==='list'){S.view='list';S.kfOpen=false;S.modal=null;}
+  else if(step.ctaNav==='roll'){S.view='roll';S.modal=null;}
+  if(step.last){endGuide();return;}
+  const next=S.guide+1;
+  if(next>=GUIDE_STEPS.length){endGuide();return;}
+  S.guide=next;
+  render();
+}
+
+function endGuide(){
+  S.guide=null;
+  S.guideCounts=null;
+  try{localStorage.setItem('ks-guide-done','1');}catch(e){}
+  render();
+}
+
+function renderGuideCard(){
+  if(S.guide==null)return"";
+  const idx=S.guide;
+  const step=GUIDE_STEPS[idx];
+  if(!step)return"";
+  const total=GUIDE_STEPS.length;
+  const pct=Math.round(((idx+1)/total)*100);
+  const isLast=!!step.last;
+  return`<div class="guide-card">
+    <div class="guide-bar">
+      <span class="guide-steps">Step ${idx+1} of ${total}</span>
+      <button class="guide-end" onclick="endGuide()" title="Skip guide">Skip guide</button>
+    </div>
+    <div class="guide-progress"><div class="guide-fill" style="width:${pct}%"></div></div>
+    <div class="guide-real-badge">${icon('check',12,'')} Real Setup · Your actual data</div>
+    <div class="guide-icon">${step.icon}</div>
+    <div class="guide-title">${step.title}</div>
+    <div class="guide-body">${step.body}</div>
+    ${step.hint?`<div class="guide-hint">${step.hint}</div>`:''}
+    <div class="guide-acts">
+      <div style="display:flex;gap:8px;flex:1;justify-content:flex-end">
+        ${!isLast
+          ?`<button class="btn btn-sm" style="background:var(--green);color:#fff;font-weight:700" onclick="nextGuideStep()">${step.cta||'Next →'}</button>`
+          :`<button class="btn btn-sm" style="background:var(--green);color:#fff;font-weight:700" onclick="endGuide()">Finish setup →</button>`}
+      </div>
+    </div>
+  </div>`;
+}
+
 function renderTourCard(){
   if(S.tour==null)return"";
   const step=TOUR_STEPS[S.tour];
@@ -5664,21 +5822,6 @@ function kfChecklist(f){
   return`<div class="cl"><div class="cl-hdr">Knife checklist</div><div class="cl-items">${rows}</div>${allOk?`<div class="cl-all-good">✓ Knife ready to add</div>`:""}</div>`;
 }
 
-function gearRatioCheck(d){
-  const knives=d.knives||[];
-  const gear=d.items||[];
-  if(!gear.length)return{countOk:true,valueOk:true,valueCheckable:false,knifeCount:knives.length,gearCount:0,knifeValue:0,gearValue:0};
-  const knifeCount=knives.length;
-  const gearCount=gear.length;
-  const countOk=knifeCount>gearCount;
-  function listVal(x,priceF,tvF,typeF){const t=x[typeF]||"WTS";return t==="WTT"?parseFloat(x[tvF])||0:parseFloat(x[priceF])||0;}
-  const knifeValue=knives.reduce((s,k)=>s+listVal(k,'price','tradeValue','knifeType'),0);
-  const gearValue=gear.reduce((s,g)=>s+listVal(g,'price','tradeValue','saleType'),0);
-  const valueCheckable=knifeValue>0||gearValue>0;
-  const valueOk=!valueCheckable||knifeValue>gearValue;
-  return{countOk,valueOk,valueCheckable,knifeCount,gearCount,knifeValue:Math.round(knifeValue),gearValue:Math.round(gearValue)};
-}
-
 function composeChecklist(d){
   const knifeProblems=[];
   d.knives.forEach((k,i)=>{
@@ -5706,7 +5849,7 @@ function composeChecklist(d){
     {ok:d.knives.length>0,label:"At least one knife added"},
     {ok:knifeProblems.length===0,label:knifeProblems.length===0?"All knife details complete":knifeProblems[0]+(knifeProblems.length>1?` (+${knifeProblems.length-1} more)`:"")},
     ...(gearProblems.length||((d.items||[]).length>0)?[{ok:gearProblems.length===0,label:gearProblems.length===0?"All gear items complete":gearProblems[0]+(gearProblems.length>1?` (+${gearProblems.length-1} more)`:"")}]:[]),
-    {ok:(d.photos||[]).filter(Boolean).length>0,label:(()=>{const n=(d.photos||[]).filter(Boolean).length;return n>1?`${n} timestamp photos linked`:"Timestamp photo linked";})()},
+    {ok:(d.photos||[]).filter(Boolean).length>0,label:"Timestamp photo linked"},
     {ok:d.payment.length>0,label:"Payment method selected"},
     {ok:!!d.rulesConfirmed,label:"r/Knife_Swap rules confirmed"},
   ];
@@ -5732,9 +5875,7 @@ function renderCompose(){
   }).join(""):`<div style="text-align:center;padding:20px 16px;color:var(--t4);font-size:13px;border:1px dashed rgba(0,0,0,.13);border-radius:var(--rs)">No knives added yet</div>`;
   const lockerPickerHtml=s.lockerPicker&&availInLocker.length?`<div class="lk-picker" style="margin-top:6px">${availInLocker.map((k,i)=>{const ri=s.inventory.indexOf(k);const issues=knifePickerIssues(k);const ok=issues.length===0;const issueText=issues.slice(0,2).join(" · ")+(issues.length>2?` +${issues.length-2} more`:"");return ok?`<div class="lk-pick-row" onclick="addFromLocker(${ri})"><div><div class="lk-pick-name">${esc(k.brand)} ${esc(k.model)}</div><div class="lk-pick-meta">${esc(k.steel||"N/A")} · ${esc(k.bladeCondition)} · $${esc(k.price)}</div></div><button class="btn btn-gn btn-xs" style="pointer-events:none">Add</button></div>`:`<div class="lk-pick-row" style="cursor:not-allowed;opacity:.75" title="${esc(issueText)}"><div style="flex:1;min-width:0"><div class="lk-pick-name">${esc(k.brand)} ${esc(k.model)}</div><div class="lk-pick-meta">${esc(k.steel||"N/A")} · ${esc(k.bladeCondition)}</div><div style="font-size:10px;color:var(--redt);margin-top:3px;font-weight:500;display:flex;align-items:center;gap:3px">${icon('alert-triangle',10,'var(--redt)')} ${esc(issueText)}</div></div><button class="btn btn-xs" style="pointer-events:none;flex-shrink:0;background:var(--orangebg);color:var(--oranget);border:.5px solid var(--oranget)">Fix first</button></div>`;}).join("")}<div style="padding:8px 14px;font-size:11px;color:var(--t4);border-top:.5px solid var(--b2);cursor:pointer" onclick="S.lockerPicker=false;render()">Close picker</div></div>`:s.lockerPicker&&!availInLocker.length?`<div style="padding:12px 14px;background:var(--bg);border-radius:var(--rs);font-size:12.5px;color:var(--t3);margin-top:6px">No available knives in The Roll. <span style="color:var(--blue);cursor:pointer" onclick="S.view='roll';render()">Add some first.</span></div>`:"";
   const gearPickerHtml=s.gearPicker&&availGearInLocker.length?`<div class="lk-picker" style="margin-top:6px">${availGearInLocker.map((item)=>{const ri=s.inventory.indexOf(item);const icn=NI_ICONS[item.itemCategory||"other"]||icon("package",14);const label=NI_LABELS[item.itemCategory||"other"]||"Other";const gissues=gearPickerIssues(item);const gok=gissues.length===0;const gissueText=gissues.join(" · ");return gok?`<div class="lk-pick-row" onclick="addGearFromRoll(${ri})"><div><div class="lk-pick-name">${icn} ${esc(label)}: ${esc(item.description||"")}</div><div class="lk-pick-meta">${esc(item.condition||"")}${item.price?" · $"+esc(item.price):""}</div></div><button class="btn btn-gn btn-xs" style="pointer-events:none">Add</button></div>`:`<div class="lk-pick-row" style="cursor:not-allowed;opacity:.75" title="${esc(gissueText)}"><div style="flex:1;min-width:0"><div class="lk-pick-name">${icn} ${esc(label)}: ${esc(item.description||"")}</div><div class="lk-pick-meta">${esc(item.condition||"")}</div><div style="font-size:10px;color:var(--redt);margin-top:3px;font-weight:500;display:flex;align-items:center;gap:3px">${icon('alert-triangle',10,'var(--redt)')} ${esc(gissueText)}</div></div><button class="btn btn-xs" style="pointer-events:none;flex-shrink:0;background:var(--orangebg);color:var(--oranget);border:.5px solid var(--oranget)">Fix first</button></div>`;}).join("")}<div style="padding:8px 14px;font-size:11px;color:var(--t4);border-top:.5px solid var(--b2);cursor:pointer" onclick="S.gearPicker=false;render()">Close picker</div></div>`:s.gearPicker&&!availGearInLocker.length?`<div style="padding:12px 14px;background:var(--bg);border-radius:var(--rs);font-size:12.5px;color:var(--t3);margin-top:6px">No available gear in The Roll. <span style="color:var(--blue);cursor:pointer" onclick="S.view='roll';render()">Add some first.</span></div>`:"";
-  const _gr=gearRatioCheck(d);
-  const _grWarn=(d.items||[]).length>0&&(!_gr.countOk||(_gr.valueCheckable&&!_gr.valueOk))?`<div style="margin:8px 0 4px;padding:10px 12px;background:rgba(255,149,0,.12);border:1px solid rgba(255,149,0,.35);border-radius:var(--rs)"><div style="display:flex;align-items:center;gap:5px;font-weight:700;font-size:12px;color:var(--acc);margin-bottom:5px">${icon('alert-triangle',13,'var(--acc)')} r/Knife_Swap Gear Ratio Rule</div>${!_gr.countOk?`<div style="font-size:12px;line-height:1.5;margin-bottom:4px">You have <strong>${_gr.gearCount} gear item${_gr.gearCount!==1?'s':''}</strong> but only <strong>${_gr.knifeCount} knife${_gr.knifeCount!==1?'s':''}</strong>. Knives must be more than 50% of all items — you need more knives than gear items. Add another knife or remove a gear item.</div>`:""}<div style="font-size:12px;line-height:1.5;margin-bottom:4px">${_gr.valueCheckable&&!_gr.valueOk?`Gear value <strong>$${_gr.gearValue}</strong> exceeds knife value <strong>$${_gr.knifeValue}</strong>. Knives must be more than 50% of total listing value. Add a higher-value knife or reduce the gear price.`:""}</div><div style="font-size:11px;color:var(--t3);margin-top:2px;border-top:.5px solid rgba(255,149,0,.25);padding-top:6px"><strong style="color:var(--t2)">What counts as gear?</strong> Knife accessories like scales, clips, backspacers, hardware, strops, sharpeners, maintenance kits, and organizers are fine and nobody will blink. EDC-adjacent items like flashlights are a gray area but generally tolerated in moderation. The rule is really aimed at unrelated items — a laptop or a watch next to a budget knife is what gets posts flagged.<br><br><strong style="color:var(--t2)">Example:</strong> $175 knife + $600 computer part = not allowed. $1,200 knife + $600 computer part = OK.</div></div>`:"";
-  const gearItemsList=(d.items||[]).length?`<div style="margin-top:10px"><div class="krows-hdr">Gear &amp; Extras</div>${_grWarn}${(d.items||[]).map((item,di)=>{const gicn=NI_ICONS[item.itemCategory||"other"]||icon("package",14);const label=NI_LABELS[item.itemCategory||"other"]||"Other";const priceStr=item.saleType!=="WTT"&&item.price?`SV: $${item.price}`:item.saleType!=="WTS"&&item.tradeValue?`TV: $${item.tradeValue}`:"$TBD";return`<div class="ki"><span class="ki-num" style="background:var(--surf);color:var(--t2);font-size:13px;width:28px;height:28px">${gicn}</span><div class="ki-info"><div class="ki-name">${esc(label)}: ${esc(item.description||"")}</div><div class="ki-meta">${esc(item.condition||"")} · ${esc(item.saleType||"WTS")}</div></div><span class="ki-price">${priceStr}</span><button class="btn btn-rd btn-xs" onclick="removeGearItem(${di})">Remove</button></div>`;}).join("")}</div>`:"";
+  const gearItemsList=(d.items||[]).length?`<div style="margin-top:10px"><div class="krows-hdr">Gear &amp; Extras</div>${(d.items||[]).map((item,di)=>{const gicn=NI_ICONS[item.itemCategory||"other"]||icon("package",14);const label=NI_LABELS[item.itemCategory||"other"]||"Other";const priceStr=item.saleType!=="WTT"&&item.price?`SV: $${item.price}`:item.saleType!=="WTS"&&item.tradeValue?`TV: $${item.tradeValue}`:"$TBD";return`<div class="ki"><span class="ki-num" style="background:var(--surf);color:var(--t2);font-size:13px;width:28px;height:28px">${gicn}</span><div class="ki-info"><div class="ki-name">${esc(label)}: ${esc(item.description||"")}</div><div class="ki-meta">${esc(item.condition||"")} · ${esc(item.saleType||"WTS")}</div></div><span class="ki-price">${priceStr}</span><button class="btn btn-rd btn-xs" onclick="removeGearItem(${di})">Remove</button></div>`;}).join("")}</div>`:"";
   const addBtns=!s.kfOpen?`<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn btn-sec" style="flex:1;justify-content:center;border-radius:var(--rs)" onclick="openKF(-1,'draft')">+ New Knife</button>${availInLocker.length?`<button class="btn btn-pu" style="border-radius:var(--rs)" onclick="S.lockerPicker=!S.lockerPicker;S.gearPicker=false;render()">From Roll: Knives${s.lockerPicker?" &#9650;":" &#9660;"}</button>`:""}${availGearInLocker.length?`<button class="btn btn-pu" style="border-radius:var(--rs)" onclick="S.gearPicker=!S.gearPicker;S.lockerPicker=false;render()">From Roll: Gear${s.gearPicker?" &#9650;":" &#9660;"}</button>`:""}</div>${lockerPickerHtml}${gearPickerHtml}${gearItemsList}`:"";
   const kfHtml=s.kfOpen&&s.kfMode==="draft"?kfFormHtml():"";
   // Upload section
@@ -5752,8 +5893,8 @@ function renderCompose(){
     <div style="margin-bottom:16px"><div class="field"><label>Post Type</label><div class="seg" style="margin-top:5px">${["[WTS]","[WTT]","[WTS/WTT]"].map(t=>`<button class="seg-item${d.postType===t?" on":""}" onclick="S.draft.postType='${t}';render()">${t}</button>`).join("")}</div></div></div>
     <div style="margin-bottom:16px"><div class="field"><label>Reddit Title Preview</label><div class="title-prev"><div class="t-text">${esc(titleStr)}</div><div style="display:flex;justify-content:flex-end;margin-top:4px"><span class="t-count${titleOver?" t-over":""}">${titleStr.length}/300${titleOver?" - near limit":""}</span></div></div><div class="field-hint">${d.knives.length>1?"Knife names truncated to fit if needed. ":""}Auto-generated from your knives.</div></div></div>
     <div class="field" style="margin-bottom:14px">
-      <label>Timestamp Photos <span style="font-size:11px;font-weight:400;color:var(--t3)">${d.photos.filter(Boolean).length>0?`(${d.photos.filter(Boolean).length} added)`:"at least 1 required"}</span></label>
-      <div class="ts-req" style="display:flex;gap:8px;align-items:flex-start">${icon('camera',14)} <span>At least one photo showing <strong>all knives</strong> with a handwritten note: your Reddit username + full date. Multiple timestamps are fine and all will be swipeable in the gallery.</span></div>
+      <label>Photos &amp; Timestamp</label>
+      <div class="ts-req" style="display:flex;gap:8px;align-items:flex-start">${icon('camera',14)} <span>Include one photo showing <strong>all knives</strong> in this post with a handwritten note: your Reddit username + full date. Multiple timestamps are fine and all will be swipeable in the gallery.</span></div>
       <div style="background:var(--surf3);border:.5px solid var(--b2);border-radius:8px;padding:8px 12px;margin-top:8px;display:flex;align-items:center;gap:10px">${icon('info',13,'var(--blue)')}<div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--t3);margin-bottom:3px">Write this on your note</div><div style="font-size:13px;font-weight:600;color:var(--t1)">${SETTINGS.username?`u/${esc(SETTINGS.username)}`:"u/yourname"}&nbsp;&nbsp;${new Date().toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})}</div></div></div>
       ${(()=>{const svc=activePhotoService();return svc==="cloudinary"?`<div class="up-zone" onclick="triggerUpload()" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave()"><div class="up-lbl">Drop photos here or click to upload</div><div class="up-sub">Photos only · videos: paste a URL below</div></div>`:`<div class="up-zone" style="cursor:default;opacity:.55;pointer-events:none"><div class="up-lbl" style="font-size:13px">Upload not configured</div><div class="up-sub">Set up Cloudinary in Settings to enable drag-and-drop uploads, or paste an Imgur URL below</div></div>`;})()}
       ${upRows?`<div class="up-files">${upRows}</div>`:""}
@@ -5992,7 +6133,7 @@ function renderSettings(){
   <div class="sgroup">
     <div class="srow"><div><div class="srow-lbl">${icon('book',13)} How-To Guide</div><div class="srow-sub">Step-by-step guide to getting the most out of BladeFlow</div></div><div class="srow-ctrl"><button class="btn btn-sec btn-sm" onclick="S.view='guide';render()">${icon('book',14)} Open Guide</button></div></div>
     <div class="srow"><div><div class="srow-lbl">${icon('bar-chart',13)} Data for Data Nerds</div><div class="srow-sub">Deep analytics on your selling history, pricing, pipeline, and more</div></div><div class="srow-ctrl"><button class="btn btn-pu btn-sm" onclick="S.modal='datanerds';render()">Open Analytics</button></div></div>
-    <div class="srow"><div><div class="srow-lbl">${icon('play-circle',13)} Onboarding</div><div class="srow-sub">Rerun the first-time setup walkthrough</div></div><div class="srow-ctrl"><button class="btn btn-sec btn-sm" onclick="try{localStorage.removeItem('ks-onboarding-done');}catch(e){}S.onboarding=true;S.onboardStep=0;S.view='list';render()">Restart Onboarding</button></div></div>
+    <div class="srow"><div><div class="srow-lbl">${icon('play-circle',13)} Onboarding</div><div class="srow-sub">Rerun the first-time setup walkthrough, or jump straight into the step-by-step guide</div></div><div class="srow-ctrl" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-sec btn-sm" onclick="try{localStorage.removeItem('ks-onboarding-done');}catch(e){}S.onboarding=true;S.onboardStep=0;S.view='list';render()">Restart Setup</button><button class="btn btn-sm" style="background:var(--green);color:#fff;font-weight:700" onclick="S.view='roll';startGuide()">${icon('check-circle',13)} Setup Guide</button></div></div>
     <div class="srow"><div class="srow-lbl">More</div><div class="srow-ctrl" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-pri btn-sm" onclick="S.view='list';startTour()">${icon("play-circle",14)} Tour</button><button class="btn btn-am btn-sm" onclick="S.modal='tutorial';S.tutStep=0;render()">${icon("book",14)} Tutorial</button><button class="btn btn-sec btn-sm" onclick="S.modal='about';S.aboutTab='about';render()">${icon("info",14)} FAQ</button><button class="btn btn-sec btn-sm" onclick="S.modal='feedback';S.feedbackTab='bug';render()">${icon("mail",14)} Feedback</button></div></div>
   </div>
   <div class="settings-section-lbl">Photo Hosting</div>
@@ -6072,6 +6213,7 @@ window.markSoldElsewhere=markSoldElsewhere;window.confirmSoldElsewhere=confirmSo
 window.sendMagicLink=sendMagicLink;window.signOut=signOut;window.changeEmail=changeEmail;window.deleteAccount=deleteAccount;window.migrateToSupabase=migrateToSupabase;window.discardLocalData=discardLocalData;window.skipMigrate=skipMigrate;window.manualSync=manualSync;
 window.renderTutorialModal=renderTutorialModal;window.renderAboutModal=renderAboutModal;window.renderCloudinaryModal=renderCloudinaryModal;window.renderCloudinaryStatus=renderCloudinaryStatus;
 window.startTour=startTour;window.nextTourStep=nextTourStep;window.prevTourStep=prevTourStep;window.endTour=endTour;
+window.startGuide=startGuide;window.nextGuideStep=nextGuideStep;window.endGuide=endGuide;
 window.autoPostType=autoPostType;window.buildTitleStr=buildTitleStr;window.doFetchPriceResearch=doFetchPriceResearch;window.clearPriceResearch=clearPriceResearch;window.applyPriceFromResearch=applyPriceFromResearch;
 
 // ─── CLOSE ACCOUNT POPOVER ON OUTSIDE CLICK ──────────────
@@ -6323,6 +6465,35 @@ if("serviceWorker" in navigator){
 window.addEventListener('beforeunload',()=>{try{const _bfs=JSON.parse(localStorage.getItem('bf_stats')||'{}');_bfs.totalTimeMs=(_bfs.totalTimeMs||0)+(Date.now()-(S._sessionStart||Date.now()));localStorage.setItem('bf_stats',JSON.stringify(_bfs));}catch(e){}});
 // Capture desired view from hash/param BEFORE any async render() calls overwrite location.hash
 const _VALID_VIEWS=['list','roll','sold','shipping','guide','settings'];
+// ─── ACCESS GATE ─────────────────────────────────────────────────────────────
+(()=>{
+  const p=new URLSearchParams(location.search);
+  if(p.get('key')==='bf2025'){
+    try{localStorage.setItem('bf_granted','1');}catch(e){}
+    // Remove key from URL bar without a reload
+    const clean=location.pathname+(location.hash||'');
+    history.replaceState(null,'',clean);
+  }
+  if(localStorage.getItem('bf_granted')!=='1'){
+    document.body.innerHTML=`<style>
+      *{box-sizing:border-box;margin:0;padding:0}
+      body{background:#1C1C1E;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+      .cs{text-align:center;padding:40px 24px;max-width:420px}
+      .cs img{width:64px;height:64px;border-radius:16px;margin-bottom:20px}
+      .cs h1{color:#F2F2F7;font-size:26px;font-weight:700;margin-bottom:8px}
+      .cs p{color:rgba(242,242,247,.55);font-size:15px;line-height:1.6;margin-bottom:24px}
+      .cs a{color:#0A84FF;font-size:14px;text-decoration:none}
+    </style>
+    <div class="cs">
+      <img src="/bladeflow/icon.png" alt="BladeFlow">
+      <h1>Coming Soon</h1>
+      <p>BladeFlow is still in beta. Follow <a href="https://www.reddit.com/user/smashedllama" target="_blank">u/smashedllama</a> on Reddit for updates.</p>
+      <a href="https://smashedllama.github.io/bladeflow/gallery.html?d=eyJ1c2VyIjoic21hc2hlZGxsYW1hMiIsImtuaXZlcyI6W3sibmFtZSI6IlNweWRlcmNvIEVuZGVsYSBXaGFybmNsaWZmZSIsInByaWNlIjoiU1Y6ICQxMjAiLCJpbWdzIjpbImh0dHBzOi8vcmVzLmNsb3VkaW5hcnkuY29tL2RzdWpseHVqcC9pbWFnZS91cGxvYWQvdjE3NzQ0MTc1NDAvaTFjNngydjZ4aWw4ZnVyMXR2ZmguanBnIiwiaHR0cHM6Ly9yZXMuY2xvdWRpbmFyeS5jb20vZHN1amx4dWpwL2ltYWdlL3VwbG9hZC92MTc3NDQxNzU1Ny9ycXh4ZXdsMnU2Z3BzeXN3Y2xieC5qcGciLCJodHRwczovL3Jlcy5jbG91ZGluYXJ5LmNvbS9kc3VqbHh1anAvaW1hZ2UvdXBsb2FkL3YxNzc0NDE3NTc3L3phZHJ0dmYzMmFjdWFibXlybXNxLmpwZyJdLCJkZXRhaWxzIjp7InN0ZWVsIjoiSzM5MCIsImNvbmRpdGlvbiI6IkZhY3RvcnkgZWRnZSwgY2FycmllZCIsIm93bmVycyI6IjIiLCJjYXJyaWVkIjoiTm8iLCJjdXQiOiJObyIsImNlbnRlcmluZyI6IlBlcmZlY3QiLCJsb2NrdXAiOiJTb2xpZCIsImxvY2t1cE5vdGVzIjoiIiwiaXNzdWVzIjoiTm9uZSIsImFjY2Vzc29yaWVzIjoiQ2VydGlmaWNhdGUvcGFwZXJzLCBPcmlnaW5hbCBib3giLCJub3RlcyI6IkxpZ2h0IHNjcmF0Y2hlcyBvbiB0aGUgYmxhZGUgaW4gdGhlIHJpZ2h0IGxpZ2h0aW5nLiBTZWUgcGhvdG9zLiJ9fSx7Im5hbWUiOiJCaWcgSWRlYSBEZXNpZ24gUG9ja2V0IEtuaWZlIiwicHJpY2UiOiJTVjogJDEyMCIsImltZ3MiOlsiaHR0cHM6Ly9yZXMuY2xvdWRpbmFyeS5jb20vZHN1amx4dWpwL2ltYWdlL3VwbG9hZC92MTc3NDQxNzIyMC9vZHF1MmRxaWZoeWFmajNqanZpdy5qcGciLCJodHRwczovL3Jlcy5jbG91ZGluYXJ5LmNvbS9kc3VqbHh1anAvaW1hZ2UvdXBsb2FkL3YxNzc0NDE3MjI5L3poa3BvNTg2NXZrZGd6OXBxdGVtLmpwZyIsImh0dHBzOi8vcmVzLmNsb3VkaW5hcnkuY29tL2RzdWpseHVqcC9pbWFnZS91cGxvYWQvdjE3NzQ0MTcyNDIvbHVpNXhwMXM3dXA5ZGg4OXJ1cHYuanBnIiwiaHR0cHM6Ly9yZXMuY2xvdWRpbmFyeS5jb20vZHN1amx4dWpwL2ltYWdlL3VwbG9hZC92MTc3NDQxNzI0My9teHJwcXh1OHZtd3hrbnQ1dDQxMS5qcGciXSwiZGV0YWlscyI6eyJzdGVlbCI6IkNQTSBTMzVWTiIsImNvbmRpdGlvbiI6IkxpZ2h0bHkgdXNlZCIsIm93bmVycyI6IjIiLCJjYXJyaWVkIjoiWWVzIiwiY3V0IjoiWWVzIiwiY2VudGVyaW5nIjoiUGVyZmVjdCIsImxvY2t1cCI6IlNvbGlkIiwibG9ja3VwTm90ZXMiOiIiLCJpc3N1ZXMiOiJIYXJkbmVzcyBUZXN0aW5nIERpbXBsZXMgTmVhciBTY2FsZXMuICIsImFjY2Vzc29yaWVzIjoiT3JpZ2luYWwgYm94LCBDZXJ0aWZpY2F0ZS9wYXBlcnMiLCJub3RlcyI6IlRlc3RlZCBmb3IgU3RlZWwgSGFyZG5lc3MgTGFiLiBDb21lcyB3aXRoIGNlcnQgZnJvbSBUYXlsb3IgYW5kIHRoZSByZXN1bHRzIGFyZSBhbHNvIG9uIHRoZSBzaXRlLiAifX0seyJuYW1lIjoiS2l6ZXIgT2N0b2JlciIsInByaWNlIjoiU1Y6ICQ4MCIsImltZ3MiOlsiaHR0cHM6Ly9yZXMuY2xvdWRpbmFyeS5jb20vZHN1amx4dWpwL2ltYWdlL3VwbG9hZC92MTc3NDQxNzI3Ni9iaXBha3VtNGpnZ2Fic3Bsd3lrMy5qcGciLCJodHRwczovL3Jlcy5jbG91ZGluYXJ5LmNvbS9kc3VqbHh1anAvaW1hZ2UvdXBsb2FkL3YxNzc0NDE3Mjg0L3B5bXBhcTd0d2FtY2txaWRrdXZoLmpwZyIsImh0dHBzOi8vcmVzLmNsb3VkaW5hcnkuY29tL2RzdWpseHVqcC9pbWFnZS91cGxvYWQvdjE3NzQ0MTcyOTQvbDZqbnllb2J6eGdyYW03YTVwbHYuanBnIl0sImRldGFpbHMiOnsic3RlZWwiOiJDUE0tMjBDViIsImNvbmRpdGlvbiI6IkxpZ2h0bHkgdXNlZCIsIm93bmVycyI6IjEiLCJjYXJyaWVkIjoiWWVzIiwiY3V0IjoiWWVzIiwiY2VudGVyaW5nIjoiUGVyZmVjdCIsImxvY2t1cCI6IlNvbGlkIiwibG9ja3VwTm90ZXMiOiIiLCJpc3N1ZXMiOiJOb25lIiwiYWNjZXNzb3JpZXMiOiJOb25lIiwibm90ZXMiOiJTY2FsZXMgaGF2ZSBiZWVuIGxhc2VyIGVuZ3JhdmVkIHdpdGggYSBjb3JhbCB0ZXh0dXJlLiAifX0seyJuYW1lIjoiU3B5ZGVyY28gTGlsIG5hdGl2ZSB3aGFybmNsaWZmZSIsInByaWNlIjoiU1Y6ICQxMjAiLCJpbWdzIjpbImh0dHBzOi8vcmVzLmNsb3VkaW5hcnkuY29tL2RzdWpseHVqcC9pbWFnZS91cGxvYWQvdjE3NzUwODk0NDMvZmh1c3Rxa2VhaHFlY3F6eGlxcXouanBnIiwiaHR0cHM6Ly9yZXMuY2xvdWRpbmFyeS5jb20vZHN1amx4dWpwL2ltYWdlL3VwbG9hZC92MTc3NTA4OTQ5NS9xZXR0YWlidXNhYzhobnhjZXB0bC5qcGciLCJodHRwczovL3Jlcy5jbG91ZGluYXJ5LmNvbS9kc3VqbHh1anAvaW1hZ2UvdXBsb2FkL3YxNzc1MDg5NTEzL2dyYWNtbHU4aW1ybXZqNGc4cGR2LmpwZyJdLCJkZXRhaWxzIjp7InN0ZWVsIjoiQ1BNIFMzMFYiLCJjb25kaXRpb24iOiJIb25lZCIsIm93bmVycyI6IjIiLCJjYXJyaWVkIjoiWWVzIiwiY3V0IjoiWWVzIiwiY2VudGVyaW5nIjoiUGVyZmVjdCIsImxvY2t1cCI6IlNvbGlkIiwibG9ja3VwTm90ZXMiOiIiLCJpc3N1ZXMiOiJOb25lIiwiYWNjZXNzb3JpZXMiOiJPcmlnaW5hbCBib3gsIENlcnRpZmljYXRlL3BhcGVycyIsIm5vdGVzIjoiIn19XSwidGltZXN0YW1wIjpbImh0dHBzOi8vcmVzLmNsb3VkaW5hcnkuY29tL2RzdWpseHVqcC9pbWFnZS91cGxvYWQvdjE3NzUwODk1OTAvdjN6bTh4NjdqcGJhbGxoMHp2c3kuanBnIl0sInN0YXJ0QXQiOjF9" target="_blank">View a sample gallery</a>
+    </div>`;
+    throw new Error('access gate');
+  }
+})();
+
 const _STARTUP_HASH=location.hash.replace('#','');
 const _STARTUP_VIEW=_VALID_VIEWS.includes(_STARTUP_HASH)?_STARTUP_HASH
   :new URLSearchParams(location.search).has('guide')?'guide':null;

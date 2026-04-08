@@ -232,6 +232,20 @@ textarea{resize:vertical;line-height:1.55}
 .demo-banner{display:flex;align-items:center;justify-content:center;gap:10px;padding:7px 16px;background:rgba(255,149,0,.11);border-bottom:1px solid rgba(255,149,0,.25);font-size:12px;color:var(--oranget);font-weight:500}
 .demo-rm-btn{font-size:11.5px;font-weight:700;padding:4px 12px;border-radius:20px;border:1.5px solid var(--oranget);background:transparent;color:var(--oranget);cursor:pointer;font-family:var(--font);animation:demoPulse 2s ease-in-out infinite}
 @keyframes demoPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,149,0,.5)}60%{box-shadow:0 0 0 6px rgba(255,149,0,0)}}
+/* ─── Setup Guide Card (real-data walkthrough) ─── */
+.guide-card{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);width:min(480px,92vw);background:var(--card);border:.5px solid rgba(52,199,89,.35);border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,.22),0 0 0 3px rgba(52,199,89,.08);padding:20px 22px 16px;z-index:9999;animation:tourIn .25s cubic-bezier(.34,1.56,.64,1) both}
+.guide-real-badge{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;background:var(--greenbg);color:var(--greent);border-radius:20px;padding:3px 10px;margin-bottom:10px;border:.5px solid rgba(52,199,89,.25)}
+.guide-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.guide-steps{font-size:10.5px;font-weight:700;color:var(--t4);letter-spacing:.06em;text-transform:uppercase}
+.guide-end{font-size:11px;color:var(--t4);background:none;border:none;cursor:pointer;padding:0;font-family:var(--font)}
+.guide-end:hover{color:var(--redt)}
+.guide-progress{height:3px;background:var(--b2);border-radius:3px;margin-bottom:14px;overflow:hidden}
+.guide-fill{height:100%;background:linear-gradient(90deg,var(--green),#34d26e);border-radius:3px;transition:width .3s ease}
+.guide-icon{font-size:26px;margin-bottom:6px}
+.guide-title{font-size:15px;font-weight:700;color:var(--t1);margin-bottom:8px;line-height:1.3}
+.guide-body{font-size:13px;color:var(--t2);line-height:1.6;margin-bottom:16px}
+.guide-acts{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.guide-hint{font-size:11px;color:var(--t3);background:var(--greenbg);border-radius:8px;padding:7px 11px;margin-bottom:14px;line-height:1.4;border:.5px solid rgba(52,199,89,.2)}
 /* ─── App-wide animations ─── */
 /* View slide-up when switching tabs - class added via JS only on tab change */
 @keyframes viewIn{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
@@ -1091,7 +1105,7 @@ const NI_ICONS={watch:icon("watch",14),sunglasses:icon("glasses",14),flashlight:
 const NI_LABELS={watch:"Watch",sunglasses:"Sunglasses",flashlight:"Flashlight","multi-tool":"Multi-tool",bag:"Bag / Case",clothing:"Clothing",other:"Other"};
 const SYNC_SAYINGS=["Sharpening the sync edge…","Honing your data to a razor's edge…","Applying the Scary Sharp protocol…","Stropping your listings clean…","Deburring your inventory…","Heat treating your data for maximum retention…","Running a paper test on your posts…","Putting a hair-whittling edge on your backup…","Your collection is in good hands…","Checking the grind geometry…","Buffing out the data scratches…","No false edges on this backup…","Setting the bevel on your backup…","Full flat grind on your file transfer…","Convex-grinding your cloud storage…","Making sure your data has no microbevels…"];
 const ED=()=>({postType:"[WTS]",knives:[],items:[],payment:[...SETTINGS.payment],paymentOther:"",noShip:[...SETTINGS.noShip],noShipOther:"",repost:false,photos:[],notes:"",rulesConfirmed:false,bundleEnabled:false,bundlePrice:"",bundles:[],groupAddons:false,tradeInterests:SETTINGS.tradeInterests||"",shippingCarrier:SETTINGS.shippingCarrier||"USPS"});
-let S={posts:[],inventory:[],loaded:false,view:"list",expanded:null,copied:null,draft:ED(),kfOpen:false,kfIdx:-1,kfPostId:null,kf:EK(),kfMode:"draft",tsUploads:{},kfExtraSlots:0,adv:false,err:"",saveNotice:false,lockerFilter:"all",lockerPicker:false,movingKnife:null,uploadFiles:[],kfUploads:[],kfPhotoTag:"other",niUploads:[],priceResearch:{status:"idle",results:[],query:""},modal:null,authStatus:"guest",authEmail:"",showMigrate:false,soldFlow:null,gearSoldFlow:null,delFlowEmail:null,authLoading:true,mdPreview:new Set(),undoStack:[],undoToast:null,_undoTid:null,flairToast:null,_flairTid:null,rollSort:"added",soldFilter:"all",listFilter:"all",shipFilter:"all",soldExpanded:new Set(),tutStep:0,aboutTab:"about",feedbackTab:"bug",acctPopover:false,trackingFlow:null,preflight:null,priceFilter:"sold",tour:null,bundlePicker:null,niOpen:false,ni:null,niIdx:-1,gearPicker:false,_skipRollAnim:false,rollKnivesOpen:true,rollGearOpen:true,emailChangeOpen:false,emailChangeNotice:false,accountDeleted:false,migrateConfirm:null,syncingScreen:false,syncMsg:0,vidBwTip:false,onboarding:false,onboardStep:0,_sessionStart:Date.now(),_renderCount:0,_loadTime:null,_copyCount:0,_viewChanges:0,_lastView:""};
+let S={posts:[],inventory:[],loaded:false,view:"list",expanded:null,copied:null,draft:ED(),kfOpen:false,kfIdx:-1,kfPostId:null,kf:EK(),kfMode:"draft",tsUploads:{},kfExtraSlots:0,adv:false,err:"",saveNotice:false,lockerFilter:"all",lockerPicker:false,movingKnife:null,uploadFiles:[],kfUploads:[],kfPhotoTag:"other",niUploads:[],priceResearch:{status:"idle",results:[],query:""},modal:null,authStatus:"guest",authEmail:"",showMigrate:false,soldFlow:null,gearSoldFlow:null,delFlowEmail:null,authLoading:true,mdPreview:new Set(),undoStack:[],undoToast:null,_undoTid:null,flairToast:null,_flairTid:null,rollSort:"added",soldFilter:"all",listFilter:"all",shipFilter:"all",soldExpanded:new Set(),tutStep:0,aboutTab:"about",feedbackTab:"bug",acctPopover:false,trackingFlow:null,preflight:null,priceFilter:"sold",tour:null,bundlePicker:null,niOpen:false,ni:null,niIdx:-1,gearPicker:false,_skipRollAnim:false,rollKnivesOpen:true,rollGearOpen:true,emailChangeOpen:false,emailChangeNotice:false,accountDeleted:false,migrateConfirm:null,syncingScreen:false,syncMsg:0,vidBwTip:false,onboarding:false,onboardStep:0,guide:null,guideCounts:null,_sessionStart:Date.now(),_renderCount:0,_loadTime:null,_copyCount:0,_viewChanges:0,_lastView:""};
 
 // ─── STORAGE ──────────────────────────────────────────────────
 async function load(){
@@ -3440,6 +3454,17 @@ function renderLoading(){
 }
 function render(){
   S._renderCount=(S._renderCount||0)+1;
+  // Auto-advance guide if condition met (e.g. knife saved, post generated)
+  if(S.guide!=null&&S.guide<GUIDE_STEPS.length){
+    const _gs=GUIDE_STEPS[S.guide];
+    const _gc=S.guideCounts||{inv:0,posts:0};
+    if(_gs?.autoCheck&&!_gs._triggered&&_gs.autoCheck(S,_gc)){
+      _gs._triggered=true; // prevent double-fire
+      const _next=S.guide+1;
+      if(_next>=GUIDE_STEPS.length){S.guide=null;try{localStorage.setItem('ks-guide-done','1');}catch(e){}}
+      else{S.guide=_next;}
+    }
+  }
   // Track whether this render is the first time we're landing on Roll — used to gate the unfurl animation
   S._rollJustEntered=(S.view==='roll'&&S._lastView!=='roll');
   if(S.loaded&&S._lastView!==S.view){S._viewChanges=(S._viewChanges||0)+1;S._lastView=S.view;
@@ -3464,7 +3489,7 @@ function render(){
     renderList();
   const toastHtml=S.undoToast?`<div class="undo-toast">↩ ${esc(S.undoToast)} <button class="undo-toast-btn" onclick="undoLast()">Undo</button></div>`:"";
   const flairToastHtml=S.flairToast?`<div class="flair-toast">${S.flairToast}</div>`:"";
-  document.getElementById("root").innerHTML=view+(S.modal&&!S.syncingScreen&&!S.showMigrate?renderModal(S.modal):"")+toastHtml+flairToastHtml+(S.tour!=null?renderTourCard():"")+(S.onboarding?renderOnboarding():"");
+  document.getElementById("root").innerHTML=view+(S.modal&&!S.syncingScreen&&!S.showMigrate?renderModal(S.modal):"")+toastHtml+flairToastHtml+(S.tour!=null?renderTourCard():"")+(S.guide!=null?renderGuideCard():"")+(S.onboarding?renderOnboarding():"");
   S._skipRollAnim=false; // reset after DOM update so next non-chip render gets animation back
   // Animate main content when switching views
   if(S._prevView!==S.view){
@@ -3892,10 +3917,12 @@ function renderOnboarding(){
       icon:"🎉",
       label:"You're ready",
       title:"You're all set",
-      body:"Head to <strong>The Roll</strong> to add your first knife, or take the interactive tour to see the full workflow with demo data first.",
-      cta:"Take the Interactive Tour",
-      ctaAction:"tour",
-      skip:"Go straight to the app"
+      body:"Want a quick walkthrough? The setup guide walks you through adding your first real knife and creating your first listing — step by step in the actual app.",
+      cta:"Guide me through it →",
+      ctaAction:"guide",
+      ctaSecondary:"Take the demo tour instead",
+      ctaSecondaryAction:"tour",
+      skip:"I'll figure it out on my own"
     }
   ];
   const step=steps[st];
@@ -3909,6 +3936,7 @@ function renderOnboarding(){
     <div class="ob-body">${step.body}</div>
     <div class="ob-acts">
       <button class="ob-btn-pri" onclick="obNext(${st},'${step.ctaAction||''}')">${step.cta}</button>
+      ${step.ctaSecondary?`<button class="ob-btn-sec" onclick="obNext(${st},'${step.ctaSecondaryAction||''}')">${step.ctaSecondary}</button>`:''}
       <button class="ob-btn-skip" onclick="obSkip()">${step.skip}</button>
     </div>
   </div>
@@ -3918,6 +3946,7 @@ function obNext(st,action){
   if(action==='settings'){S.view='settings';S.onboardStep=st;render();return;}
   if(action==='cloudinary'){S.modal='cloudinary';render();return;}
   if(action==='tour'){obDone();S.view='list';startTour();return;}
+  if(action==='guide'){obDone();startGuide();return;}
   const nextSt=st+1;
   const totalSteps=4;
   if(nextSt>=totalSteps){obDone();return;}
@@ -5620,6 +5649,129 @@ function endTour(keepData){
   render();
 }
 
+// ─── SETUP GUIDE (real-data first-time walkthrough) ──────────────────────────
+const GUIDE_STEPS=[
+  {
+    icon:"🗡️",
+    label:"Setup — Step 1 of 3",
+    title:"Welcome to The Roll",
+    body:"This is your knife inventory — every knife you want to sell lives here first. Tap <strong>+ Add Knife</strong> at the top of the screen to open the knife form.",
+    hint:"💡 Tap the blue + Add Knife button above to get started.",
+    cta:"Got it, I'll tap it →",
+    autoCheck:(s)=>s.kfOpen===true,
+  },
+  {
+    icon:"✏️",
+    label:"Setup — Step 1 of 3",
+    title:"Fill in your knife details",
+    body:"Enter the <strong>brand, model, and asking price</strong> at minimum. The more info you add, the better your listing. Add a photo if you have one ready — photos close sales.",
+    hint:"💡 Price and brand are required. Photos are strongly recommended on r/Knife_Swap.",
+    cta:"Details filled in →",
+  },
+  {
+    icon:"💾",
+    label:"Setup — Step 1 of 3",
+    title:"Save your knife",
+    body:"Scroll to the bottom of the knife form and tap <strong>Save Knife</strong>. Your knife will appear in The Roll.",
+    hint:"💡 Scroll down in the knife form to find the Save Knife button.",
+    cta:"I saved it →",
+    autoCheck:(s,c)=>s.inventory.filter(k=>!k._tourDemo).length > (c.inv||0),
+  },
+  {
+    icon:"📋",
+    label:"Setup — Step 2 of 3",
+    title:"Create your first listing",
+    body:"Switch to the <strong>Listings</strong> tab above. Tap <strong>+ New Post</strong> to open the post builder, then add the knife you just saved.",
+    hint:"💡 Tap the Listings tab in the header, then tap the + New Post button.",
+    cta:"Go to Listings →",
+    ctaNav:"list",
+  },
+  {
+    icon:"⚡",
+    label:"Setup — Step 2 of 3",
+    title:"Build and generate your post",
+    body:"Add your knife to the post, choose your payment methods, and tap <strong>Generate Post</strong>. BladeFlow formats everything to r/Knife_Swap standards automatically.",
+    hint:"💡 You need at least one knife added and a timestamp photo to generate.",
+    cta:"I generated it →",
+    autoCheck:(s,c)=>s.posts.filter(p=>!p._tourDemo).length > (c.posts||0),
+  },
+  {
+    icon:"🎉",
+    label:"Setup complete!",
+    title:"You're ready to sell!",
+    body:"Your post is formatted and ready. Use the <strong>Copy Post</strong> button to grab the text, then paste it into a new r/Knife_Swap thread. Come back here to track sales, shipping, and payments.",
+    cta:"Finish setup →",
+    ctaNav:null,
+    last:true,
+  },
+];
+
+function startGuide(){
+  S.guide=0;
+  S.guideCounts={
+    inv:S.inventory.filter(k=>!k._tourDemo).length,
+    posts:S.posts.filter(p=>!p._tourDemo).length
+  };
+  // Reset any triggered flags from a previous run
+  GUIDE_STEPS.forEach(gs=>{ delete gs._triggered; });
+  S.onboarding=false;
+  try{localStorage.setItem('ks-onboarding-done','1');}catch(e){}
+  // Navigate to Roll so the user can start adding a knife
+  S.view='roll';
+  S.kfOpen=false;
+  S.modal=null;
+  render();
+}
+
+function nextGuideStep(){
+  if(S.guide==null)return;
+  const step=GUIDE_STEPS[S.guide];
+  // Perform nav side-effect if any
+  if(step.ctaNav==='list'){S.view='list';S.kfOpen=false;S.modal=null;}
+  else if(step.ctaNav==='roll'){S.view='roll';S.modal=null;}
+  if(step.last){endGuide();return;}
+  const next=S.guide+1;
+  if(next>=GUIDE_STEPS.length){endGuide();return;}
+  S.guide=next;
+  render();
+}
+
+function endGuide(){
+  S.guide=null;
+  S.guideCounts=null;
+  try{localStorage.setItem('ks-guide-done','1');}catch(e){}
+  render();
+}
+
+function renderGuideCard(){
+  if(S.guide==null)return"";
+  const idx=S.guide;
+  const step=GUIDE_STEPS[idx];
+  if(!step)return"";
+  const total=GUIDE_STEPS.length;
+  const pct=Math.round(((idx+1)/total)*100);
+  const isLast=!!step.last;
+  return`<div class="guide-card">
+    <div class="guide-bar">
+      <span class="guide-steps">Step ${idx+1} of ${total}</span>
+      <button class="guide-end" onclick="endGuide()" title="Skip guide">Skip guide</button>
+    </div>
+    <div class="guide-progress"><div class="guide-fill" style="width:${pct}%"></div></div>
+    <div class="guide-real-badge">${icon('check',12,'')} Real Setup · Your actual data</div>
+    <div class="guide-icon">${step.icon}</div>
+    <div class="guide-title">${step.title}</div>
+    <div class="guide-body">${step.body}</div>
+    ${step.hint?`<div class="guide-hint">${step.hint}</div>`:''}
+    <div class="guide-acts">
+      <div style="display:flex;gap:8px;flex:1;justify-content:flex-end">
+        ${!isLast
+          ?`<button class="btn btn-sm" style="background:var(--green);color:#fff;font-weight:700" onclick="nextGuideStep()">${step.cta||'Next →'}</button>`
+          :`<button class="btn btn-sm" style="background:var(--green);color:#fff;font-weight:700" onclick="endGuide()">Finish setup →</button>`}
+      </div>
+    </div>
+  </div>`;
+}
+
 function renderTourCard(){
   if(S.tour==null)return"";
   const step=TOUR_STEPS[S.tour];
@@ -5981,7 +6133,7 @@ function renderSettings(){
   <div class="sgroup">
     <div class="srow"><div><div class="srow-lbl">${icon('book',13)} How-To Guide</div><div class="srow-sub">Step-by-step guide to getting the most out of BladeFlow</div></div><div class="srow-ctrl"><button class="btn btn-sec btn-sm" onclick="S.view='guide';render()">${icon('book',14)} Open Guide</button></div></div>
     <div class="srow"><div><div class="srow-lbl">${icon('bar-chart',13)} Data for Data Nerds</div><div class="srow-sub">Deep analytics on your selling history, pricing, pipeline, and more</div></div><div class="srow-ctrl"><button class="btn btn-pu btn-sm" onclick="S.modal='datanerds';render()">Open Analytics</button></div></div>
-    <div class="srow"><div><div class="srow-lbl">${icon('play-circle',13)} Onboarding</div><div class="srow-sub">Rerun the first-time setup walkthrough</div></div><div class="srow-ctrl"><button class="btn btn-sec btn-sm" onclick="try{localStorage.removeItem('ks-onboarding-done');}catch(e){}S.onboarding=true;S.onboardStep=0;S.view='list';render()">Restart Onboarding</button></div></div>
+    <div class="srow"><div><div class="srow-lbl">${icon('play-circle',13)} Onboarding</div><div class="srow-sub">Rerun the first-time setup walkthrough, or jump straight into the step-by-step guide</div></div><div class="srow-ctrl" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-sec btn-sm" onclick="try{localStorage.removeItem('ks-onboarding-done');}catch(e){}S.onboarding=true;S.onboardStep=0;S.view='list';render()">Restart Setup</button><button class="btn btn-sm" style="background:var(--green);color:#fff;font-weight:700" onclick="S.view='roll';startGuide()">${icon('check-circle',13)} Setup Guide</button></div></div>
     <div class="srow"><div class="srow-lbl">More</div><div class="srow-ctrl" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-pri btn-sm" onclick="S.view='list';startTour()">${icon("play-circle",14)} Tour</button><button class="btn btn-am btn-sm" onclick="S.modal='tutorial';S.tutStep=0;render()">${icon("book",14)} Tutorial</button><button class="btn btn-sec btn-sm" onclick="S.modal='about';S.aboutTab='about';render()">${icon("info",14)} FAQ</button><button class="btn btn-sec btn-sm" onclick="S.modal='feedback';S.feedbackTab='bug';render()">${icon("mail",14)} Feedback</button></div></div>
   </div>
   <div class="settings-section-lbl">Photo Hosting</div>
@@ -6061,6 +6213,7 @@ window.markSoldElsewhere=markSoldElsewhere;window.confirmSoldElsewhere=confirmSo
 window.sendMagicLink=sendMagicLink;window.signOut=signOut;window.changeEmail=changeEmail;window.deleteAccount=deleteAccount;window.migrateToSupabase=migrateToSupabase;window.discardLocalData=discardLocalData;window.skipMigrate=skipMigrate;window.manualSync=manualSync;
 window.renderTutorialModal=renderTutorialModal;window.renderAboutModal=renderAboutModal;window.renderCloudinaryModal=renderCloudinaryModal;window.renderCloudinaryStatus=renderCloudinaryStatus;
 window.startTour=startTour;window.nextTourStep=nextTourStep;window.prevTourStep=prevTourStep;window.endTour=endTour;
+window.startGuide=startGuide;window.nextGuideStep=nextGuideStep;window.endGuide=endGuide;
 window.autoPostType=autoPostType;window.buildTitleStr=buildTitleStr;window.doFetchPriceResearch=doFetchPriceResearch;window.clearPriceResearch=clearPriceResearch;window.applyPriceFromResearch=applyPriceFromResearch;
 
 // ─── CLOSE ACCOUNT POPOVER ON OUTSIDE CLICK ──────────────
