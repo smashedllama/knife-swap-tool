@@ -607,6 +607,21 @@ button:disabled{opacity:.35;cursor:not-allowed}
 .tut-phase{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--t3);text-align:center;margin-bottom:6px}
 .tut-preview{background:var(--bg);border:.5px solid var(--b2);border-radius:12px;padding:13px 15px;margin:14px 0;text-align:left;font-size:12.5px;color:var(--t2);line-height:1.6}
 .tut-chip{display:inline-flex;align-items:center;background:var(--surf);border:.5px solid var(--b1);border-radius:6px;padding:1px 7px;font-size:12px;font-weight:600;color:var(--t1);white-space:nowrap}
+.ob-overlay{position:fixed;inset:0;background:var(--bg);z-index:10000;display:flex;flex-direction:column;overflow-y:auto}
+.ob-wrap{flex:1;display:flex;flex-direction:column;max-width:520px;margin:0 auto;padding:32px 20px 40px;width:100%}
+.ob-progress{height:3px;background:var(--b2);border-radius:3px;margin-bottom:32px;overflow:hidden}
+.ob-fill{height:100%;background:linear-gradient(90deg,var(--acc),var(--blue));border-radius:3px;transition:width .35s ease}
+.ob-step-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--t4);margin-bottom:10px}
+.ob-icon{font-size:40px;margin-bottom:12px}
+.ob-title{font-size:22px;font-weight:700;color:var(--t1);margin-bottom:10px;line-height:1.25}
+.ob-body{font-size:14px;color:var(--t2);line-height:1.7;margin-bottom:24px}
+.ob-card{background:var(--surf);border:.5px solid var(--b2);border-radius:12px;padding:14px 16px;margin-bottom:10px}
+.ob-card-title{font-size:13px;font-weight:700;color:var(--t1);margin-bottom:3px}
+.ob-card-sub{font-size:12px;color:var(--t3);line-height:1.5}
+.ob-acts{display:flex;flex-direction:column;gap:10px;margin-top:auto}
+.ob-btn-pri{width:100%;padding:14px;border-radius:12px;background:var(--acc);color:#fff;font-size:15px;font-weight:700;border:none;cursor:pointer;font-family:var(--font)}
+.ob-btn-sec{width:100%;padding:11px;border-radius:12px;background:var(--surf);color:var(--t2);font-size:13px;font-weight:600;border:.5px solid var(--b2);cursor:pointer;font-family:var(--font)}
+.ob-btn-skip{background:none;border:none;color:var(--t4);font-size:12px;cursor:pointer;padding:4px;font-family:var(--font);margin-top:4px}
 .tut-cta-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px}
 .tut-bar-wrap{width:100%;height:4px;background:var(--b1);border-radius:2px;overflow:hidden;margin-bottom:6px}
 .tut-bar-fill{height:100%;background:var(--orange);border-radius:2px;transition:width .3s}
@@ -1076,7 +1091,7 @@ const NI_ICONS={watch:icon("watch",14),sunglasses:icon("glasses",14),flashlight:
 const NI_LABELS={watch:"Watch",sunglasses:"Sunglasses",flashlight:"Flashlight","multi-tool":"Multi-tool",bag:"Bag / Case",clothing:"Clothing",other:"Other"};
 const SYNC_SAYINGS=["Sharpening the sync edge…","Honing your data to a razor's edge…","Applying the Scary Sharp protocol…","Stropping your listings clean…","Deburring your inventory…","Heat treating your data for maximum retention…","Running a paper test on your posts…","Putting a hair-whittling edge on your backup…","Your collection is in good hands…","Checking the grind geometry…","Buffing out the data scratches…","No false edges on this backup…","Setting the bevel on your backup…","Full flat grind on your file transfer…","Convex-grinding your cloud storage…","Making sure your data has no microbevels…"];
 const ED=()=>({postType:"[WTS]",knives:[],items:[],payment:[...SETTINGS.payment],paymentOther:"",noShip:[...SETTINGS.noShip],noShipOther:"",repost:false,photos:[],notes:"",rulesConfirmed:false,bundleEnabled:false,bundlePrice:"",bundles:[],groupAddons:false,tradeInterests:SETTINGS.tradeInterests||"",shippingCarrier:SETTINGS.shippingCarrier||"USPS"});
-let S={posts:[],inventory:[],loaded:false,view:"list",expanded:null,copied:null,draft:ED(),kfOpen:false,kfIdx:-1,kfPostId:null,kf:EK(),kfMode:"draft",tsUploads:{},kfExtraSlots:0,adv:false,err:"",saveNotice:false,lockerFilter:"all",lockerPicker:false,movingKnife:null,uploadFiles:[],kfUploads:[],kfPhotoTag:"other",niUploads:[],priceResearch:{status:"idle",results:[],query:""},modal:null,authStatus:"guest",authEmail:"",showMigrate:false,soldFlow:null,gearSoldFlow:null,delFlowEmail:null,authLoading:true,mdPreview:new Set(),undoStack:[],undoToast:null,_undoTid:null,flairToast:null,_flairTid:null,rollSort:"added",soldFilter:"all",listFilter:"all",shipFilter:"all",soldExpanded:new Set(),tutStep:0,aboutTab:"about",feedbackTab:"bug",acctPopover:false,trackingFlow:null,preflight:null,priceFilter:"sold",tour:null,bundlePicker:null,niOpen:false,ni:null,niIdx:-1,gearPicker:false,_skipRollAnim:false,rollKnivesOpen:true,rollGearOpen:true,emailChangeOpen:false,emailChangeNotice:false,accountDeleted:false,migrateConfirm:null,syncingScreen:false,syncMsg:0,vidBwTip:false,_sessionStart:Date.now(),_renderCount:0,_loadTime:null,_copyCount:0,_viewChanges:0,_lastView:""};
+let S={posts:[],inventory:[],loaded:false,view:"list",expanded:null,copied:null,draft:ED(),kfOpen:false,kfIdx:-1,kfPostId:null,kf:EK(),kfMode:"draft",tsUploads:{},kfExtraSlots:0,adv:false,err:"",saveNotice:false,lockerFilter:"all",lockerPicker:false,movingKnife:null,uploadFiles:[],kfUploads:[],kfPhotoTag:"other",niUploads:[],priceResearch:{status:"idle",results:[],query:""},modal:null,authStatus:"guest",authEmail:"",showMigrate:false,soldFlow:null,gearSoldFlow:null,delFlowEmail:null,authLoading:true,mdPreview:new Set(),undoStack:[],undoToast:null,_undoTid:null,flairToast:null,_flairTid:null,rollSort:"added",soldFilter:"all",listFilter:"all",shipFilter:"all",soldExpanded:new Set(),tutStep:0,aboutTab:"about",feedbackTab:"bug",acctPopover:false,trackingFlow:null,preflight:null,priceFilter:"sold",tour:null,bundlePicker:null,niOpen:false,ni:null,niIdx:-1,gearPicker:false,_skipRollAnim:false,rollKnivesOpen:true,rollGearOpen:true,emailChangeOpen:false,emailChangeNotice:false,accountDeleted:false,migrateConfirm:null,syncingScreen:false,syncMsg:0,vidBwTip:false,onboarding:false,onboardStep:0,_sessionStart:Date.now(),_renderCount:0,_loadTime:null,_copyCount:0,_viewChanges:0,_lastView:""};
 
 // ─── STORAGE ──────────────────────────────────────────────────
 async function load(){
@@ -3444,7 +3459,7 @@ function render(){
     renderList();
   const toastHtml=S.undoToast?`<div class="undo-toast">↩ ${esc(S.undoToast)} <button class="undo-toast-btn" onclick="undoLast()">Undo</button></div>`:"";
   const flairToastHtml=S.flairToast?`<div class="flair-toast">${S.flairToast}</div>`:"";
-  document.getElementById("root").innerHTML=view+(S.modal&&!S.syncingScreen&&!S.showMigrate?renderModal(S.modal):"")+toastHtml+flairToastHtml+(S.tour!=null?renderTourCard():"");
+  document.getElementById("root").innerHTML=view+(S.modal&&!S.syncingScreen&&!S.showMigrate?renderModal(S.modal):"")+toastHtml+flairToastHtml+(S.tour!=null?renderTourCard():"")+(S.onboarding?renderOnboarding():"");
   S._skipRollAnim=false; // reset after DOM update so next non-chip render gets animation back
   // Animate main content when switching views
   if(S._prevView!==S.view){
@@ -3837,6 +3852,78 @@ function renderCloudinaryStatus(){
 }
 function tutDone(){localStorage.setItem('ks-tutorial-done','1');S.modal=null;render();}
 function tutGo(view){localStorage.setItem('ks-tutorial-done','1');S.modal=null;S.view=view;render();}
+function renderOnboarding(){
+  const st=S.onboardStep||0;
+  const hasCdn=!!(SETTINGS.cloudinaryCloud&&SETTINGS.cloudinaryPreset);
+  const hasUser=!!(SETTINGS.username);
+  const steps=[
+    {
+      icon:"👋",
+      label:"Welcome",
+      title:"Welcome to BladeFlow",
+      body:"BladeFlow builds your r/Knife_Swap listings for you — formatted posts, photo galleries, price research, shipping tracking, and buyer messages. Let's get you set up in 3 quick steps.",
+      cta:"Get Started →",
+      skip:"Skip setup, I'll figure it out"
+    },
+    {
+      icon:"🔑",
+      label:"Step 1 of 3 — Your Profile",
+      title:"Set your Reddit username",
+      body:"Your username gets stamped into every post, confirmation comment, and buyer message automatically. You never have to type it again.",
+      cta:hasUser?"Username set ✓  →  Next":"Open Settings to set username →",
+      ctaAction:hasUser?null:"settings",
+      skip:"Skip for now"
+    },
+    {
+      icon:"📸",
+      label:"Step 2 of 3 — Photo Uploads",
+      title:"Set up photo hosting",
+      body:"BladeFlow supports drag-and-drop uploads via a free Cloudinary account. If you don't want to set that up right now, you can still use the app by pasting externally hosted image URLs (Imgur, etc.) into each knife's photo slots.",
+      cta:hasCdn?"Cloudinary connected ✓  →  Next":"Set up Cloudinary (free, 5 min) →",
+      ctaAction:hasCdn?null:"cloudinary",
+      skip:"Skip — I'll paste URLs manually"
+    },
+    {
+      icon:"🎉",
+      label:"You're ready",
+      title:"You're all set",
+      body:"Head to <strong>The Roll</strong> to add your first knife, or take the interactive tour to see the full workflow with demo data first.",
+      cta:"Take the Interactive Tour",
+      ctaAction:"tour",
+      skip:"Go straight to the app"
+    }
+  ];
+  const step=steps[st];
+  const pct=Math.round((st/Math.max(steps.length-1,1))*100);
+  return`<div class="ob-overlay" onclick="event.stopPropagation()">
+  <div class="ob-wrap">
+    <div class="ob-progress"><div class="ob-fill" style="width:${pct}%"></div></div>
+    <div class="ob-step-label">${step.label}</div>
+    <div class="ob-icon">${step.icon}</div>
+    <div class="ob-title">${step.title}</div>
+    <div class="ob-body">${step.body}</div>
+    <div class="ob-acts">
+      <button class="ob-btn-pri" onclick="obNext(${st},'${step.ctaAction||''}')">${step.cta}</button>
+      <button class="ob-btn-skip" onclick="obSkip()">${step.skip}</button>
+    </div>
+  </div>
+</div>`;
+}
+function obNext(st,action){
+  if(action==='settings'){S.view='settings';S.onboardStep=st;render();return;}
+  if(action==='cloudinary'){S.modal='cloudinary';render();return;}
+  if(action==='tour'){obDone();S.view='list';startTour();return;}
+  const nextSt=st+1;
+  const totalSteps=4;
+  if(nextSt>=totalSteps){obDone();return;}
+  S.onboardStep=nextSt;render();
+}
+function obSkip(){obDone();}
+function obDone(){
+  S.onboarding=false;
+  try{localStorage.setItem('ks-onboarding-done','1');}catch(e){}
+  render();
+}
 function renderTutorialModal(){
   const done=()=>`tutDone()`;
   const go=(view)=>`tutGo('${view}')`;
@@ -4511,7 +4598,7 @@ function kfFormHtml(){
               ${activePhotoService()==="cloudinary"
                 ?`<button class="btn btn-sec btn-sm" onclick="triggerKnifeUpload('${tag}')" type="button" style="width:100%">${icon('image',12)} Upload Photo</button>`
                 :`<div style="background:var(--orangebg);border:.5px solid var(--oranget);border-radius:7px;padding:6px 8px;font-size:10.5px;color:var(--oranget);line-height:1.45">
-                  ${icon('alert-circle',11,'var(--oranget)')} <strong>Cloudinary not set up.</strong> Direct uploads disabled. <span style="text-decoration:underline;cursor:pointer" onclick="S.modal='cloudinary';render()">Set up Cloudinary in Settings</span> or use the Imgur link below.
+                  ${icon('alert-circle',11,'var(--oranget)')} <strong>Cloudinary not set up.</strong> Direct uploads disabled. <span style="text-decoration:underline;cursor:pointer" onclick="S.modal='cloudinary';render()">Set up Cloudinary in Settings</span> or paste any externally hosted image URL below.
                 </div>`}
             `:""}
           </div>`;
@@ -4528,7 +4615,7 @@ function kfFormHtml(){
       </div>
       <!-- Imgur gallery link — single field, full width -->
       <div style="margin-top:10px;border:.5px solid var(--b2);border-radius:9px;padding:9px 11px;background:var(--surf)">
-        <div style="font-size:11px;font-weight:600;color:var(--t2);margin-bottom:5px">${icon('link',11,'var(--t3)')} Imgur Gallery Link <span style="font-size:9px;font-weight:500;color:var(--t4);margin-left:3px">optional alternative to uploading photos</span></div>
+        <div style="font-size:11px;font-weight:600;color:var(--t2);margin-bottom:5px">${icon('link',11,'var(--t3)')} Imgur Gallery Link <span style="font-size:9px;font-weight:500;color:var(--t4);margin-left:3px">optional — paste any externally hosted image gallery link</span></div>
         ${f.imgurLink
           ?`<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
               <a href="${esc(f.imgurLink)}" target="_blank" rel="noopener" style="font-size:11px;color:var(--blue);text-decoration:none;word-break:break-all;flex:1">${esc(f.imgurLink)}</a>
@@ -4601,7 +4688,7 @@ function kfFormHtml(){
               Keep clips short (under 30s), use video selectively on your best listings, and check your usage before a busy week. If you're running low, paste an <strong>Imgur link</strong> instead — that uses Imgur's bandwidth, not yours.
               <br><br>
               <a href="https://console.cloudinary.com" target="_blank" rel="noopener" style="color:#7c3aed;font-weight:600;text-decoration:none">Check your Cloudinary usage ↗</a>
-              <div style="margin-top:10px">${activePhotoService()==='cloudinary'?`<button class="btn btn-sm" onclick="triggerKnifeVideoUpload()" type="button" style="background:#7c3aed;color:#fff;border:none;font-weight:600">${icon('video',13,'#fff')} Upload Video</button>`:`<button class="btn btn-sm" style="opacity:.4;cursor:default;background:var(--bg);border:.5px solid var(--b2);color:var(--t4)" disabled>Configure Cloudinary to upload</button>`}</div>
+              <div style="margin-top:10px">${activePhotoService()==='cloudinary'?`<button class="btn btn-sm" onclick="triggerKnifeVideoUpload()" type="button" style="background:#7c3aed;color:#fff;border:none;font-weight:600">${icon('video',13,'#fff')} Upload Video</button>`:`<button class="btn btn-sm" style="opacity:.4;cursor:default;background:var(--bg);border:.5px solid var(--b2);color:var(--t4)" disabled>Cloudinary required for video upload</button>`}</div>
             </div>`:``}
           </div>`:''}
         </div>`;
@@ -5905,6 +5992,7 @@ function renderSettings(){
   <div class="sgroup">
     <div class="srow"><div><div class="srow-lbl">${icon('book',13)} How-To Guide</div><div class="srow-sub">Step-by-step guide to getting the most out of BladeFlow</div></div><div class="srow-ctrl"><button class="btn btn-sec btn-sm" onclick="S.view='guide';render()">${icon('book',14)} Open Guide</button></div></div>
     <div class="srow"><div><div class="srow-lbl">${icon('bar-chart',13)} Data for Data Nerds</div><div class="srow-sub">Deep analytics on your selling history, pricing, pipeline, and more</div></div><div class="srow-ctrl"><button class="btn btn-pu btn-sm" onclick="S.modal='datanerds';render()">Open Analytics</button></div></div>
+    <div class="srow"><div><div class="srow-lbl">${icon('play-circle',13)} Onboarding</div><div class="srow-sub">Rerun the first-time setup walkthrough</div></div><div class="srow-ctrl"><button class="btn btn-sec btn-sm" onclick="try{localStorage.removeItem('ks-onboarding-done');}catch(e){}S.onboarding=true;S.onboardStep=0;S.view='list';render()">Restart Onboarding</button></div></div>
     <div class="srow"><div class="srow-lbl">More</div><div class="srow-ctrl" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-pri btn-sm" onclick="S.view='list';startTour()">${icon("play-circle",14)} Tour</button><button class="btn btn-am btn-sm" onclick="S.modal='tutorial';S.tutStep=0;render()">${icon("book",14)} Tutorial</button><button class="btn btn-sec btn-sm" onclick="S.modal='about';S.aboutTab='about';render()">${icon("info",14)} FAQ</button><button class="btn btn-sec btn-sm" onclick="S.modal='feedback';S.feedbackTab='bug';render()">${icon("mail",14)} Feedback</button></div></div>
   </div>
   <div class="settings-section-lbl">Photo Hosting</div>
@@ -5965,7 +6053,7 @@ window.removeKnife=removeKnife;window.setPrevPrice=setPrevPrice;window.applyDrop
 window.syncDraft=syncDraft;window.submitPost=submitPost;window.addTimestampUrl=addTimestampUrl;window.removeTimestampUrl=removeTimestampUrl;
 window.openBundlePicker=openBundlePicker;window.closeBundlePicker=closeBundlePicker;window.toggleBundleKnife=toggleBundleKnife;window.confirmBundleCreate=confirmBundleCreate;window.removeBundle=removeBundle;
 window.openNI=openNI;window.closeNI=closeNI;window.saveNI=saveNI;window.removeNI=removeNI;window.markNISold=markNISold;window.addGearFromRoll=addGearFromRoll;window.removeGearItem=removeGearItem;window.markNIPending=markNIPending;window.triggerNIUpload=triggerNIUpload;window.handleNIFileInput=handleNIFileInput;window.removeNIUpload=removeNIUpload;window.addNIPhotoUrl=addNIPhotoUrl;window.markGearSold=markGearSold;window.confirmGearSoldFlow=confirmGearSoldFlow;window.cancelGearSoldFlow=cancelGearSoldFlow;window.markGearPending=markGearPending;window.lookupZipGear=lookupZipGear;window.saveGearTracking=saveGearTracking;window.markGearShipped=markGearShipped;window.markGearDelivered=markGearDelivered;window.markGearConfirmed=markGearConfirmed;window.copyGearConfirmComment=copyGearConfirmComment;window.gearShipCard=gearShipCard;window.gearAddrDisplayHtml=gearAddrDisplayHtml;window.gearPickerIssues=gearPickerIssues;window.gearSoldFlowHtml=gearSoldFlowHtml;
-window.markSold=markSold;window.cycleTmpl=cycleTmpl;window.deletePost=deletePost;window.copyPost=copyPost;window.copyText=copyText;window.openRedditPost=openRedditPost;window.startPriceDropRepost=startPriceDropRepost;window.startSamePriceRepost=startSamePriceRepost;window.tutDone=tutDone;window.tutGo=tutGo;window.openPreflight=openPreflight;window.closePreflight=closePreflight;window.addTimestampToPreflight=addTimestampToPreflight;window.addTimestampInline=addTimestampInline;window.updateTimestampInline=updateTimestampInline;window.handleTsUpdateInput=handleTsUpdateInput;window.handleTsUpdateDrop=handleTsUpdateDrop;window.copyFromPreflight=copyFromPreflight;window.openRedditFromPreflight=openRedditFromPreflight;
+window.markSold=markSold;window.cycleTmpl=cycleTmpl;window.deletePost=deletePost;window.copyPost=copyPost;window.copyText=copyText;window.openRedditPost=openRedditPost;window.startPriceDropRepost=startPriceDropRepost;window.startSamePriceRepost=startSamePriceRepost;window.tutDone=tutDone;window.tutGo=tutGo;window.obNext=obNext;window.obSkip=obSkip;window.obDone=obDone;window.openPreflight=openPreflight;window.closePreflight=closePreflight;window.addTimestampToPreflight=addTimestampToPreflight;window.addTimestampInline=addTimestampInline;window.updateTimestampInline=updateTimestampInline;window.handleTsUpdateInput=handleTsUpdateInput;window.handleTsUpdateDrop=handleTsUpdateDrop;window.copyFromPreflight=copyFromPreflight;window.openRedditFromPreflight=openRedditFromPreflight;
 window.startMove=startMove;window.cancelMove=cancelMove;window.executeMove=executeMove;
 window.updateModelList=updateModelList;window.autoFillInput=autoFillInput;window.saveSettings=saveSettings;window.imgFallback=imgFallback;
 window.triggerUpload=triggerUpload;window.handleFileInput=handleFileInput;window.handleDrop=handleDrop;window.handleDragOver=handleDragOver;window.handleDragLeave=handleDragLeave;window.removeUpload=removeUpload;
@@ -6244,7 +6332,8 @@ render();
   await loadSettings();
   await initSupabase();
   if(!currentUser){await load();}
-  if(!localStorage.getItem('ks-tutorial-done')){S.modal='tutorial';S.tutStep=0;}
+  if(!localStorage.getItem('ks-onboarding-done')){S.onboarding=true;S.onboardStep=0;}
+  else if(!localStorage.getItem('ks-tutorial-done')){S.modal='tutorial';S.tutStep=0;}
   if(_STARTUP_VIEW)S.view=_STARTUP_VIEW;
   render();
 })();
