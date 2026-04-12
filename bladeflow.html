@@ -910,6 +910,12 @@ window.storage={
 // ─── SUPABASE CONFIG ──────────────────────────────────────────
 const SUPABASE_URL = "https://yfosdanxivqbknolazws.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlmb3NkYW54aXZxYmtub2xhendzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1Mjc1NzksImV4cCI6MjA4OTEwMzU3OX0.JarIg0mb_DtcqppRw0IG4HfXT9-aYbGRKG9sGLAqikk";
+const DESKFLOW_SUBMIT_TICKET_URL = "https://ctmlmhfhxyinoniwfcgw.supabase.co/functions/v1/submit-ticket";
+const DESKFLOW_API_KEY = ""; // Set in Settings for secure feedback submission
+const FEEDBACK_RATE_LIMIT_MS = 30000;
+let _feedbackLastSentAt = 0;
+let _feedbackBusy = false;
+
 let _sb=null;       // supabase client instance
 let currentUser=null;
 let _sbSyncTid=null; // debounce timer for Supabase batch sync
@@ -1032,7 +1038,7 @@ function tmx(a,v,ex){if(v===ex)return[ex];const r=a.filter(x=>x!==ex);return r.i
 
 // ─── SETTINGS ─────────────────────────────────────────────────
 const CHAT_MSG_DEFAULT=`Thanks for picking up the {knife}!\n\nPlease send {price} via:\n{payment}\nOnce payment clears, please drop me your shipping address:\n• Full name\n• Street address (+ apt/unit if applicable)\n• City, State, ZIP\n\nI'll get it packed up and out the door right away!`;
-const DS=()=>({payment:["PayPal G&S"],noShip:[],username:"",saveNotice:false,postHeader:"",tradeInterests:"",rollAnim:false,cloudinaryCloud:"",cloudinaryPreset:"",shippingCarrier:"USPS",paymentLinks:{},cdnBytes:0,cdnCount:0,chatMsgTemplate:"",soldInComment:false,soldCommentNote:""});
+const DS=()=>({payment:["PayPal G&S"],noShip:[],username:"",saveNotice:false,postHeader:"",tradeInterests:"",rollAnim:false,cloudinaryCloud:"",cloudinaryPreset:"",shippingCarrier:"USPS",paymentLinks:{},cdnBytes:0,cdnCount:0,chatMsgTemplate:"",soldInComment:false,soldCommentNote:"",deskflowApiKey:""});
 let SETTINGS=DS();
 async function loadSettings(){try{const r=await window.storage.get("ks_settings");if(r&&r.value)SETTINGS={...DS(),...JSON.parse(r.value)};}catch(e){}try{const old=JSON.parse(localStorage.getItem('ks_cdn_bytes')||'null');if(old&&old.bytes){SETTINGS.cdnBytes=(SETTINGS.cdnBytes||0)+old.bytes;SETTINGS.cdnCount=(SETTINGS.cdnCount||0)+(old.count||0);localStorage.removeItem('ks_cdn_bytes');window.storage.set("ks_settings",JSON.stringify(SETTINGS));}}catch(e){}}
 async function saveSettings(){
@@ -3812,16 +3818,17 @@ function renderFeedbackModal(){
   const tab=S.feedbackTab||"bug";
   const isBug=tab==="bug";
   const isBrand=tab==="brand";
-  const tabBtn=(id,label)=>`<button onclick="S.feedbackTab='${id}';render()" style="flex:1;padding:8px 0;border:none;cursor:pointer;font-size:12px;font-weight:600;font-family:var(--font);border-radius:8px;transition:all var(--tr);${tab===id?"background:var(--blue);color:#fff":"background:transparent;color:var(--t2)"}">${label}</button>`;
+  const submitLabel=_feedbackBusy?`${icon('refresh-cw',13)} Sending...`:`${icon('send',13)} Send Feedback`;
+  const tabBtn=(id,label)=>`<button onclick="S.feedbackTab='${id}';S.err='';render()" style="flex:1;padding:8px 0;border:none;cursor:pointer;font-size:12px;font-weight:600;font-family:var(--font);border-radius:8px;transition:all var(--tr);${tab===id?"background:var(--blue);color:#fff":"background:transparent;color:var(--t2)"}">${label}</button>`;
   const inputStyle="width:100%;box-sizing:border-box;font-family:var(--font);font-size:13px;padding:9px 11px;border-radius:10px;border:.5px solid var(--b2);background:var(--bg);color:var(--t1)";
   const bugFields=`
     <div style="margin-bottom:14px">
       <label style="display:block;font-size:12px;font-weight:600;color:var(--t2);margin-bottom:5px">What happened?</label>
-      <textarea id="fb-what" rows="3" placeholder="Describe the bug…" style="${inputStyle};resize:vertical"></textarea>
+      <textarea id="fb-what" rows="3" placeholder="Describe the bug..." style="${inputStyle};resize:vertical"></textarea>
     </div>
     <div style="margin-bottom:14px">
       <label style="display:block;font-size:12px;font-weight:600;color:var(--t2);margin-bottom:5px">Steps to reproduce <span style="font-weight:400;color:var(--t3)">(optional)</span></label>
-      <textarea id="fb-steps" rows="3" placeholder="1. Go to…&#10;2. Click…&#10;3. See error" style="${inputStyle};resize:vertical"></textarea>
+      <textarea id="fb-steps" rows="3" placeholder="1. Go to...&#10;2. Click...&#10;3. See error" style="${inputStyle};resize:vertical"></textarea>
     </div>
     <div style="margin-bottom:4px">
       <label style="display:block;font-size:12px;font-weight:600;color:var(--t2);margin-bottom:5px">Device / browser <span style="font-weight:400;color:var(--t3)">(optional)</span></label>
@@ -3830,7 +3837,7 @@ function renderFeedbackModal(){
   const featureFields=`
     <div style="margin-bottom:14px">
       <label style="display:block;font-size:12px;font-weight:600;color:var(--t2);margin-bottom:5px">What would you like to see?</label>
-      <textarea id="fb-idea" rows="3" placeholder="Describe the feature…" style="${inputStyle};resize:vertical"></textarea>
+      <textarea id="fb-idea" rows="3" placeholder="Describe the feature..." style="${inputStyle};resize:vertical"></textarea>
     </div>
     <div style="margin-bottom:4px">
       <label style="display:block;font-size:12px;font-weight:600;color:var(--t2);margin-bottom:5px">Why would it be useful? <span style="font-weight:400;color:var(--t3)">(optional)</span></label>
@@ -3846,14 +3853,14 @@ function renderFeedbackModal(){
     </div>
     <div style="margin-bottom:4px">
       <label style="display:block;font-size:12px;font-weight:600;color:var(--t2);margin-bottom:5px">Model name(s) <span style="font-weight:400;color:var(--t3)">(optional)</span></label>
-      <textarea id="fb-models" rows="3" placeholder="e.g. Praetorian Ti, Marauder, Eris…" style="${inputStyle};resize:vertical"></textarea>
+      <textarea id="fb-models" rows="3" placeholder="e.g. Praetorian Ti, Marauder, Eris..." style="${inputStyle};resize:vertical"></textarea>
     </div>`;
   const titles={bug:`${icon('alert-circle',16)} Report a Bug`,feature:`${icon('lightbulb',16)} Request a Feature`,brand:`${icon('tag',16)} Brand Request`};
-  return`<div class="modal-overlay" onclick="S.modal=null;render()">
+  return`<div class="modal-overlay" onclick="S.modal=null;S.err='';render()">
   <div class="modal" onclick="event.stopPropagation()" style="max-width:460px">
     <div class="modal-hdr">
       <div class="modal-title">${titles[tab]}</div>
-      <button class="modal-close" onclick="S.modal=null;render()">&#x2715;</button>
+      <button class="modal-close" onclick="S.modal=null;S.err='';render()">&#x2715;</button>
     </div>
     <div class="modal-body">
       <div style="display:flex;gap:4px;background:var(--bg);border-radius:10px;padding:3px;margin-bottom:18px">
@@ -3862,38 +3869,138 @@ function renderFeedbackModal(){
         ${tabBtn("brand",`${icon('tag',12)} Brand Request`)}
       </div>
       ${isBug?bugFields:isBrand?brandFields:featureFields}
+      ${S.err?`<div class="err" style="margin-top:12px">${esc(S.err)}</div>`:""}
       <div style="display:flex;gap:8px;margin-top:18px">
-        <button class="btn btn-sec btn-sm" style="flex:1;justify-content:center" onclick="S.modal=null;render()">Cancel</button>
-        <button class="btn btn-pri" style="flex:2;justify-content:center" onclick="
-          var subj,body;
-          if(S.feedbackTab==='bug'){
-            subj=encodeURIComponent('BladeFlow \u2013 Bug Report');
-            var what=(document.getElementById('fb-what')||{}).value||'';
-            var steps=(document.getElementById('fb-steps')||{}).value||'';
-            var device=(document.getElementById('fb-device')||{}).value||'';
-            body='What happened:\n'+(what||'(not provided)')+'\n\nSteps to reproduce:\n'+(steps||'(not provided)')+'\n\nDevice / browser:\n'+(device||'(not provided)');
-          }else if(S.feedbackTab==='brand'){
-            subj=encodeURIComponent('BladeFlow \u2013 Brand Request');
-            var brand=(document.getElementById('fb-brand')||{}).value||'';
-            var models=(document.getElementById('fb-models')||{}).value||'';
-            if(!brand){alert('Please enter a brand name.');return;}
-            body='Brand:\n'+brand+'\n\nModels:\n'+(models||'(not specified)');
-          }else{
-            subj=encodeURIComponent('BladeFlow \u2013 Feature Request');
-            var idea=(document.getElementById('fb-idea')||{}).value||'';
-            var why=(document.getElementById('fb-why')||{}).value||'';
-            body='Feature idea:\n'+(idea||'(not provided)')+'\n\nWhy it would be useful:\n'+(why||'(not provided)');
-          }
-          window.open('mailto:help@altflow.dev?subject='+subj+'&body='+encodeURIComponent(body));
-        ">${icon('mail',13)} Open in Mail App</button>
+        <button class="btn btn-sec btn-sm" style="flex:1;justify-content:center" onclick="S.modal=null;S.err='';render()">Cancel</button>
+        <button class="btn btn-pri" style="flex:2;justify-content:center" ${_feedbackBusy?"disabled":""} onclick="submitFeedbackForm()">${submitLabel}</button>
       </div>
-      <p style="font-size:11px;color:var(--t3);text-align:center;margin-top:12px;line-height:1.5">Opens your default mail app with the form pre-filled. Your email address is never stored by this tool.</p>
+      <p style="font-size:11px;color:var(--t3);text-align:center;margin-top:12px;line-height:1.5">Sent securely to DeskFlow. If intake is unavailable, a mail app fallback opens instead.</p>
     </div>
   </div>
 </div>`;
 }
 
+function sanitizeFeedbackInput(value,maxLen){
+  if(typeof value!=="string")return "";
+  return value
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g,"")
+    .replace(/\r\n?/g,"\n")
+    .trim()
+    .slice(0,maxLen);
+}
+
+function openFeedbackMailFallback(subject,body){
+  const subj=encodeURIComponent(subject||"BladeFlow Feedback");
+  const payload=encodeURIComponent(body||"(no details)");
+  window.open('mailto:help@altflow.dev?subject='+subj+'&body='+payload);
+}
+
+async function submitFeedbackForm(){
+  if(_feedbackBusy)return;
+
+  const now=Date.now();
+  const msRemaining=FEEDBACK_RATE_LIMIT_MS-(now-_feedbackLastSentAt);
+  if(msRemaining>0){
+    S.err=`Please wait ${Math.ceil(msRemaining/1000)}s before sending another feedback message.`;
+    render();
+    return;
+  }
+
+  const tab=S.feedbackTab||"bug";
+  const apiKey=(SETTINGS.deskflowApiKey||DESKFLOW_API_KEY||"").trim();
+
+  let subject="BladeFlow - Feedback";
+  let description="";
+  let type="general";
+
+  if(tab==="bug"){
+    type="bug";
+    subject="BladeFlow - Bug Report";
+    const what=sanitizeFeedbackInput((document.getElementById('fb-what')||{}).value||"",2500);
+    const steps=sanitizeFeedbackInput((document.getElementById('fb-steps')||{}).value||"",2500);
+    const device=sanitizeFeedbackInput((document.getElementById('fb-device')||{}).value||"",500);
+    if(what.length<8){S.err="Please add a little more detail to 'What happened?'";render();return;}
+    description=`## What happened\n${what}\n\n## Steps to reproduce\n${steps||"(not provided)"}\n\n## Device / browser\n${device||"(not provided)"}`;
+  }else if(tab==="feature"){
+    type="feature_request";
+    subject="BladeFlow - Feature Request";
+    const idea=sanitizeFeedbackInput((document.getElementById('fb-idea')||{}).value||"",2500);
+    const why=sanitizeFeedbackInput((document.getElementById('fb-why')||{}).value||"",2500);
+    if(idea.length<8){S.err="Please describe the feature request first.";render();return;}
+    description=`## Feature idea\n${idea}\n\n## Why it helps\n${why||"(not provided)"}`;
+  }else{
+    type="general";
+    subject="BladeFlow - Brand Request";
+    const brand=sanitizeFeedbackInput((document.getElementById('fb-brand')||{}).value||"",300);
+    const models=sanitizeFeedbackInput((document.getElementById('fb-models')||{}).value||"",2500);
+    if(brand.length<2){S.err="Please enter a brand name.";render();return;}
+    description=`## Brand\n${brand}\n\n## Requested models\n${models||"(not specified)"}`;
+  }
+
+  if(!apiKey){
+    S.err="Feedback intake is not configured yet. Add your DeskFlow product API key in Settings > Help & Feedback.";
+    render();
+    return;
+  }
+
+  _feedbackBusy=true;
+  S.err="";
+  render();
+
+  try{
+    const response=await fetch(DESKFLOW_SUBMIT_TICKET_URL,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        apiKey,
+        type,
+        subject,
+        description,
+        customerEmail:S.authStatus==="signed_in"?S.authEmail:null,
+        customerName:S.authStatus==="signed_in"?S.authEmail.split('@')[0]:null,
+        metadata:{
+          sourceApp:"bladeflow",
+          feedbackTab:tab,
+          authStatus:S.authStatus,
+          authEmail:S.authStatus==="signed_in"?S.authEmail:null,
+          userAgent:navigator.userAgent,
+          language:navigator.language,
+          pageUrl:location.href,
+          timestamp:new Date().toISOString(),
+          appVersion:"3.1"
+        }
+      })
+    });
+
+    let payload={};
+    try{payload=await response.json();}catch(e){}
+    if(!response.ok||!payload.success){
+      const msg=(payload&&payload.error)||`Feedback request failed (${response.status})`;
+      throw new Error(msg);
+    }
+
+    _feedbackLastSentAt=Date.now();
+    S.modal=null;
+    S.err="";
+    S.flairToast=`${icon('check-circle',13)} Feedback sent. Thank you.`;
+    clearTimeout(S._flairTid);
+    S._flairTid=setTimeout(()=>{S.flairToast=null;render();},7000);
+    render();
+  }catch(error){
+    const baseMsg=error?.message||"Feedback submission failed.";
+    S.err=baseMsg+" You can retry, or use mail fallback.";
+    render();
+    if(window.confirm('Secure DeskFlow submit failed. Open your mail app as fallback?')){
+      openFeedbackMailFallback(subject,description);
+    }
+  }finally{
+    _feedbackBusy=false;
+    render();
+  }
+}
+
 function renderCloudinaryStatus(){
+
   const el=document.getElementById('cl-status');
   if(!el)return;
   const c=(SETTINGS.cloudinaryCloud||"").trim();
@@ -6151,6 +6258,7 @@ function renderSettings(){
   </div>
   <div class="settings-section-lbl">Help</div>
   <div class="sgroup">
+    <div class="srow" style="flex-direction:column;align-items:flex-start;gap:8px"><div><div class="srow-lbl">${icon('send',13)} DeskFlow Feedback Intake</div><div class="srow-sub" style="line-height:1.5;max-width:420px">Optional but recommended: set your DeskFlow product API key so bug reports and feature requests submit securely to your DeskFlow inbox instead of email-only fallback.</div></div><input type="text" style="width:100%;font-size:13px;padding:7px 10px" value="${esc(sv.deskflowApiKey||"")}" placeholder="DeskFlow product API key" onchange="SETTINGS.deskflowApiKey=this.value.trim();saveSettings()"/></div>
     <div class="srow"><div><div class="srow-lbl">${icon('book',13)} How-To Guide</div><div class="srow-sub">Step-by-step guide to getting the most out of BladeFlow</div></div><div class="srow-ctrl"><button class="btn btn-sec btn-sm" onclick="S.view='guide';render()">${icon('book',14)} Open Guide</button></div></div>
     <div class="srow"><div><div class="srow-lbl">${icon('bar-chart',13)} Data for Data Nerds</div><div class="srow-sub">Deep analytics on your selling history, pricing, pipeline, and more</div></div><div class="srow-ctrl"><button class="btn btn-pu btn-sm" onclick="S.modal='datanerds';render()">Open Analytics</button></div></div>
     <div class="srow"><div><div class="srow-lbl">${icon('play-circle',13)} Onboarding</div><div class="srow-sub">Rerun the first-time setup walkthrough, or jump straight into the step-by-step guide</div></div><div class="srow-ctrl" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-sec btn-sm" onclick="try{localStorage.removeItem('ks-onboarding-done');}catch(e){}S.onboarding=true;S.onboardStep=0;S.view='list';render()">Restart Setup</button><button class="btn btn-sm" style="background:var(--green);color:#fff;font-weight:700" onclick="S.view='roll';startGuide()">${icon('check-circle',13)} Setup Guide</button></div></div>
