@@ -910,8 +910,7 @@ window.storage={
 // ─── SUPABASE CONFIG ──────────────────────────────────────────
 const SUPABASE_URL = "https://yfosdanxivqbknolazws.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlmb3NkYW54aXZxYmtub2xhendzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1Mjc1NzksImV4cCI6MjA4OTEwMzU3OX0.JarIg0mb_DtcqppRw0IG4HfXT9-aYbGRKG9sGLAqikk";
-const DESKFLOW_SUBMIT_TICKET_URL = "https://ctmlmhfhxyinoniwfcgw.supabase.co/functions/v1/submit-ticket";
-const DESKFLOW_API_KEY = ""; // Set in Settings for secure feedback submission
+const FEEDBACK_SUBMIT_PROXY_URL = "https://steelhardnesslab.com/.netlify/functions/feedback-submit";
 const FEEDBACK_RATE_LIMIT_MS = 30000;
 let _feedbackLastSentAt = 0;
 let _feedbackBusy = false;
@@ -1038,7 +1037,7 @@ function tmx(a,v,ex){if(v===ex)return[ex];const r=a.filter(x=>x!==ex);return r.i
 
 // ─── SETTINGS ─────────────────────────────────────────────────
 const CHAT_MSG_DEFAULT=`Thanks for picking up the {knife}!\n\nPlease send {price} via:\n{payment}\nOnce payment clears, please drop me your shipping address:\n• Full name\n• Street address (+ apt/unit if applicable)\n• City, State, ZIP\n\nI'll get it packed up and out the door right away!`;
-const DS=()=>({payment:["PayPal G&S"],noShip:[],username:"",saveNotice:false,postHeader:"",tradeInterests:"",rollAnim:false,cloudinaryCloud:"",cloudinaryPreset:"",shippingCarrier:"USPS",paymentLinks:{},cdnBytes:0,cdnCount:0,chatMsgTemplate:"",soldInComment:false,soldCommentNote:"",deskflowApiKey:""});
+const DS=()=>({payment:["PayPal G&S"],noShip:[],username:"",saveNotice:false,postHeader:"",tradeInterests:"",rollAnim:false,cloudinaryCloud:"",cloudinaryPreset:"",shippingCarrier:"USPS",paymentLinks:{},cdnBytes:0,cdnCount:0,chatMsgTemplate:"",soldInComment:false,soldCommentNote:""});
 let SETTINGS=DS();
 async function loadSettings(){try{const r=await window.storage.get("ks_settings");if(r&&r.value)SETTINGS={...DS(),...JSON.parse(r.value)};}catch(e){}try{const old=JSON.parse(localStorage.getItem('ks_cdn_bytes')||'null');if(old&&old.bytes){SETTINGS.cdnBytes=(SETTINGS.cdnBytes||0)+old.bytes;SETTINGS.cdnCount=(SETTINGS.cdnCount||0)+(old.count||0);localStorage.removeItem('ks_cdn_bytes');window.storage.set("ks_settings",JSON.stringify(SETTINGS));}}catch(e){}}
 async function saveSettings(){
@@ -3907,7 +3906,6 @@ async function submitFeedbackForm(){
   }
 
   const tab=S.feedbackTab||"bug";
-  const apiKey=(SETTINGS.deskflowApiKey||DESKFLOW_API_KEY||"").trim();
 
   let subject="BladeFlow - Feedback";
   let description="";
@@ -3937,22 +3935,16 @@ async function submitFeedbackForm(){
     description=`## Brand\n${brand}\n\n## Requested models\n${models||"(not specified)"}`;
   }
 
-  if(!apiKey){
-    S.err="Feedback intake is not configured yet. Add your DeskFlow product API key in Settings > Help & Feedback.";
-    render();
-    return;
-  }
-
   _feedbackBusy=true;
   S.err="";
   render();
 
   try{
-    const response=await fetch(DESKFLOW_SUBMIT_TICKET_URL,{
+    const response=await fetch(FEEDBACK_SUBMIT_PROXY_URL,{
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({
-        apiKey,
+        sourceApp:"bladeflow",
         type,
         subject,
         description,
@@ -6257,7 +6249,6 @@ function renderSettings(){
   </div>
   <div class="settings-section-lbl">Help</div>
   <div class="sgroup">
-    <div class="srow" style="flex-direction:column;align-items:flex-start;gap:8px"><div><div class="srow-lbl">${icon('send',13)} DeskFlow Feedback Intake</div><div class="srow-sub" style="line-height:1.5;max-width:420px">Optional but recommended: set your DeskFlow product API key so bug reports and feature requests submit securely to your DeskFlow inbox instead of email-only fallback.</div></div><input type="text" style="width:100%;font-size:13px;padding:7px 10px" value="${esc(sv.deskflowApiKey||"")}" placeholder="DeskFlow product API key" onchange="SETTINGS.deskflowApiKey=this.value.trim();saveSettings()"/></div>
     <div class="srow"><div><div class="srow-lbl">${icon('book',13)} How-To Guide</div><div class="srow-sub">Step-by-step guide to getting the most out of BladeFlow</div></div><div class="srow-ctrl"><button class="btn btn-sec btn-sm" onclick="S.view='guide';render()">${icon('book',14)} Open Guide</button></div></div>
     <div class="srow"><div><div class="srow-lbl">${icon('bar-chart',13)} Data for Data Nerds</div><div class="srow-sub">Deep analytics on your selling history, pricing, pipeline, and more</div></div><div class="srow-ctrl"><button class="btn btn-pu btn-sm" onclick="S.modal='datanerds';render()">Open Analytics</button></div></div>
     <div class="srow"><div><div class="srow-lbl">${icon('play-circle',13)} Onboarding</div><div class="srow-sub">Rerun the first-time setup walkthrough, or jump straight into the step-by-step guide</div></div><div class="srow-ctrl" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-sec btn-sm" onclick="try{localStorage.removeItem('ks-onboarding-done');}catch(e){}S.onboarding=true;S.onboardStep=0;S.view='list';render()">Restart Setup</button><button class="btn btn-sm" style="background:var(--green);color:#fff;font-weight:700" onclick="S.view='roll';startGuide()">${icon('check-circle',13)} Setup Guide</button></div></div>
