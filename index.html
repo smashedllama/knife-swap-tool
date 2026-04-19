@@ -3925,21 +3925,21 @@ async function submitFeedbackForm(){
     const steps=sanitizeFeedbackInput((document.getElementById('fb-steps')||{}).value||"",2500);
     const device=sanitizeFeedbackInput((document.getElementById('fb-device')||{}).value||"",500);
     if(what.length<8){S.err="Please add a little more detail to 'What happened?'";render();return;}
-    description=`## What happened\n${what}\n\n## Steps to reproduce\n${steps||"(not provided)"}\n\n## Device / browser\n${device||"(not provided)"}`;
+    description=`What happened:\n${what}\n\nSteps to reproduce:\n${steps||"(not provided)"}\n\nDevice / browser: ${device||"(not provided)"}`;
   }else if(tab==="feature"){
     type="feature_request";
     subject="BladeFlow - Feature Request";
     const idea=sanitizeFeedbackInput((document.getElementById('fb-idea')||{}).value||"",2500);
     const why=sanitizeFeedbackInput((document.getElementById('fb-why')||{}).value||"",2500);
     if(idea.length<8){S.err="Please describe the feature request first.";render();return;}
-    description=`## Feature idea\n${idea}\n\n## Why it helps\n${why||"(not provided)"}`;
+    description=`Feature idea:\n${idea}\n\nWhy it helps:\n${why||"(not provided)"}`;
   }else{
     type="general";
     subject="BladeFlow - Brand Request";
     const brand=sanitizeFeedbackInput((document.getElementById('fb-brand')||{}).value||"",300);
     const models=sanitizeFeedbackInput((document.getElementById('fb-models')||{}).value||"",2500);
     if(brand.length<2){S.err="Please enter a brand name.";render();return;}
-    description=`## Brand\n${brand}\n\n## Requested models\n${models||"(not specified)"}`;
+    description=`Brand: ${brand}\n\nRequested models:\n${models||"(not specified)"}`;
   }
 
   const emailVal=sanitizeFeedbackInput((document.getElementById('fb-email')||{}).value||"",254)||(S.authStatus==="signed_in"?S.authEmail:"");
