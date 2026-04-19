@@ -3854,6 +3854,12 @@ function renderFeedbackModal(){
       <label style="display:block;font-size:12px;font-weight:600;color:var(--t2);margin-bottom:5px">Model name(s) <span style="font-weight:400;color:var(--t3)">(optional)</span></label>
       <textarea id="fb-models" rows="3" placeholder="e.g. Praetorian Ti, Marauder, Eris..." style="${inputStyle};resize:vertical"></textarea>
     </div>`;
+  const emailReadonly = S.authStatus === "signed_in";
+  const emailField = `
+    <div style="margin-top:14px">
+      <label style="display:block;font-size:12px;font-weight:600;color:var(--t2);margin-bottom:5px">Your email <span style="color:var(--redt)">*</span>${emailReadonly?` <span style="font-weight:400;color:var(--t3)">(from your account)</span>`:""}</label>
+      <input id="fb-email" type="email" value="${esc(S.authEmail||"")}" placeholder="you@example.com" style="${inputStyle}${emailReadonly?";opacity:0.65":""}" ${emailReadonly?"readonly":""}/>
+    </div>`;
   const titles={bug:`${icon('alert-circle',16)} Report a Bug`,feature:`${icon('lightbulb',16)} Request a Feature`,brand:`${icon('tag',16)} Brand Request`};
   return`<div class="modal-overlay" onclick="S.modal=null;S.err='';render()">
   <div class="modal" onclick="event.stopPropagation()" style="max-width:460px">
@@ -3868,6 +3874,7 @@ function renderFeedbackModal(){
         ${tabBtn("brand",`${icon('tag',12)} Brand Request`)}
       </div>
       ${isBug?bugFields:isBrand?brandFields:featureFields}
+      ${emailField}
       ${S.err?`<div class="err" style="margin-top:12px">${esc(S.err)}</div>`:""}
       <div style="display:flex;gap:8px;margin-top:18px">
         <button class="btn btn-sec btn-sm" style="flex:1;justify-content:center" onclick="S.modal=null;S.err='';render()">Cancel</button>
@@ -3935,6 +3942,13 @@ async function submitFeedbackForm(){
     description=`## Brand\n${brand}\n\n## Requested models\n${models||"(not specified)"}`;
   }
 
+  const emailVal=sanitizeFeedbackInput((document.getElementById('fb-email')||{}).value||"",254)||(S.authStatus==="signed_in"?S.authEmail:"");
+  if(!emailVal||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)){
+    S.err="A valid email address is required.";
+    render();
+    return;
+  }
+
   _feedbackBusy=true;
   S.err="";
   render();
@@ -3948,8 +3962,8 @@ async function submitFeedbackForm(){
         type,
         subject,
         description,
-        customerEmail:S.authStatus==="signed_in"?S.authEmail:null,
-        customerName:S.authStatus==="signed_in"?S.authEmail.split('@')[0]:null,
+        customerEmail:emailVal,
+        customerName:emailVal.split('@')[0],
         metadata:{
           sourceApp:"bladeflow",
           feedbackTab:tab,
@@ -3974,7 +3988,8 @@ async function submitFeedbackForm(){
     _feedbackLastSentAt=Date.now();
     S.modal=null;
     S.err="";
-    S.flairToast=`${icon('check-circle',13)} Feedback sent. Thank you.`;
+    const ticketRef=payload.ticketCode||(payload.ticketNumber?`#${payload.ticketNumber}`:null);
+    S.flairToast=`${icon('check-circle',13)} Ticket ${ticketRef||""} submitted. Thank you.`;
     clearTimeout(S._flairTid);
     S._flairTid=setTimeout(()=>{S.flairToast=null;render();},7000);
     render();
