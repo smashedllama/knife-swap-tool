@@ -6594,11 +6594,13 @@ function checkPostRules(pid){
   const noExtLinks=!BANNED_LINK_RE.test(txt);
   const missingSlots=activeKnives.filter(k=>{const ph=(k.photos||[]).filter(Boolean);const ext=ph.filter(u=>!u.includes("res.cloudinary.com"));const vid=ph.filter(u=>isCdnVideo(u));const img=ph.filter(u=>u.includes("res.cloudinary.com")&&!isCdnVideo(u));return!(!!(k.imgurLink)||ext.length>=1||vid.length>=1||img.length>=2);});
   const missingGearPhotos=(p.items||[]).filter(it=>!it.sold&&!(it.photos||[]).filter(Boolean).length);
+  const activeGear=(p.items||[]).filter(it=>!it.sold);
+  const hasActiveItems=activeKnives.length>0||activeGear.length>0;
   const tsDateOk=!p.timestampAddedAt||new Date(p.timestampAddedAt).toDateString()===new Date().toDateString();
   const tsDateMsg=tsDateOk?"Timestamp date is current":`Timestamp is from ${new Date(p.timestampAddedAt).toLocaleDateString("en-US",{month:"long",day:"numeric"})} - a new one with today's date is required`;
   return[
     {ok:(p.photos||[]).filter(Boolean).length>0,msg:"Timestamp photo link in post"},
-    ...(p.timestampAddedAt?[{ok:tsDateOk,msg:tsDateMsg,tsUpdate:!tsDateOk}]:[]),
+    ...(p.timestampAddedAt&&hasActiveItems?[{ok:tsDateOk,msg:tsDateMsg,tsUpdate:!tsDateOk}]:[]),
     {ok:missingSlots.length===0,msg:missingSlots.length===0?"All knives have photos":`Needs more photos: ${missingSlots.map(k=>k.brand+" "+k.model).join(", ")} (2 Cloudinary photos, 1 video, or 1 Imgur link)`},
     {ok:missingGearPhotos.length===0,msg:missingGearPhotos.length===0?"All gear items have a photo":`Missing photo: ${missingGearPhotos.map(it=>it.description||NI_LABELS[it.itemCategory||"other"]||"item").join(", ")}`},
     {ok:activeKnives.filter(k=>k.knifeType!=="WTT").every(k=>k.price&&k.price.length>0),msg:"All WTS knives have a price"},
