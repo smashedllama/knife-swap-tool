@@ -1300,6 +1300,7 @@ function reconcileInventory(){
 
 // ─── SUPABASE FUNCTIONS ───────────────────────────────────────
 async function initSupabase(){
+  if(!window.supabase){console.warn('[auth] Supabase JS library not loaded — running in local-only mode');S.authLoading=false;return;}
   if(!SUPABASE_URL||SUPABASE_URL.includes("YOUR_PROJECT")||!SUPABASE_ANON_KEY||SUPABASE_ANON_KEY.includes("YOUR_ANON")){S.authLoading=false;return;}
   try{
     // Read hash tokens BEFORE createClient — Supabase's detectSessionInUrl may clear the hash
@@ -1398,9 +1399,11 @@ function _showSyncOfflineToast(){
 }
 async function _sbLoad(){
   if(!_sb||!currentUser)return;
+  const ctrl=new AbortController();
+  const tid=setTimeout(()=>ctrl.abort(),12000);
   try{
     // Check profile first — catches soft-deleted accounts before loading any data
-    const {data:prof}=await _sb.from("profiles").select("settings,deleted_at,purge_at").eq("id",currentUser.id).single();
+    const {data:prof}=await _sb.from("profiles").select("settings,deleted_at,purge_at").eq("id",currentUser.id).abortSignal(ctrl.signal).single();
     if(prof?.deleted_at){
       // Account is in purgatory — wipe everything and show deleted screen
       S.accountDeleted=true;S.loaded=true;
@@ -1411,7 +1414,7 @@ async function _sbLoad(){
     if(prof?.settings&&Object.keys(prof.settings).length)SETTINGS={...DS(),...prof.settings};
     // If local data is dirty (unsaved changes), merge instead of overwrite so nothing is lost
     const _dirty=localStorage.getItem("ks_dirty")==="1";
-    const {data:posts}=await _sb.from("posts").select("data").eq("user_id",currentUser.id);
+    const {data:posts}=await _sb.from("posts").select("data").eq("user_id",currentUser.id).abortSignal(ctrl.signal);
     if(posts&&posts.length){
       const sbPosts=posts.map(r=>r.data).filter(p=>!p._tourDemo);
       if(_dirty){
@@ -1423,7 +1426,7 @@ async function _sbLoad(){
         S.posts=sbPosts.sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||"")).map(p=>{if(!p.postText)p.postText=buildPost(p);return p;});
       }
     }
-    const {data:inv}=await _sb.from("inventory").select("data").eq("user_id",currentUser.id);
+    const {data:inv}=await _sb.from("inventory").select("data").eq("user_id",currentUser.id).abortSignal(ctrl.signal);
     if(inv&&inv.length){
       if(_dirty){
         const localInvMap=new Map(S.inventory.map(k=>[k.id,k]));
@@ -1440,7 +1443,14 @@ async function _sbLoad(){
     try{localStorage.setItem("ks_v4",JSON.stringify(S.posts));localStorage.setItem("ks_inv_v1",JSON.stringify(S.inventory));localStorage.setItem("ks_settings",JSON.stringify(SETTINGS));localStorage.setItem("ks_synced_uid",currentUser.id);}catch(e){}
     // If dirty, push the merged local data up to Supabase now
     if(_dirty){_scheduleSbSync(true);}
-  }catch(e){console.warn("Supabase load failed:",e);S.loaded=true;_syncStatus='error';_syncErrMsg='Could not load cloud data';}
+  }catch(e){
+    console.warn("Supabase load failed:",e);
+    S.loaded=true;
+    _syncStatus='error';
+    _syncErrMsg=ctrl.signal.aborted?'Cloud sync timed out — using local data':'Could not load cloud data';
+    if(ctrl.signal.aborted)_showSyncErrorToast();
+  }
+  clearTimeout(tid);
 }
 async function _sbUpsertPost(post){
   if(!_sb||!currentUser)return;
