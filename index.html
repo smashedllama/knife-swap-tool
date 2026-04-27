@@ -3064,11 +3064,13 @@ function confirmSoldFlow(){
   const raw=(g("sold-to-input")?.value||"").trim();
   const buyer=raw.replace(/^@/,"").replace(/^\/?u\//i,"");
   const soldPrice=(g("sold-price-input")?.value||"").trim().replace(/^\$/,"");
+  const soldAt=parseSoldDate(g("sold-date-input")?.value);
   pushUndo("Knife marked sold");
-  up(s=>{const p=s.posts.find(x=>x.id===sf.pid);if(!p)return;const k=p.knives[sf.ki];k.sold=true;k.soldAt=new Date().toISOString();k.soldTo=buyer||null;k.soldPrice=soldPrice||null;k.shippingAddress=null;k.pending=false;if(k.inventoryId){const inv=s.inventory.find(x=>x.id===k.inventoryId);if(inv){inv.status="sold";inv.archived=true;}}p.postText=buildPost(p);});
+  up(s=>{const p=s.posts.find(x=>x.id===sf.pid);if(!p)return;const k=p.knives[sf.ki];k.sold=true;k.soldAt=soldAt;k.soldTo=buyer||null;k.soldPrice=soldPrice||null;k.shippingAddress=null;k.pending=false;if(k.inventoryId){const inv=s.inventory.find(x=>x.id===k.inventoryId);if(inv){inv.status="sold";inv.archived=true;}}p.postText=buildPost(p);});
   saveInvNow();S.soldFlow=null;render();
 }
 function cancelSoldFlow(){S.soldFlow=null;render();}
+function parseSoldDate(val){if(!val)return new Date().toISOString();const d=new Date(val+"T12:00:00");return isNaN(d.getTime())?new Date().toISOString():d.toISOString();}
 function markGearSold(pid,gi){
   const p=S.posts.find(x=>x.id===pid);if(!p)return;
   const item=p.items?.[gi];if(!item)return;
@@ -3085,8 +3087,9 @@ function confirmGearSoldFlow(){
   const raw=(g("gsold-to-input")?.value||"").trim();
   const buyer=raw.replace(/^@/,"").replace(/^\/?u\//i,"");
   const soldPrice=(g("gsold-price-input")?.value||"").trim().replace(/^\$/,"");
+  const soldAt=parseSoldDate(g("gsold-date-input")?.value);
   pushUndo("Item marked sold");
-  up(s=>{const p=s.posts.find(x=>x.id===sf.pid);if(!p||!p.items||p.items[sf.gi]==null)return;const it=p.items[sf.gi];it.sold=true;it.soldAt=new Date().toISOString();it.soldTo=buyer||null;it.soldPrice=soldPrice||null;it.shippingAddress=null;it.pending=false;if(it.inventoryId){const inv=s.inventory.find(x=>x.id===it.inventoryId);if(inv){inv.status="sold";inv.archived=true;}}p.postText=buildPost(p);});
+  up(s=>{const p=s.posts.find(x=>x.id===sf.pid);if(!p||!p.items||p.items[sf.gi]==null)return;const it=p.items[sf.gi];it.sold=true;it.soldAt=soldAt;it.soldTo=buyer||null;it.soldPrice=soldPrice||null;it.shippingAddress=null;it.pending=false;if(it.inventoryId){const inv=s.inventory.find(x=>x.id===it.inventoryId);if(inv){inv.status="sold";inv.archived=true;}}p.postText=buildPost(p);});
   saveInvNow();S.gearSoldFlow=null;render();
 }
 function cancelGearSoldFlow(){S.gearSoldFlow=null;render();}
@@ -3151,6 +3154,10 @@ function gearSoldFlowHtml(pid,gi){
       <div class="field"><label style="font-size:11px">Buyer (Reddit username)</label><input id="gsold-to-input" type="text" placeholder="e.g. u/buyer123" style="font-size:13px;padding:8px 10px"/></div>
       <div class="field"><label style="font-size:11px">Sale Price ($)</label><input id="gsold-price-input" type="number" min="0" placeholder="${esc(it.price||"")}" style="font-size:13px;padding:8px 10px"/></div>
     </div>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+      <span style="font-size:12px;color:var(--t3);white-space:nowrap">Sale date</span>
+      <input id="gsold-date-input" type="date" value="${new Date().toISOString().slice(0,10)}" style="font-size:13px;padding:6px 10px;border:.5px solid var(--b2);border-radius:8px;outline:none;background:var(--surf);color:var(--t1);font-family:var(--font)"/>
+    </div>
     <div style="display:flex;gap:8px">
       <button class="btn btn-gn" onclick="confirmGearSoldFlow()">${icon('check-circle',13)} Confirm Sale</button>
       <button class="btn btn-sec" onclick="cancelGearSoldFlow()">Cancel</button>
@@ -3166,8 +3173,9 @@ function confirmSoldElsewhere(){
   const g=id=>document.getElementById(id);
   const soldPrice=(g("se-price-input")?.value||"").trim().replace(/^\$/,"");
   const trackShip=!!(g("se-track-ship")?.checked);
+  const soldAt=parseSoldDate(g("se-date-input")?.value);
   pushUndo("Knife marked sold elsewhere");
-  up(s=>{const p=s.posts.find(x=>x.id===sf.pid);if(!p)return;const k=p.knives[sf.ki];k.sold=true;k.soldElsewhere=true;k.soldElsewhereTrackShip=trackShip;k.soldAt=new Date().toISOString();k.soldPrice=soldPrice||null;k.pending=false;if(k.inventoryId){const inv=s.inventory.find(x=>x.id===k.inventoryId);if(inv){inv.status="sold";inv.archived=true;}}p.postText=buildPost(p);});
+  up(s=>{const p=s.posts.find(x=>x.id===sf.pid);if(!p)return;const k=p.knives[sf.ki];k.sold=true;k.soldElsewhere=true;k.soldElsewhereTrackShip=trackShip;k.soldAt=soldAt;k.soldPrice=soldPrice||null;k.pending=false;if(k.inventoryId){const inv=s.inventory.find(x=>x.id===k.inventoryId);if(inv){inv.status="sold";inv.archived=true;}}p.postText=buildPost(p);});
   saveInvNow();S.soldFlow=null;render();
 }
 function markWithdrawn(pid,ki){
@@ -4918,6 +4926,10 @@ function renderList(){
   <input id="se-price-input" type="text" inputmode="decimal" placeholder="${esc(k.price||"price")}" style="width:100px;font-size:13px;padding:7px 10px;border:.5px solid var(--b2);border-radius:8px;outline:none;background:var(--surf);color:var(--t1);font-family:var(--font)"/>
   <span style="font-size:11px;color:var(--t4)">(optional)</span>
 </div>
+<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+  <span style="font-size:12px;color:var(--t3);white-space:nowrap">Sale date</span>
+  <input id="se-date-input" type="date" value="${new Date().toISOString().slice(0,10)}" style="font-size:13px;padding:6px 10px;border:.5px solid var(--b2);border-radius:8px;outline:none;background:var(--surf);color:var(--t1);font-family:var(--font)"/>
+</div>
 <label class="cblk" style="margin-bottom:10px;font-size:12px">
   <input type="checkbox" id="se-track-ship"/> Track in shipping pipeline
   <span style="display:block;font-size:11px;color:var(--t4);font-weight:400;margin-top:2px">Check if you still need to ship this item (e.g. sold on eBay but shipping yourself).</span>
@@ -4932,6 +4944,10 @@ function renderList(){
   <input id="sold-to-input" type="text" placeholder="Buyer's Reddit username" style="flex:1;min-width:160px;font-size:13px;padding:7px 10px;border:.5px solid var(--b2);border-radius:8px;outline:none;background:var(--surf);color:var(--t1);font-family:var(--font)"/>
   <span style="font-size:12px;font-weight:600;color:var(--t3);white-space:nowrap">Sold for $</span>
   <input id="sold-price-input" type="text" inputmode="decimal" placeholder="${esc(k.price||"price")}" style="width:90px;font-size:13px;padding:7px 10px;border:.5px solid var(--b2);border-radius:8px;outline:none;background:var(--surf);color:var(--t1);font-family:var(--font)"/>
+</div>
+<div style="display:flex;gap:8px;align-items:center;margin-bottom:7px">
+  <span style="font-size:12px;color:var(--t3);white-space:nowrap">Sale date</span>
+  <input id="sold-date-input" type="date" value="${new Date().toISOString().slice(0,10)}" style="font-size:13px;padding:6px 10px;border:.5px solid var(--b2);border-radius:8px;outline:none;background:var(--surf);color:var(--t1);font-family:var(--font)"/>
 </div>
 <div style="display:flex;gap:8px;margin-bottom:4px">
   <button class="btn btn-gn btn-sm" onclick="confirmSoldFlow()">Confirm Sold</button>

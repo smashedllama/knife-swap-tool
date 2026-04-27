@@ -2,9 +2,9 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "KnifeSwap Generator",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "4321"],
+      "name": "BladeFlow",
+      "runtimeExecutable": "ruby",
+      "runtimeArgs": ["-e", "require 'webrick'; WEBrick::HTTPServer.new(:Port=>4321,:DocumentRoot=>'/Users/mgmtbook/Documents/KnifeSwapPostGenerator').start"],
       "port": 4321
     }
   ]
