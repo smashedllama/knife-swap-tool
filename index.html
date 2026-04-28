@@ -1399,58 +1399,61 @@ function _showSyncOfflineToast(){
 }
 async function _sbLoad(){
   if(!_sb||!currentUser)return;
-  const ctrl=new AbortController();
-  const tid=setTimeout(()=>ctrl.abort(),12000);
+  let _tid;
+  const _timeout=new Promise((_,reject)=>{_tid=setTimeout(()=>reject(new Error('_sbLoad timed out')),10000);});
   try{
-    // Check profile first — catches soft-deleted accounts before loading any data
-    const {data:prof}=await _sb.from("profiles").select("settings,deleted_at,purge_at").eq("id",currentUser.id).abortSignal(ctrl.signal).single();
-    if(prof?.deleted_at){
-      // Account is in purgatory — wipe everything and show deleted screen
-      S.accountDeleted=true;S.loaded=true;
-      S.posts=[];S.inventory=[];
-      try{localStorage.removeItem("ks_v4");localStorage.removeItem("ks_inv_v1");}catch(e){}
-      return;
-    }
-    if(prof?.settings&&Object.keys(prof.settings).length)SETTINGS={...DS(),...prof.settings};
-    // If local data is dirty (unsaved changes), merge instead of overwrite so nothing is lost
-    const _dirty=localStorage.getItem("ks_dirty")==="1";
-    const {data:posts}=await _sb.from("posts").select("data").eq("user_id",currentUser.id).abortSignal(ctrl.signal);
-    if(posts&&posts.length){
-      const sbPosts=posts.map(r=>r.data).filter(p=>!p._tourDemo);
-      if(_dirty){
-        // Prefer local for existing posts; only add posts that exist in Supabase but not locally
-        const localMap=new Map(S.posts.map(p=>[p.id,p]));
-        const newFromSb=sbPosts.filter(p=>!localMap.has(p.id)).map(p=>{if(!p.postText)p.postText=buildPost(p);return p;});
-        if(newFromSb.length)S.posts=[...S.posts,...newFromSb].sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));
-      }else{
-        S.posts=sbPosts.sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||"")).map(p=>{if(!p.postText)p.postText=buildPost(p);return p;});
-      }
-    }
-    const {data:inv}=await _sb.from("inventory").select("data").eq("user_id",currentUser.id).abortSignal(ctrl.signal);
-    if(inv&&inv.length){
-      if(_dirty){
-        const localInvMap=new Map(S.inventory.map(k=>[k.id,k]));
-        const newInvFromSb=inv.map(r=>r.data).filter(k=>!k._tourDemo&&!localInvMap.has(k.id));
-        if(newInvFromSb.length)S.inventory=[...S.inventory,...newInvFromSb];
-      }else{
-        S.inventory=inv.map(r=>r.data).filter(k=>!k._tourDemo);
-      }
-    }
-    S.loaded=true;
-    reconcileInventory();
-    _syncStatus='synced';_syncLastAt=Date.now();_syncErrMsg='';
-    // Mirror to localStorage and mark this device as synced for this user
-    try{localStorage.setItem("ks_v4",JSON.stringify(S.posts));localStorage.setItem("ks_inv_v1",JSON.stringify(S.inventory));localStorage.setItem("ks_settings",JSON.stringify(SETTINGS));localStorage.setItem("ks_synced_uid",currentUser.id);}catch(e){}
-    // If dirty, push the merged local data up to Supabase now
-    if(_dirty){_scheduleSbSync(true);}
+    await Promise.race([_sbLoadCore(),_timeout]);
   }catch(e){
     console.warn("Supabase load failed:",e);
     S.loaded=true;
     _syncStatus='error';
-    _syncErrMsg=ctrl.signal.aborted?'Cloud sync timed out — using local data':'Could not load cloud data';
-    if(ctrl.signal.aborted)_showSyncErrorToast();
+    _syncErrMsg=(e.message||'').includes('timed out')?'Cloud sync timed out — using local data':'Could not load cloud data';
+    if((e.message||'').includes('timed out'))_showSyncErrorToast();
   }
-  clearTimeout(tid);
+  clearTimeout(_tid);
+}
+async function _sbLoadCore(){
+  // Check profile first — catches soft-deleted accounts before loading any data
+  const {data:prof}=await _sb.from("profiles").select("settings,deleted_at,purge_at").eq("id",currentUser.id).single();
+  if(prof?.deleted_at){
+    // Account is in purgatory — wipe everything and show deleted screen
+    S.accountDeleted=true;S.loaded=true;
+    S.posts=[];S.inventory=[];
+    try{localStorage.removeItem("ks_v4");localStorage.removeItem("ks_inv_v1");}catch(e){}
+    return;
+  }
+  if(prof?.settings&&Object.keys(prof.settings).length)SETTINGS={...DS(),...prof.settings};
+  // If local data is dirty (unsaved changes), merge instead of overwrite so nothing is lost
+  const _dirty=localStorage.getItem("ks_dirty")==="1";
+  const {data:posts}=await _sb.from("posts").select("data").eq("user_id",currentUser.id);
+  if(posts&&posts.length){
+    const sbPosts=posts.map(r=>r.data).filter(p=>!p._tourDemo);
+    if(_dirty){
+      // Prefer local for existing posts; only add posts that exist in Supabase but not locally
+      const localMap=new Map(S.posts.map(p=>[p.id,p]));
+      const newFromSb=sbPosts.filter(p=>!localMap.has(p.id)).map(p=>{if(!p.postText)p.postText=buildPost(p);return p;});
+      if(newFromSb.length)S.posts=[...S.posts,...newFromSb].sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));
+    }else{
+      S.posts=sbPosts.sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||"")).map(p=>{if(!p.postText)p.postText=buildPost(p);return p;});
+    }
+  }
+  const {data:inv}=await _sb.from("inventory").select("data").eq("user_id",currentUser.id);
+  if(inv&&inv.length){
+    if(_dirty){
+      const localInvMap=new Map(S.inventory.map(k=>[k.id,k]));
+      const newInvFromSb=inv.map(r=>r.data).filter(k=>!k._tourDemo&&!localInvMap.has(k.id));
+      if(newInvFromSb.length)S.inventory=[...S.inventory,...newInvFromSb];
+    }else{
+      S.inventory=inv.map(r=>r.data).filter(k=>!k._tourDemo);
+    }
+  }
+  S.loaded=true;
+  reconcileInventory();
+  _syncStatus='synced';_syncLastAt=Date.now();_syncErrMsg='';
+  // Mirror to localStorage and mark this device as synced for this user
+  try{localStorage.setItem("ks_v4",JSON.stringify(S.posts));localStorage.setItem("ks_inv_v1",JSON.stringify(S.inventory));localStorage.setItem("ks_settings",JSON.stringify(SETTINGS));localStorage.setItem("ks_synced_uid",currentUser.id);}catch(e){}
+  // If dirty, push the merged local data up to Supabase now
+  if(_dirty){_scheduleSbSync(true);}
 }
 async function _sbUpsertPost(post){
   if(!_sb||!currentUser)return;
